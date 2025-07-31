@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './modules/user/user.module';
 import { RoleModule } from './modules/role/role.module';
 import { PrestataireModule } from './modules/prestataire/prestataire.module';
 import { LivreurModule } from './modules/livreur/livreur.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -20,21 +21,17 @@ import { LivreurModule } from './modules/livreur/livreur.module';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         host: config.get('DATABASE_HOST'),
-        port:         
+        port: parseInt(config.get('DATABASE_PORT').toString()),        
         username: config.get('DATABASE_USER'),
         password: config.get('DATABASE_PASSWORD'),
         database: config.get('DATABASE_NAME'),
         autoLoadEntities: true,
-        synchronize: true, // ⚠️ dev only!
+        synchronize: false, 
       })
     }),
-
     UserModule,
-
     RoleModule,
-
     PrestataireModule,
-
     LivreurModule
   ],
   controllers: [AppController],
