@@ -1,4 +1,3 @@
-import { Livreur } from './../livreur.entity';
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { Livreur } from "../livreur.entity";
 

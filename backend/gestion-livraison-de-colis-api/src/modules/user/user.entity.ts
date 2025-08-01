@@ -1,14 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, Unique, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { Prestataire } from '../prestataire/prestataire.entity';
-import { Roles } from '../role/role.entity';
+import { Role } from '../role/role.entity';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
 
 
-@Entity()
-@Unique(["email", "telephone", "photo_profil", "mot_de_passe"])
+@Entity("utilisateurs")
+@Unique(["email", "telephone", "photo_profil", "mot_de_passe", "login"])
 export class User {
     @PrimaryGeneratedColumn()
-    id_utilisateur: number;
+    id_utilisateur?: number;
 
     @Column()
     nom: string;
@@ -16,32 +16,38 @@ export class User {
     @Column()
     prenom: string;
 
+    @Column({nullable: false})
+    civilite: string;
+    
     @Column()
     date_naissance: Date;
 
-    @Column()
+    @Column({nullable: true})
     telephone?: string;
 
     @Column()
     email: string;
 
+    @Column({nullable: false})
+    login: string;
+
     @Column()
     mot_de_passe: string;
 
-    @Column()
+    @Column({default: true })
     est_active: boolean;
 
-    @Column()
+    @Column({ nullable: true })
     photo_profil?: string;
 
-    @OneToOne(() => Roles)
-    @JoinColumn()
-    role: Roles;
+    @OneToOne(() => Role)
+    @JoinColumn({name: "id_role"})
+    role: Role;
 
     @OneToOne(() => TypeUtilisateur, (typeUtilisateur) => typeUtilisateur.users)
-    @JoinColumn()
+    @JoinColumn({name: "id_type_utilisateur"})
     type_utilisateur: TypeUtilisateur;
 
-    @OneToOne(() => Prestataire)
+    @OneToOne(() => Prestataire, { nullable: true })
     prestataire?: Prestataire;
 }

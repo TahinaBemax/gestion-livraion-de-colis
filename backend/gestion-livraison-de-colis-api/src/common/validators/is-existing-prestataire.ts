@@ -13,8 +13,6 @@ export function IsExistingPrestataire(validationOptions?: ValidationOptions){
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments){
-                    if(value == null) return true;
-
                     if(typeof value !== "string") {
                         value.toString();
                     };

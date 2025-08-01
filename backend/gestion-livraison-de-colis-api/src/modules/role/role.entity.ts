@@ -1,11 +1,11 @@
 import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { User } from "../user/user.entity";
 
-@Entity()
+@Entity("roles")
 @Unique(['nom_role'])
-export class Roles {
-    @PrimaryColumn()
-    id_role: number;
+export class Role {
+    @PrimaryColumn({name: "id_role"})
+    id: string;
 
     @Column({nullable: false})
     nom_role: string;

@@ -27,7 +27,6 @@ CREATE TABLE prestataire(
    UNIQUE(email)
 );
 
-
 CREATE TABLE points_livraison(
    id_point_livraison SERIAL,
    numero_magasin TEXT NOT NULL,
@@ -125,7 +124,7 @@ CREATE TABLE animations_ville(
    FOREIGN KEY(id_point_livraison) REFERENCES points_livraison(id_point_livraison)
 );
 
-CREATE TABLE utilisateur(
+CREATE TABLE utilisateurs(
    id_utilisateur SERIAL,
    nom TEXT NOT NULL,
    prenom TEXT NOT NULL,
@@ -155,11 +154,11 @@ CREATE TABLE notifications(
    id_notification SERIAL,
    dateheure_notification TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    message TEXT NOT NULL,
-   id_expediteur INTEGER NOT NULL,
-   id_destinataire INTEGER NOT NULL,
+   id_utilisateur INTEGER NOT NULL,
+   id_utilisateur_1 INTEGER NOT NULL,
    PRIMARY KEY(id_notification),
-   FOREIGN KEY(id_utilisateur) REFERENCES utilisateur(id_utilisateur),
-   FOREIGN KEY(id_utilisateur_1) REFERENCES utilisateur(id_utilisateur)
+   FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
+   FOREIGN KEY(id_utilisateur_1) REFERENCES utilisateurs(id_utilisateur)
 );
 
 CREATE TABLE itineraires_livraison(
@@ -173,7 +172,7 @@ CREATE TABLE itineraires_livraison(
    id_point_livraison INTEGER NOT NULL,
    id_planning_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_itineraire_livraison),
-   FOREIGN KEY(id_utilisateur) REFERENCES utilisateur(id_utilisateur),
+   FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
    FOREIGN KEY(id_point_livraison) REFERENCES points_livraison(id_point_livraison),
    FOREIGN KEY(id_planning_livraison) REFERENCES plannings_livraison(id_planning_livraison)
 );
@@ -190,7 +189,7 @@ CREATE TABLE detail_info_livreur(
    PRIMARY KEY(id_detail_info_liveur),
    UNIQUE(id_utilisateur),
    FOREIGN KEY(id_categorie_livreur) REFERENCES categories_livreurs(id_categorie_livreur),
-   FOREIGN KEY(id_utilisateur) REFERENCES utilisateur(id_utilisateur)
+   FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 );
 
 CREATE TABLE livraisons(

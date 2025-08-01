@@ -1,6 +1,6 @@
 
 export enum TypeUtilisateur {
-    Personnel = "Personnel",
-    Livreur = "Livreur",
-    Prestataire = "Prestataire"
+    Personnel = "TYPE-USER-00001",
+    Livreur = "TYPE-USER-00003",
+    Prestataire = "TYPE-USER-00002"
 }

@@ -3,7 +3,7 @@ import { CategorieLivreurService } from './categorie-livreur.service';
 import { CategorieLivreur } from './categorie-livreur.entity';
 
 @Module({
-  providers: [CategorieLivreurService],
+  providers: [CategorieLivreurService, CategorieLivreur],
   exports:[CategorieLivreur, CategorieLivreurService]
 })
 export class CategorieLivreurModule {}

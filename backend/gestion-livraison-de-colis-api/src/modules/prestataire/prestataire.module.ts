@@ -4,7 +4,7 @@ import { PrestataireController } from './prestataire.controller';
 import { Prestataire } from './prestataire.entity';
 
 @Module({
-  providers: [PrestataireService],
+  providers: [PrestataireService, Prestataire],
   controllers: [PrestataireController],
   exports:[Prestataire, PrestataireService]
 })
