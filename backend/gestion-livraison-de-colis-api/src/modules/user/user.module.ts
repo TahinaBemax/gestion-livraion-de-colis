@@ -8,10 +8,15 @@ import { UserMapper } from './utils/user.mapper';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
 import { Role } from '../role/role.entity';
 import { Prestataire } from '../prestataire/prestataire.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
-  providers: [UserService, UserMapper,],
+  providers: [UserService, UserMapper, JwtService],
   controllers: [UserController],
-  imports: [TypeUtilisateurModule,TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire])]
+  imports: [
+    TypeUtilisateurModule,
+    TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire])
+  ],
+  exports:[UserService, UserMapper]
 })
 export class UserModule {}

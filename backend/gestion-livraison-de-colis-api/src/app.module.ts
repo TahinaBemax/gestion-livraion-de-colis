@@ -7,6 +7,7 @@ import { RoleModule } from './modules/role/role.module';
 import { PrestataireModule } from './modules/prestataire/prestataire.module';
 import { LivreurModule } from './modules/livreur/livreur.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './core/auth/auth.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     UserModule,
     RoleModule,
     PrestataireModule,
-    LivreurModule
+    LivreurModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

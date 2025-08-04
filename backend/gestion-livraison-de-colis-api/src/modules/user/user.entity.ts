@@ -40,14 +40,15 @@ export class User {
     @Column({ nullable: true })
     photo_profil?: string;
 
-    @OneToOne(() => Role)
+    @OneToOne(() => Role, {eager: true})
     @JoinColumn({name: "id_role"})
     role: Role;
 
-    @OneToOne(() => TypeUtilisateur, (typeUtilisateur) => typeUtilisateur.users)
+    @OneToOne(() => TypeUtilisateur, (typeUtilisateur) => typeUtilisateur.users, {eager: true})
     @JoinColumn({name: "id_type_utilisateur"})
     type_utilisateur: TypeUtilisateur;
 
     @OneToOne(() => Prestataire, { nullable: true })
+    @JoinColumn({name: "id_prestataire"})
     prestataire?: Prestataire;
 }

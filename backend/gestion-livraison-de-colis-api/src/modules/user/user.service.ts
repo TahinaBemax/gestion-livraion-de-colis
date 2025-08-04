@@ -1,3 +1,4 @@
+import { JoinColumn } from 'typeorm';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +14,31 @@ export class UserService {
         private readonly userMapper: UserMapper
     ){}
 
+    async filterBy(nom?: string, prenom?: string, role?: string, nomEntreprise?: string): Promise<User[]> {
+        const queryBuilder = this.userRepo.createQueryBuilder('user')
+            .leftJoinAndSelect('user.role', 'role')
+            .leftJoinAndSelect('user.prestataire', 'prestataire')
+            .where('user.est_active = :estActive', { estActive: true });
+
+        if (nom) {
+            queryBuilder.andWhere('user.nom ILIKE :nom', { nom: `%${nom}%` });
+        }
+
+        if (prenom) {
+            queryBuilder.andWhere('user.prenom ILIKE :prenom', { prenom: `%${prenom}%` });
+        }
+
+        if (role) {
+            queryBuilder.andWhere('role.nom_role ILIKE :role', { role: `%${role}%` });
+        }
+
+        if (nomEntreprise) {
+            queryBuilder.andWhere('prestataire.nom_entreprise ILIKE :nomEntreprise', { nomEntreprise: `%${nomEntreprise}%` });
+        }
+
+        return await queryBuilder.getMany();
+    }
+
     async create(create_user: CreateUserDto): Promise<User>{
         const user: User = await this.userMapper.fromDto(create_user);
         const temp_user = this.userRepo.create(user);
@@ -24,10 +50,24 @@ export class UserService {
     }
 
     async findById(id: number): Promise<User> {
-        const user = await this.userRepo.findOneBy({id_utilisateur: id});
+        const user = await this.userRepo.findOne( {
+            where: {id_utilisateur: id}
+        });
 
         if (!user) {
-            throw new NotFoundException(`User id: ${id} is not found`)
+            throw new NotFoundException(`Utilisateur {${id}} introuvable!`)
+        }
+
+        return user;
+    }
+
+    async findByLogin(login: string): Promise<User> {
+        const user = await this.userRepo.findOne({
+            where: {login: login}
+        });
+
+        if (!user) {
+            throw new NotFoundException(`Utilisateur introuvable!`)
         }
 
         return user;

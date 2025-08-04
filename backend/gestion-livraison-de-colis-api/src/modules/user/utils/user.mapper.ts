@@ -8,6 +8,7 @@ import { User } from "../user.entity";
 import { Role } from "src/modules/role/role.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { parse } from "date-fns";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserMapper {
@@ -23,6 +24,7 @@ export class UserMapper {
   async fromDto(dto: CreateUserDto): Promise<User> {
     const user = plainToInstance(User, dto);
     user.telephone = dto.telephone != null ? dto.telephone.replace(/\s+/g, '') : undefined;
+    user.mot_de_passe = await bcrypt.hash(dto.mot_de_passe, 10);
 
     user.date_naissance = parse(dto.date_naissance.toString(), 'dd/MM/yyyy', new Date());
     user.role = await this.roleRepo.findOneOrFail({ where: { id: dto.role } });
