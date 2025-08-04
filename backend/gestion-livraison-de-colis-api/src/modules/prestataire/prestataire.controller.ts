@@ -23,10 +23,10 @@ export class PrestataireController {
         return this.prestataireService.findAll();
     }
 
-    @Get('/filterBy')
-    filterBy(@Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('nomEntreprise') nomEntreprise?:string): Promise<Prestataire[]> {
-        return this.prestataireService.filterBy(nom, prenom, nomEntreprise);
-    }
+    // @Get('/filterBy')
+    // filterBy(@Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('nomEntreprise') nomEntreprise?:string): Promise<Prestataire[]> {
+    //     return this.prestataireService.filterBy(nom, prenom, nomEntreprise);
+    // }
 
     @Get(":id")
     findById(@Param("id") id:number) {

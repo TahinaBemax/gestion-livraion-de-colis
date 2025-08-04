@@ -277,8 +277,8 @@ CHECK(type = 'Livreur' OR type = 'Prestataire' OR type = 'Personnel');
 ALTER TABLE 
    roles 
 ADD CONSTRAINT 
-   role_check 
-CHECK(nom_role = 'Admin' OR nom_role = 'Utilisateur');
+   roles_check 
+CHECK(nom_role = 'Admin' OR nom_role = 'Utilisateur', OR 'Responsable Exploitation');
 
 
 ALTER TABLE 

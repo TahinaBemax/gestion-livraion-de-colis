@@ -31,6 +31,11 @@ export class UserController {
         return this.userService.filterBy(nom, prenom, role, nomEntreprise);
     }
 
+    @Get('prestataires/filterBy')
+    filterPrestataireUsersBy(@Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('nomEntreprise') nomEntreprise?:string): Promise<User[]> {
+        return this.userService.prestataireUsersfilterBy(nom, prenom, nomEntreprise);
+    }
+
     @Get(":id")
     findById(@Param("id") id: number): Promise<User> {
         return this.userService.findById(id);
