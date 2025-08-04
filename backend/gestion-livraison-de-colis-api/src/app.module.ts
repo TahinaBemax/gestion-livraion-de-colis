@@ -8,6 +8,8 @@ import { PrestataireModule } from './modules/prestataire/prestataire.module';
 import { LivreurModule } from './modules/livreur/livreur.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './core/auth/auth.module';
+import { GlobalJwtGuard } from './common/guards/global-jwt.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -37,6 +39,6 @@ import { AuthModule } from './core/auth/auth.module';
     AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, GlobalJwtGuard, RolesGuard],
 })
 export class AppModule {}

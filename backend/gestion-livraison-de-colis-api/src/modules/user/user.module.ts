@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { TypeUtilisateurModule } from './type-utilisateur/type-utilisateur.module';
@@ -8,10 +8,10 @@ import { UserMapper } from './utils/user.mapper';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
 import { Role } from '../role/role.entity';
 import { Prestataire } from '../prestataire/prestataire.entity';
-import { JwtService } from '@nestjs/jwt';
+import { AuthModule } from 'src/core/auth/auth.module';
 
 @Module({
-  providers: [UserService, UserMapper, JwtService],
+  providers: [UserService, UserMapper],
   controllers: [UserController],
   imports: [
     TypeUtilisateurModule,
