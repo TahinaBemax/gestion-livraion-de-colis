@@ -7,7 +7,7 @@ import { CategorieLivreur } from "./categorie-livreur/categorie-livreur.entity";
 export class Livreur {
     @PrimaryGeneratedColumn()
     @Column("id_detail_info_livreur")
-    id_livreur: Number;
+    id_livreur: number;
 
     @Column()
     total_points: number;

@@ -1,0 +1,18 @@
+import { IsBoolean, IsEmpty, IsNumber, IsOptional, IsPositive, isPositive } from "class-validator";
+import { ExistsInDatabase } from "src/common/validators/is-exist-in-database.validator";
+import { CategorieLivreur } from "src/modules/livreur/categorie-livreur/categorie-livreur.entity";
+import { User } from "src/modules/user/user.entity";
+
+export class CreateLivreurDto {
+    @IsBoolean()
+    peut_faire_chargement_colis: boolean;
+    
+    @IsEmpty()
+    qr_code: string;
+    
+    @ExistsInDatabase(CategorieLivreur, 'id_categorie_livreur')
+    id_categorie_livreur: string;
+    
+    @ExistsInDatabase(User, 'id_utilisateur')
+    id_utilisateur: number;
+}
