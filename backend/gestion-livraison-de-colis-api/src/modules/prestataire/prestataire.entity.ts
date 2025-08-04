@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { User } from "../user/user.entity";
 
 @Entity()
@@ -43,6 +43,10 @@ export class Prestataire {
     @Column()
     email: string;
 
+    @Column({nullable: false, default: true})
+    est_active: boolean;
+
     @OneToMany(() => User, (user) => user.prestataire)
+    @JoinColumn({name:"id_utilisateur"})
     users: User[];
 }

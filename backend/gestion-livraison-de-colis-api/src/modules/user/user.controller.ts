@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from 'src/common/dto/create-user-dto';
 import { User } from './user.entity';
@@ -32,7 +32,7 @@ export class UserController {
     }
 
     @Get(":id")
-    findById(id: number): Promise<User> {
+    findById(@Param("id") id: number): Promise<User> {
         return this.userService.findById(id);
     }
 
@@ -42,13 +42,13 @@ export class UserController {
     }
 
     @Put(":id")
-    async activateUser(id: number): Promise<{ message: string }>{
+    async activateUser( @Param("id") id: number): Promise<{ message: string }>{
         this.userService.activateUser(id);
         return Promise.resolve({ message: "Compte Utilisateur activé." });
     }
 
     @Delete(":id")
-    async delete(id:number): Promise<{ message: string }>{
+    async delete(@Param("id") id:number): Promise<{ message: string }>{
         this.userService.delete(id);
         return Promise.resolve({ message: "Compte Utilisateur activé." });
     }
