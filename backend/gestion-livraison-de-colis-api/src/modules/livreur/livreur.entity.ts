@@ -1,12 +1,11 @@
-import { Column, Entity, IntegerType, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "../user/user.entity";
 import { CategorieLivreur } from "./categorie-livreur/categorie-livreur.entity";
 
 
 @Entity("detail_info_livreur")
 export class Livreur {
-    @PrimaryGeneratedColumn()
-    @Column("id_detail_info_livreur")
+    @PrimaryGeneratedColumn({name: "id_detail_info_livreur"})
     id_livreur: number;
 
     @Column()

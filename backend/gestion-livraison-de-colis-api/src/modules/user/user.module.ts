@@ -8,15 +8,16 @@ import { UserMapper } from './utils/user.mapper';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
 import { Role } from '../role/role.entity';
 import { Prestataire } from '../prestataire/prestataire.entity';
-import { AuthModule } from 'src/core/auth/auth.module';
 import { AdminController } from './admin/admin.controller';
 import { PrestataireService } from '../prestataire/prestataire.service';
+import { LivreurModule } from '../livreur/livreur.module';
 
 @Module({
   providers: [UserService, UserMapper, PrestataireService],
   controllers: [UserController, AdminController],
   imports: [
     TypeUtilisateurModule,
+    forwardRef(() => LivreurModule),
     TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire])
   ],
   exports:[UserService, UserMapper]

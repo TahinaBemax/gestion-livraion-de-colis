@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryColumn } from "typeorm";
 import { Livreur } from "../livreur.entity";
 
 @Entity("categorie_livreur")
@@ -10,5 +10,6 @@ export class CategorieLivreur{
     categorie_livreur: string;
 
     @OneToMany(() => Livreur, (livreur) => livreur.categorie_livreur)
+    @JoinColumn({name: "id_livreur"})
     Livreurs: Livreur[];
 }

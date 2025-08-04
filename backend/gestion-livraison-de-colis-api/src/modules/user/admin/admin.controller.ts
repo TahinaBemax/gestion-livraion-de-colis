@@ -7,11 +7,16 @@ import { User } from '../user.entity';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
 import { Prestataire } from 'src/modules/prestataire/prestataire.entity';
 import { PrestataireService } from 'src/modules/prestataire/prestataire.service';
+import { LivreurService } from 'src/modules/livreur/livreur.service';
 
 @Controller('admin')
 @Roles(UserRole.Admin)
 export class AdminController {
-    constructor(private readonly userService: UserService, private readonly prestataireService: PrestataireService){}
+    constructor(
+        private readonly userService: UserService, 
+        private readonly prestataireService: PrestataireService,
+        private readonly livreurService: LivreurService
+    ){}
 
     @Post("/users")
     createUser(@Body() dto: CreateUserDto): Promise<User> {
@@ -75,5 +80,11 @@ export class AdminController {
     @Put("/prestataires/:id/activate")
     activate(@Param('id') id:number){
         return this.prestataireService.activate(id);
+    }
+
+    /* LIVREUR*/
+    @Put("/livreurs")
+    findLivreurs(){
+        return this.livreurService.findAllLivreurs();
     }
 }

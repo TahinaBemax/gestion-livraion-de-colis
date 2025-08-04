@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmpty, IsNumber, IsOptional, IsPositive, isPositive } from "class-validator";
+import { IsBoolean, IsEmpty } from "class-validator";
 import { ExistsInDatabase } from "src/common/validators/is-exist-in-database.validator";
 import { CategorieLivreur } from "src/modules/livreur/categorie-livreur/categorie-livreur.entity";
 import { User } from "src/modules/user/user.entity";

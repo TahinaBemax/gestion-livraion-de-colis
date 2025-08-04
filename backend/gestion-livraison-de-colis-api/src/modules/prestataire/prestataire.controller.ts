@@ -21,6 +21,13 @@ export class PrestataireController {
         return this.prestataireService.findById(id);
     }
 
+    @Put("/:id/livreurs")
+    findLivreurByIdPrestataire(@Param("id") id_prestataire: number){
+        return this.livreurService.findAllLivreursByPrestataire(id_prestataire);
+    }
+
+
+
     @Post("/livreurs")
     createLivreur(@Body() data: CreateLivreurDto){
         return this.livreurService.create(data);

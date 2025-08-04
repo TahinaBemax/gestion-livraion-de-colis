@@ -5,12 +5,16 @@ import { plainToInstance } from 'class-transformer';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';
 import { CategorieLivreur } from './categorie-livreur/categorie-livreur.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class LivreurService {
     constructor(
+        @InjectRepository(Livreur)
         private readonly livreurRepo: Repository<Livreur>, 
+        @InjectRepository(User)
         private readonly userRepo: Repository<User>,
+        @InjectRepository(CategorieLivreur)
         private readonly categorieRepo: Repository<CategorieLivreur>
     ){}
 
@@ -29,6 +33,15 @@ export class LivreurService {
 
     async findAllLivreurs(): Promise<Livreur[]>{
         return this.livreurRepo.find({relations: ["user"]});
+    }
+
+    async findAllLivreursByPrestataire(id:number): Promise<Livreur[]>{
+        return this.livreurRepo
+            .createQueryBuilder('livreur')
+            .leftJoinAndSelect('livreur.user', 'user')
+            .leftJoinAndSelect('user.prestataire', 'prestataire')
+            .where('prestataire.id_prestataire = :id', { id })
+            .getMany();
     }
 
     async findById(id:number): Promise<Livreur>{
