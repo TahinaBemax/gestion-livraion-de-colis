@@ -25,6 +25,25 @@ export class PrestataireService {
         return this.prestataireRepo.find();
     }
 
+    async filterBy(nom?: string, prenom?: string, nomEntreprise?: string): Promise<Prestataire[]> {
+            const queryBuilder = this.prestataireRepo.createQueryBuilder('prestataire')
+                .leftJoinAndSelect('prestataire.users', 'user')
+    
+            if (nom) {
+                queryBuilder.andWhere('user.nom ILIKE :nom', { nom: `%${nom}%` });
+            }
+    
+            if (prenom) {
+                queryBuilder.andWhere('user.prenom ILIKE :prenom', { prenom: `%${prenom}%` });
+            }
+    
+            if (nomEntreprise) {
+                queryBuilder.andWhere('prestataire.nom_entreprise ILIKE :nomEntreprise', { nomEntreprise: `%${nomEntreprise}%` });
+            }
+    
+            return await queryBuilder.getMany();
+    }
+
     async findById(id:number): Promise<Prestataire> {
         const prestataire = await this.prestataireRepo.findOneBy({ id_prestataire: id})
         if(!prestataire) throw new NotFoundException(`Prestataire id:{${id}} introuvable`);

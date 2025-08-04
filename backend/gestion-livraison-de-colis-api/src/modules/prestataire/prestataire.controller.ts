@@ -1,7 +1,8 @@
 import { Prestataire } from 'src/modules/prestataire/prestataire.entity';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { PrestataireService } from './prestataire.service';
+import { User } from '../user/user.entity';
 
 @Controller('prestataires')
 export class PrestataireController {
@@ -20,6 +21,11 @@ export class PrestataireController {
     @Get()
     findAll() {
         return this.prestataireService.findAll();
+    }
+
+    @Get('/filterBy')
+    filterBy(@Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('nomEntreprise') nomEntreprise?:string): Promise<Prestataire[]> {
+        return this.prestataireService.filterBy(nom, prenom, nomEntreprise);
     }
 
     @Get(":id")
