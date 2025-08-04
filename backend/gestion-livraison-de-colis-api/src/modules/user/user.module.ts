@@ -9,10 +9,12 @@ import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
 import { Role } from '../role/role.entity';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { AuthModule } from 'src/core/auth/auth.module';
+import { AdminController } from './admin/admin.controller';
+import { PrestataireService } from '../prestataire/prestataire.service';
 
 @Module({
-  providers: [UserService, UserMapper],
-  controllers: [UserController],
+  providers: [UserService, UserMapper, PrestataireService],
+  controllers: [UserController, AdminController],
   imports: [
     TypeUtilisateurModule,
     TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire])

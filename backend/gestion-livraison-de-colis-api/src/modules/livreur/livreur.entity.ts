@@ -1,4 +1,4 @@
-import { Column, Entity, IntegerType, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, IntegerType, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "../user/user.entity";
 import { CategorieLivreur } from "./categorie-livreur/categorie-livreur.entity";
 
@@ -25,8 +25,10 @@ export class Livreur {
     total_livraison_effectue: number;
 
     @OneToOne(() => CategorieLivreur)
+    @JoinColumn({name: "id_categorie_livreur"})
     categorie_livreur: CategorieLivreur;
 
     @OneToOne(() => User)
+    @JoinColumn({name:"id_utilisateur"})
     user: User;
 }

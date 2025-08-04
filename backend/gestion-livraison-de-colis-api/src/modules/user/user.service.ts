@@ -65,12 +65,16 @@ export class UserService {
     }
 
     findAll():Promise<User[]>{
-        return this.userRepo.findBy({est_active: true});
+        return this.userRepo.find({
+            where: {est_active: true},
+            relations: ["prestataire"]
+        });
     }
 
     async findById(id: number): Promise<User> {
         const user = await this.userRepo.findOne( {
-            where: {id_utilisateur: id}
+            where: {id_utilisateur: id},
+            relations: ["prestataire"]
         });
 
         if (!user) {
