@@ -9,7 +9,7 @@ import { LivreurModule } from '../livreur/livreur.module';
 @Module({
   providers: [PrestataireService, Prestataire],
   controllers: [PrestataireController],
-  exports:[Prestataire, PrestataireService],
+  exports:[PrestataireModule],
   imports: [
     LivreurModule,
     TypeOrmModule.forFeature([Prestataire, User])

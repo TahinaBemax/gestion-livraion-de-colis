@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
 import { CategorieLivreur } from './categorie-livreur/categorie-livreur.entity';
 import { Livreur } from './livreur.entity';
+import { LiveurMapper } from './livreur.mapper';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { Livreur } from './livreur.entity';
     forwardRef(() => UserModule),
     TypeOrmModule.forFeature([Livreur, User, CategorieLivreur])
   ],
-  providers: [LivreurService],
-  exports:[LivreurService]
+  providers: [LivreurService, LiveurMapper],
+  exports:[LivreurService, LiveurMapper]
 })
 export class LivreurModule {}

@@ -19,6 +19,7 @@ CREATE TABLE prestataire(
    code_postal VARCHAR(50)  NOT NULL,
    telephone VARCHAR(16)  NOT NULL,
    email TEXT NOT NULL,
+   est_active BOOLEAN NOT NULL DEFAULT TRUE,
    PRIMARY KEY(id_prestataire),
    UNIQUE(nom_entreprise),
    UNIQUE(NIF),
@@ -89,8 +90,8 @@ CREATE TABLE contrainte_jour_livraison(
    id_contrainte_jour_livraison SERIAL,
    jour TEXT NOT NULL,
    est_livrable BOOLEAN NOT NULL,
-   heure_debut_livraison TIME,
-   heure_fin_livraison TIME,
+   heure_debut TIME,
+   heure_fin TIME,
    id_contrainte_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_contrainte_jour_livraison),
    FOREIGN KEY(id_contrainte_livraison) REFERENCES contraintes_livraison(id_contrainte_livraison)
@@ -134,7 +135,7 @@ CREATE TABLE utilisateurs(
    email TEXT NOT NULL,
    login TEXT NOT NULL,
    mot_de_passe TEXT NOT NULL,
-   est_active CHAR(3)  NOT NULL DEFAULT TRUE,
+   est_active BOOLEAN NOT NULL DEFAULT TRUE,
    photo_profil TEXT,
    id_prestataire INTEGER,
    id_role VARCHAR(50)  NOT NULL,
@@ -180,7 +181,7 @@ CREATE TABLE itineraires_livraison(
 CREATE TABLE detail_info_livreur(
    id_detail_info_liveur SERIAL,
    total_points DOUBLE PRECISION NOT NULL DEFAULT 0,
-   rang_global INTEGER NOT NULL,
+   rang_global INTEGER NOT NULL DEFAULT 0,
    peut_faire_chargement_colis BOOLEAN NOT NULL DEFAULT TRUE,
    qr_code TEXT,
    total_livraison_effectue INTEGER NOT NULL DEFAULT 0,
@@ -264,4 +265,3 @@ CREATE TABLE incident_livraison(
    FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison),
    FOREIGN KEY(id_probleme_livraison) REFERENCES problemes_livraison(id_probleme_livraison)
 );
-

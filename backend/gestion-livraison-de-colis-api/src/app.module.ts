@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './core/auth/auth.module';
 import { GlobalJwtGuard } from './common/guards/global-jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { PointLivraisonModule } from './modules/point-livraison/point-livraison.module';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { RolesGuard } from './common/guards/roles.guard';
     RoleModule,
     PrestataireModule,
     LivreurModule,
-    AuthModule
+    AuthModule,
+    PointLivraisonModule
   ],
   controllers: [AppController],
   providers: [AppService, GlobalJwtGuard, RolesGuard],

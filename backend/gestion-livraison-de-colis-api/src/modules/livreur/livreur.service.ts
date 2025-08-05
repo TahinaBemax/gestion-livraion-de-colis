@@ -6,6 +6,7 @@ import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';
 import { CategorieLivreur } from './categorie-livreur/categorie-livreur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LiveurMapper } from './livreur.mapper';
 
 @Injectable()
 export class LivreurService {
@@ -14,17 +15,14 @@ export class LivreurService {
         private readonly livreurRepo: Repository<Livreur>, 
         @InjectRepository(User)
         private readonly userRepo: Repository<User>,
-        @InjectRepository(CategorieLivreur)
-        private readonly categorieRepo: Repository<CategorieLivreur>
+        private readonly livreurMapper: LiveurMapper
     ){}
 
     async create(dto: CreateLivreurDto): Promise<Livreur> {
-        const livreur: Livreur = plainToInstance(Livreur, dto);
+        const preparedData = this.livreurMapper.prepareData(dto);
+        const livreur = (await preparedData).livreur; 
+        const user = (await preparedData).user;
 
-        const user = await this.getUserByIdIfExist(dto.id_utilisateur);
-        const categorie = await this.getCategorieLivreurByIdIfExist(dto.id_categorie_livreur);
-        
-        livreur.categorie_livreur = categorie;
         livreur.user = user;
 
         const prepared = this.livreurRepo.create(livreur);
@@ -90,18 +88,10 @@ export class LivreurService {
         return this.livreurRepo.save(prepared);
     }
 
-
     private async getUserByIdIfExist(id: number) {
         const user: User = await this.userRepo.findOneByOrFail({id_utilisateur: id});
         if(!user) throw new BadRequestException(`Utilisateur id:${id} Introuvable!`);
 
         return user;
-    }
-
-    private async getCategorieLivreurByIdIfExist(id: string) {
-        const categorieLivreur: CategorieLivreur = await this.categorieRepo.findOneByOrFail({id_categorie_livreur: id});
-        if(!categorieLivreur) throw new BadRequestException(`Utilisateur id:${id} Introuvable!`);
-
-        return categorieLivreur;
     }
 }
