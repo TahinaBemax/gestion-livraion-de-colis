@@ -21,12 +21,17 @@ export class PrestataireController {
         return this.prestataireService.findById(id);
     }
 
-    @Put("/:id/livreurs")
+    @Get("/:id/livreurs")
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     findLivreurByIdPrestataire(@Param("id") id_prestataire: number){
         return this.livreurService.findAllLivreursByPrestataire(id_prestataire);
     }
 
-
+    @Get("/:id/responsable-exploitation")
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+    findResponsableExploitationByIdPrestataire(@Param("id") id_prestataire: number){
+        return this.prestataireService.findReponsableExploitation(id_prestataire);
+    }
 
     @Post("/livreurs")
     createLivreur(@Body() data: CreateLivreurDto){

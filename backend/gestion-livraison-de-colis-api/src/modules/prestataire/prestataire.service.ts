@@ -4,6 +4,7 @@ import { Prestataire } from './prestataire.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
 import { plainToInstance } from 'class-transformer';
+import { User } from '../user/user.entity';
 
 @Injectable()
 export class PrestataireService {
@@ -23,6 +24,10 @@ export class PrestataireService {
 
     async findAll():Promise<Prestataire[]> {
         return this.prestataireRepo.find();
+    }
+
+    async findReponsableExploitation(idPrestataire: number):Promise<User[]> {
+        return (await this.findById(idPrestataire)).users;
     }
 
     async filterBy(nom?: string, prenom?: string, nomEntreprise?: string): Promise<Prestataire[]> {
