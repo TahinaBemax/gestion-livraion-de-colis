@@ -18,8 +18,8 @@ import { LivreurModule } from '../livreur/livreur.module';
   imports: [
     TypeUtilisateurModule,
     forwardRef(() => LivreurModule),
-    TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire])
+    TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire]),
   ],
-  exports:[UserService, UserMapper]
+  exports:[UserService, UserMapper, UserModule]
 })
 export class UserModule {}

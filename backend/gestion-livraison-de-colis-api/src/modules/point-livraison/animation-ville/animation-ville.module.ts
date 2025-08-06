@@ -13,6 +13,6 @@ import { AnimationVille } from './animation-ville.entity';
   ],
   providers: [AnimationVilleService],
   controllers: [AnimationVilleController],
-  exports:[AnimationVilleModule]
+  exports:[AnimationVilleService]
 })
 export class AnimationVilleModule {}

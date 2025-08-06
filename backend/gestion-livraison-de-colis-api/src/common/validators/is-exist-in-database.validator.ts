@@ -1,12 +1,13 @@
 import { registerDecorator, ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { ValidationOptions } from 'class-validator/types/decorator/ValidationOptions';
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @ValidatorConstraint({ name: 'ExistsInDatabase', async: true })
 @Injectable()
 export class ExistsInDatabaseConstraint implements ValidatorConstraintInterface {
-    constructor(private readonly repository: Repository<any>) {}
+    constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
     async validate(value: any, args: ValidationArguments): Promise<boolean> {
         if (!value) {
@@ -16,10 +17,11 @@ export class ExistsInDatabaseConstraint implements ValidatorConstraintInterface 
         const [entityClass, field] = args.constraints;
         
         try {
+            const repo = this.dataSource.getRepository(entityClass);
             const whereCondition = {};
             whereCondition[field] = value;
             
-            const entity = await this.repository.findOne({
+            const entity = await repo.findOne({
                 where: whereCondition
             });
             

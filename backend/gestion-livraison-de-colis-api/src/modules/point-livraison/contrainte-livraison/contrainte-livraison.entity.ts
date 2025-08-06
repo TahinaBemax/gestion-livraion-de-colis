@@ -3,13 +3,13 @@ import { PointLivraison } from "../point-livraison.entity";
 import { ContrainteJourLivraison } from "../contrainte-jour-livraison/contrainte-jour-livraison.entity";
 
 @Entity("contraintes_livraison")
-@Unique(["intutile_contrainte"])
+@Unique(["intitule_contrainte"])
 export class ContrainteLivraison {
     @PrimaryGeneratedColumn()
     id_contrainte_livraison: number;
 
     @Column()
-    intutile_contrainte: string;
+    intitule_contrainte: string;
 
     @Column()
     heure_debut: Date;
@@ -22,9 +22,6 @@ export class ContrainteLivraison {
 
     @Column()
     date_fin: Date;
-
-    @Column()
-    latitude: string;
 
     @Column()
     priorite_contrainte: string;

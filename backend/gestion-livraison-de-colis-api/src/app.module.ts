@@ -11,6 +11,9 @@ import { AuthModule } from './core/auth/auth.module';
 import { GlobalJwtGuard } from './common/guards/global-jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { PointLivraisonModule } from './modules/point-livraison/point-livraison.module';
+import { ExistsInDatabase, ExistsInDatabaseConstraint } from './common/validators/is-exist-in-database.validator';
+import { IsPrestataireExistsInDatabaseConstraint } from './common/validators/is-existing-prestataire';
+import { SharedModule } from './common/validators/sharded-module';
 
 @Module({
   imports: [
@@ -38,9 +41,14 @@ import { PointLivraisonModule } from './modules/point-livraison/point-livraison.
     PrestataireModule,
     LivreurModule,
     AuthModule,
-    PointLivraisonModule
+    PointLivraisonModule,
   ],
   controllers: [AppController],
-  providers: [AppService, GlobalJwtGuard, RolesGuard],
+  providers: [
+    AppService, 
+    GlobalJwtGuard, 
+    RolesGuard,
+  ],
+  exports:[]
 })
 export class AppModule {}

@@ -1,12 +1,9 @@
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsStrongPassword } from "class-validator";
+import { IsBoolean, IsDateString, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsStrongPassword } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsImageFormat } from "src/common/validators/is-image-format";
 import { IsPhoneNumber } from "src/common/validators/is-phone-number";
 import { UserRole } from "src/common/enum/user-role.enum";
 import { TypeUtilisateur } from "src/common/enum/type-utilisateur.enum";
-import { IsExistingPrestataire } from "src/common/validators/is-existing-prestataire";
-import { Transform } from "class-transformer";
-
 export class CreateUserDto {
     @IsNotEmpty()
     nom: string;
@@ -17,8 +14,9 @@ export class CreateUserDto {
     @IsNotEmpty({message: "La civilite est obligatoire. (Madame, Monsieur, etc.)"})
     civilite: string;
 
+    @IsDateString()
     @IsFRDate()
-    date_naissance: Date;
+    date_naissance: string;
 
     @IsPhoneNumber()
     telephone?: string;
@@ -47,6 +45,5 @@ export class CreateUserDto {
     type_utilisateur: string;
 
     @IsOptional()
-    @IsExistingPrestataire()
     prestataire?: number;
 }

@@ -46,7 +46,7 @@ export class Prestataire {
     @Column({nullable: false, default: true})
     est_active: boolean;
 
-    @OneToMany(() => User, (user) => user.prestataire)
+    @OneToMany(() => User, (user) => user.prestataire, {lazy: true})
     @JoinColumn({name:"id_utilisateur"})
     users: User[];
 }

@@ -1,7 +1,6 @@
-import { IsBoolean,IsEmpty } from "class-validator";
-import { ExistsInDatabase } from "src/common/validators/is-exist-in-database.validator";
-import { CategorieLivreur } from "src/modules/livreur/categorie-livreur/categorie-livreur.entity";
+import { IsBoolean, IsEnum, IsNotEmpty } from "class-validator";
 import { CreateUserDto } from "../create-user-dto";
+import { CategorieLivreurEnum } from "src/common/enum/categorie-livreur.enum";
 
 export class CreateLivreurDto {
     user: CreateUserDto;
@@ -9,9 +8,9 @@ export class CreateLivreurDto {
     @IsBoolean()
     peut_faire_chargement_colis: boolean;
     
-    @IsEmpty()
+    @IsNotEmpty()
     qr_code: string;
     
-    @ExistsInDatabase(CategorieLivreur, 'id_categorie_livreur')
+    @IsEnum(CategorieLivreurEnum)
     id_categorie_livreur: string;
 }

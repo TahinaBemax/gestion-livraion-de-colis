@@ -1,20 +1,5 @@
 [
     {
-        "nom": "Rakoto",
-        "prenom": "Andry",
-        "civilite": "Monsieur",
-        "date_naissance": "1992-08-10",
-        "telephone": "+261321234567",
-        "email": "andry.rakoto@example.mg",
-        "login": "arakoto",
-        "mot_de_passe": "StrongPassword2023!",
-        "est_active": true,
-        "photo_profil": "https://example.com/photos/arakoto.jpg",
-        "role": "ROLE-02",
-        "type_utilisateur": "TYPE-USER-00003",
-        "prestataire": 1
-    },
-    {
         "nom": "Rasoa",
         "prenom": "Miora",
         "civilite": "Madame",
@@ -29,6 +14,4 @@
         "type_utilisateur": "TYPE-USER-00002",
         "prestataire": 1
     }
-
-
 ]

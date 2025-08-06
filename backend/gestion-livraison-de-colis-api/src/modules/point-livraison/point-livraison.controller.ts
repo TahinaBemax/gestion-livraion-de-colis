@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { PointLivraisonService } from './point-livraison.service';
 import { PointLivraisonCreateDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -26,11 +26,9 @@ export class PointLivraisonController {
         return this.plService.update(id, data);
     }
 
-    @Put()
+    @Post()
+    @Roles(UserRole.Admin)
     create( @Body() data: PointLivraisonCreateDto){
         return this.plService.create(data);
     }
-
-
-
 }

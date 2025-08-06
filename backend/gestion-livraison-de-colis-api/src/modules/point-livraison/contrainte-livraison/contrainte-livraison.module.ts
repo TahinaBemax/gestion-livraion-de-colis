@@ -11,6 +11,6 @@ import { ContrainteLivraison } from './contrainte-livraison.entity';
   ],
   providers: [ContrainteLivraisonService],
   controllers: [ContrainteLivraisonController],
-  exports:[ContrainteLivraisonModule]
+  exports:[ContrainteLivraisonService]
 })
 export class ContrainteLivraisonModule {}

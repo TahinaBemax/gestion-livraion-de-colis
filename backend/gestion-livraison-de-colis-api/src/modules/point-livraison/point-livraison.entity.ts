@@ -40,11 +40,11 @@ export class PointLivraison {
     @JoinColumn({name: "id_prestataire"})
     prestataire?: Prestataire;
 
-    @OneToMany(() => ContrainteLivraison, (contrainte) => contrainte.point_livraison)
+    @OneToMany(() => ContrainteLivraison, (contrainte) => contrainte.point_livraison, {cascade:true, onUpdate: "CASCADE"})
     @JoinColumn({name: "id_contrainte_livraison"})
     contraintes_livraison?: ContrainteLivraison[];
 
-    @OneToMany(() => AnimationVille, (animation) => animation.point_livraison)
+    @OneToMany(() => AnimationVille, (animation) => animation.point_livraison, {cascade:true, onUpdate: "CASCADE"})
     @JoinColumn({name: "id_animation"})
     animations_ville?: AnimationVille[];
 }

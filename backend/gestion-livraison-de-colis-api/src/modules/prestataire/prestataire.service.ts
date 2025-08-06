@@ -10,7 +10,9 @@ import { User } from '../user/user.entity';
 export class PrestataireService {
     constructor(
         @InjectRepository(Prestataire)
-        private readonly prestataireRepo: Repository<Prestataire>
+        private readonly prestataireRepo: Repository<Prestataire>,
+        @InjectRepository(User)
+        private readonly userRepo: Repository<User>
     ){}
 
     async create(prestataireCreateDto: PrestataireCreateDto): Promise<Prestataire>{
@@ -27,7 +29,12 @@ export class PrestataireService {
     }
 
     async findReponsableExploitation(idPrestataire: number):Promise<User[]> {
-        return (await this.findById(idPrestataire)).users;
+        return this.userRepo.createQueryBuilder('user')
+            .leftJoinAndSelect('user.role', 'role')
+            .leftJoinAndSelect('user.prestataire', 'prestataire')
+            .where('prestataire.id_prestataire = :id', { id: idPrestataire })
+            .andWhere('role.id_role = :roleId', { roleId: 'ROLE-03' })
+            .getMany();
     }
 
     async filterBy(nom?: string, prenom?: string, nomEntreprise?: string): Promise<Prestataire[]> {

@@ -1,5 +1,5 @@
 import { AnimationVilleService } from './animation-ville/animation-ville.service';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PointLivraison } from './point-livraison.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,7 @@ import { PointLivraisonCreateDto } from 'src/common/dto/point-livraison/point-li
 import { plainToInstance } from 'class-transformer';
 import { PrestataireService } from '../prestataire/prestataire.service';
 import { ContrainteLivraisonService } from './contrainte-livraison/contrainte-livraison.service';
+import { Prestataire } from '../prestataire/prestataire.entity';
 
 @Injectable()
 export class PointLivraisonService {
@@ -73,5 +74,29 @@ export class PointLivraisonService {
             const contrainte = await this.animationVilleService.findById(c);
             pointLivraison.animations_ville?.push(contrainte);
         });
+    }
+
+    async assignDeliveryPointsToProvider(prestataire: Prestataire, id_points_livraison:number[]): Promise<{message: string}>{
+        const queryRunner = this.pointLivraisonRep.manager.connection.createQueryRunner();
+
+        //start a transaction
+        await queryRunner.startTransaction();
+        try {
+            const pls = await this.pointLivraisonRep.findBy({ id_point_livraison: In(id_points_livraison) });
+            pls.forEach(pl => {
+                pl.prestataire = prestataire;
+            });
+
+            await queryRunner.manager.save(PointLivraison, pls);
+
+            await queryRunner.commitTransaction();
+
+            return {message: "Points de livraison rattachés avec succes!"};
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
     }
 }
