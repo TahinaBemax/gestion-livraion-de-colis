@@ -14,6 +14,7 @@ import { PointLivraisonModule } from './modules/point-livraison/point-livraison.
 import { ExistsInDatabase, ExistsInDatabaseConstraint } from './common/validators/is-exist-in-database.validator';
 import { IsPrestataireExistsInDatabaseConstraint } from './common/validators/is-existing-prestataire';
 import { SharedModule } from './common/validators/sharded-module';
+import { CsvImportModule } from './modules/csv-import/csv-import.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SharedModule } from './common/validators/sharded-module';
     LivreurModule,
     AuthModule,
     PointLivraisonModule,
+    CsvImportModule,
   ],
   controllers: [AppController],
   providers: [

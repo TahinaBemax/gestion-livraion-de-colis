@@ -66,7 +66,7 @@ export class PrestataireController {
     }
 
     @Get("/:id/points-livraison")
-    @Roles(UserRole.Admin)
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     async getProviderDeliveryPoints(@Param("id") id: number){
         return this.plService.findByPrestataire(id);
     }
