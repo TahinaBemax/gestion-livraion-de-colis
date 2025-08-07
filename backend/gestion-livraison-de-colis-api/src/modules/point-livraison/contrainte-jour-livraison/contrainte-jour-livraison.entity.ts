@@ -10,10 +10,10 @@ export class ContrainteJourLivraison {
     est_livrable: boolean;
 
     @Column()
-    heure_debut: Date;
+    heure_debut: string;
 
     @Column()
-    heure_fin: Date;
+    heure_fin: string;
     
     @OneToOne(() => ContrainteLivraison)
     @JoinColumn({name: "id_contrainte_livraison"})

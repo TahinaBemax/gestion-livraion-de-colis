@@ -5,6 +5,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { GlobalJwtGuard } from './common/guards/global-jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 
 async function bootstrap() {
@@ -18,6 +19,15 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalGuards(globalJwtGuard, rolesGuard);
+
+  const config = new DocumentBuilder()
+    .setTitle('Gestion de livraison de colis')
+    .setDescription('Projet de stage pour obtenir le diplôme licence en developpement web et design.')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document); // 'api' is the path where the docs will be accessible
+
   
   await app.listen(process.env.PORT ?? 3000);
 }

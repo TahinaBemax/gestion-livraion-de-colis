@@ -2,6 +2,7 @@ import { UserService } from './../../modules/user/user.service';
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { LoginResponse } from 'src/common/dto/auth/login-response-dto';
 @Injectable()
 export class AuthService {
     constructor
@@ -21,15 +22,19 @@ export class AuthService {
         return null;
     }
 
-    async login(user: any) {
+    login(user: any): LoginResponse {
         const payload = {
             username: user.login, 
             sub: user.id_utilisateur, 
             role: user.role?.id
         };
 
-        return {
-            access_token: this.jwtService.sign(payload),
-        }
+        const access_token = this.jwtService.sign(payload);
+        const loginReponse: LoginResponse = new LoginResponse();
+        
+        loginReponse.access_token = access_token;
+        loginReponse.user = this.userService;
+
+        return loginReponse;
     }
 }

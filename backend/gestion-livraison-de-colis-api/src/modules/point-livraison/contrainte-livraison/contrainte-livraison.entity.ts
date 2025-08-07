@@ -12,10 +12,10 @@ export class ContrainteLivraison {
     intitule_contrainte: string;
 
     @Column()
-    heure_debut: Date;
+    heure_debut: string;
 
     @Column()
-    heure_fin: Date;
+    heure_fin: string;
 
     @Column()
     date_debut: Date;
@@ -30,7 +30,7 @@ export class ContrainteLivraison {
     @JoinColumn({name: "id_point_livraison"})
     point_livraison?: PointLivraison;
 
-    @OneToMany(() => ContrainteJourLivraison, (contrainte) => contrainte.contrainte_livraison)
+    @OneToMany(() => ContrainteJourLivraison, (contrainte) => contrainte.contrainte_livraison, {eager: true, cascade: true, onUpdate: "CASCADE"})
     @JoinColumn({name: "id_contrainte_jour_livraison"})
     contrainte_jour_livraisons?: ContrainteJourLivraison[];
 }
