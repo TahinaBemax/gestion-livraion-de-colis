@@ -33,7 +33,7 @@ export class AuthService {
         const loginReponse: LoginResponse = new LoginResponse();
         
         loginReponse.access_token = access_token;
-        loginReponse.user = this.userService;
+        loginReponse.user = user;
 
         return loginReponse;
     }
