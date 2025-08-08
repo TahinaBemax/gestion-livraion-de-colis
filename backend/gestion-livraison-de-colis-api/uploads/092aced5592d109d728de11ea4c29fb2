@@ -1,6 +1,0 @@
-intitule_contrainte,heure_debut,heure_fin,date_debut,date_fin,priorite_contrainte,numero_magasin
-Limited Delivery Zone,09:00,18:00,01/09/2025,30/09/2025,1,M123
-No Deliveries After 6PM,10:00,18:00,01/09/2025,30/09/2025,2,M124
-Holiday Delivery Restriction,09:00,17:00,25/12/2025,25/12/2025,2,M125
-Weekend Only Delivery,10:00,20:00,01/10/2025,31/10/2025,3,M126
-No Deliveries on Sundays,08:00,17:00,01/11/2025,30/11/2025,1,M127

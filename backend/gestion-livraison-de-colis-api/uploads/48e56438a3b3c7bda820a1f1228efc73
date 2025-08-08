@@ -1,6 +1,0 @@
-numero_magasin,nom_rue,departement,ville,pays,latitude,longitude,code_postal,complement_adresse,nom_prestataire
-M123,10 Rue de Paris,75,Paris,France,48.8566,2.3522,75001,Near Eiffel Tower,Fast Delivery
-M124,5 Avenue des Champs,75,Paris,France,48.8708,2.3073,75008,Near Arc de Triomphe,Quick Service
-M125,1 Boulevard de la République,69,Lyon,France,45.7570,4.8320,69001,Near City Center,Speedy Logistics
-M126,22 Rue de Bretagne,59,Lille,France,50.6292,3.0573,59000,In the Old Town,Delivery Masters
-M127,33 Rue du Commerce,13,Marseille,France,43.2965,5.3698,13001,Near Vieux-Port,Marseille Express

@@ -1,18 +1,22 @@
 import { PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, Entity, Timestamp } from "typeorm";
 import { ContrainteLivraison } from "../contrainte-livraison/contrainte-livraison.entity";
+import { timestamp } from "rxjs";
 
 @Entity("contrainte_jour_livraison")
 export class ContrainteJourLivraison {
     @PrimaryGeneratedColumn()
     id_contrainte_jour_livraison: number;
+
+    @Column()
+    jour:string;
     
     @Column()
     est_livrable: boolean;
 
-    @Column()
+    @Column({type: "time"})
     heure_debut: string;
 
-    @Column()
+    @Column({type: "time"})
     heure_fin: string;
     
     @OneToOne(() => ContrainteLivraison)

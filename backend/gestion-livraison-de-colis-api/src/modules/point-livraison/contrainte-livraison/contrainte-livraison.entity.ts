@@ -11,11 +11,11 @@ export class ContrainteLivraison {
     @Column()
     intitule_contrainte: string;
 
-    @Column()
-    heure_debut: string;
+    @Column({nullable: true, type: "time"})
+    heure_debut?: string;
 
-    @Column()
-    heure_fin: string;
+    @Column({nullable: true, type: "time"})
+    heure_fin?: string;
 
     @Column()
     date_debut: Date;

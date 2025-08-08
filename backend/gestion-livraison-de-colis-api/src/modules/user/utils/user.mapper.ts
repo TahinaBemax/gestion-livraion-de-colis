@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { CreateUserDto } from "src/common/dto/create-user-dto";
-import { Prestataire } from "src/modules/prestataire/prestataire.entity";
 import { Repository } from "typeorm";
 import { TypeUtilisateur } from "../type-utilisateur/type-utilisateur.entity";
 import { User } from "../user.entity";
