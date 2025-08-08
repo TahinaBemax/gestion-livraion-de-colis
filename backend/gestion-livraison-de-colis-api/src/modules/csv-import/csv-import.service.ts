@@ -9,22 +9,10 @@ import { PointLivraison } from "../point-livraison/point-livraison.entity";
 import { CsvParser, ParsedCsv } from "./parser/csv.parser";
 import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
-import { format, isValid, parse } from "date-fns";
+import { isValid, parse } from "date-fns";
+import { ImportCsvRestult } from "src/common/dto/csv-import/import-result-dto";
 
-export interface ImportCsvRestult {
-  is_success: boolean;
-  errors: {
-    points_livraison: any[],
-    contraintes_livraison: any[],
-    contraintes_jour_livraison: any[]
-  };
-  success_rows: {
-    points_livraison: PointLivraisonCsvDto[],
-    contraintes_livraison: ContrainteLivraisonCsvDto[],
-    contraintes_jour_livraison: ContrainteJourLivraisonCsvDto[]
-  };
-  message: string;
-}
+
 
 @Injectable()
 export class CsvImportService {
@@ -157,8 +145,6 @@ export class CsvImportService {
         const ck = plainToInstance(ContrainteLivraison, c);
         ck.date_debut = date_debut;
         ck.date_fin = date_fin;
-        // ck.heure_debut = (!ck.heure_debut || ck.heure_debut.trim() == '' || ck.heure_debut.toLowerCase() == "null") ? undefined: ck.heure_debut;
-        // ck.heure_fin = (!ck.heure_fin || ck.heure_fin.trim() == '' || ck.heure_fin.toLowerCase() == "null") ? undefined: ck.heure_fin;
 
         ck.contrainte_jour_livraisons = dailyConstraints
           .filter(dc => dc.intitule_contrainte === c.intitule_contrainte)
