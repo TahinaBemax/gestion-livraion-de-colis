@@ -1,18 +1,30 @@
-import { IsBoolean, IsEmpty } from "class-validator";
-import { ExistsInDatabase } from "src/common/validators/is-exist-in-database.validator";
-import { CategorieLivreur } from "src/modules/livreur/categorie-livreur/categorie-livreur.entity";
-import { User } from "src/modules/user/user.entity";
+import { IsBoolean, IsEnum, IsNotEmpty } from "class-validator";
+import { CreateUserDto } from "../create-user-dto";
+import { CategorieLivreurEnum } from "src/common/enum/categorie-livreur.enum";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateLivreurDto {
+    @ApiProperty({
+        type: CreateUserDto,
+        example: {nom: "tahina", prenom:"bemax", etc:"..."}
+    })
+    user: CreateUserDto;
+
     @IsBoolean()
+    @ApiProperty({
+        example: true
+    })
     peut_faire_chargement_colis: boolean;
     
-    @IsEmpty()
+    @IsNotEmpty()
+    @ApiProperty({
+        example: "qr_code_12132343"
+    })
     qr_code: string;
     
-    @ExistsInDatabase(CategorieLivreur, 'id_categorie_livreur')
+    @IsEnum(CategorieLivreurEnum)
+    @ApiProperty({
+        example: "CAT-LIVREUR-00001"
+    })
     id_categorie_livreur: string;
-    
-    @ExistsInDatabase(User, 'id_utilisateur')
-    id_utilisateur: number;
 }

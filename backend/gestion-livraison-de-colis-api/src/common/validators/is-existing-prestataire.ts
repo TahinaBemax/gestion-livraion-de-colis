@@ -1,32 +1,38 @@
-import { Prestataire } from './../../modules/prestataire/prestataire.entity';
-import { registerDecorator, ValidationArguments } from 'class-validator';
+import { Injectable } from '@nestjs/common';
+import { registerDecorator, ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { ValidationOptions } from 'class-validator/types/decorator/ValidationOptions';
+import { PrestataireService } from 'src/modules/prestataire/prestataire.service';
 
-export function IsExistingPrestataire(validationOptions?: ValidationOptions){
-    const prestataires: Prestataire[] = [];
-    
+@ValidatorConstraint({ name: 'IsPrestataireExistsInDatabase', async: true })
+@Injectable()
+export class IsPrestataireExistsInDatabaseConstraint implements ValidatorConstraintInterface {
+    constructor(private readonly prestataireService: PrestataireService) {}
+
+    async validate(value: any, args: ValidationArguments): Promise<boolean> {
+        if (!value) return false;
+
+        try {
+            const prestataire = await this.prestataireService.findById(value);
+
+            return !!prestataire;
+        } catch (error) {
+            console.error('IsPrestataireExistsInDatabase validation error:', error);
+            return false;
+        }
+    }
+
+    defaultMessage(args: ValidationArguments): string {
+        return `Prestataire id:'${args.value}' n'exist pas`;
+    }
+}
+
+export function IsExistingPrestataire(validationOptions?: ValidationOptions) {
     return function (object: Object, propertyName: string) {
         registerDecorator({
-            name: 'IsExistingPrestataire',
-            target:object.constructor,
-            propertyName,
+            target: object.constructor,
+            propertyName: propertyName,
             options: validationOptions,
-            validator: {
-                validate(value: any, args: ValidationArguments){
-                    if(typeof value !== "string") {
-                        value.toString();
-                    };
-
-                    prestataires.forEach(e => {
-                        if(parseInt(value) == e.id_prestataire) return true;
-                    });
-
-                    return false;
-                },
-                defaultMessage(){
-                    return `Prestataire introuvable!`;
-                },
-            },
-        })
-    }
+            validator: IsPrestataireExistsInDatabaseConstraint,
+        });
+    };
 }

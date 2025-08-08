@@ -10,6 +10,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './core/auth/auth.module';
 import { GlobalJwtGuard } from './common/guards/global-jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { PointLivraisonModule } from './modules/point-livraison/point-livraison.module';
+import { ExistsInDatabase, ExistsInDatabaseConstraint } from './common/validators/is-exist-in-database.validator';
+import { IsPrestataireExistsInDatabaseConstraint } from './common/validators/is-existing-prestataire';
+import { SharedModule } from './common/validators/sharded-module';
+import { CsvImportModule } from './modules/csv-import/csv-import.module';
 
 @Module({
   imports: [
@@ -36,9 +41,16 @@ import { RolesGuard } from './common/guards/roles.guard';
     RoleModule,
     PrestataireModule,
     LivreurModule,
-    AuthModule
+    AuthModule,
+    PointLivraisonModule,
+    CsvImportModule,
   ],
   controllers: [AppController],
-  providers: [AppService, GlobalJwtGuard, RolesGuard],
+  providers: [
+    AppService, 
+    GlobalJwtGuard, 
+    RolesGuard,
+  ],
+  exports:[]
 })
 export class AppModule {}

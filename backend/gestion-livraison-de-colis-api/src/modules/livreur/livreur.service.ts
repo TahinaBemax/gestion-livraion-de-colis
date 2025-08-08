@@ -6,6 +6,7 @@ import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';
 import { CategorieLivreur } from './categorie-livreur/categorie-livreur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LiveurMapper } from './livreur.mapper';
 
 @Injectable()
 export class LivreurService {
@@ -14,17 +15,17 @@ export class LivreurService {
         private readonly livreurRepo: Repository<Livreur>, 
         @InjectRepository(User)
         private readonly userRepo: Repository<User>,
-        @InjectRepository(CategorieLivreur)
-        private readonly categorieRepo: Repository<CategorieLivreur>
+        private readonly livreurMapper: LiveurMapper
     ){}
 
     async create(dto: CreateLivreurDto): Promise<Livreur> {
-        const livreur: Livreur = plainToInstance(Livreur, dto);
-
-        const user = await this.getUserByIdIfExist(dto.id_utilisateur);
-        const categorie = await this.getCategorieLivreurByIdIfExist(dto.id_categorie_livreur);
+        const preparedData = this.livreurMapper.prepareData(dto);
+        const user = (await preparedData).user;
+        const prestataire = await user.prestataire;
         
-        livreur.categorie_livreur = categorie;
+        if(!prestataire?.est_active) throw new BadRequestException("Compte Prestataire désactivé ne peut pas créer un Livreur!");
+        
+        const livreur = (await preparedData).livreur; 
         livreur.user = user;
 
         const prepared = this.livreurRepo.create(livreur);
@@ -48,7 +49,7 @@ export class LivreurService {
         const livreur = await this.livreurRepo.findOne({
             where: {id_livreur: id},
             relations: ["user"]
-    });
+        });
 
         if(!livreur) throw new NotFoundException(`Livreur id:${id} Introuvable`);
         return livreur;
@@ -56,7 +57,8 @@ export class LivreurService {
 
     async desactivateAccount(id_prestataire:number, id: number): Promise<{message: string}>{
         const matched = await this.findById(id);
-        if(id_prestataire !== matched.user.prestataire?.id_prestataire) 
+        const prestataire = await matched.user.prestataire;
+        if(id_prestataire != prestataire?.id_prestataire) 
             throw new UnauthorizedException("Vous n'avez pas le droit de modifier ce livreur!");
 
         if(matched.user.est_active){
@@ -69,7 +71,8 @@ export class LivreurService {
 
     async activateAccount(id_prestataire:number, id: number): Promise<{message: string}>{
         const matched = await this.findById(id);
-        if(id_prestataire !== matched.user.prestataire?.id_prestataire) 
+        const prestataire = await matched.user.prestataire;
+        if(id_prestataire != prestataire?.id_prestataire) 
             throw new UnauthorizedException("Vous n'avez pas le droit de modifier ce livreur!");
 
         if(!matched.user.est_active){
@@ -77,31 +80,23 @@ export class LivreurService {
             this.userRepo.save(matched.user);
         }
 
-        return {message: "Compte Livreur désactivé avec succés!"};
+        return {message: "Compte Livreur activé avec succés!"};
     }
 
     async update(id_prestataire: number, livreur: Livreur):Promise<Livreur> {
         const matched = await this.findById(livreur.id_livreur);
 
-        if(id_prestataire !== matched.user.prestataire?.id_prestataire) 
+        if(id_prestataire !== (await matched.user.prestataire)?.id_prestataire) 
             throw new BadRequestException("Vous n'avez pas le droit de modifier ce livreur!");
 
         const prepared = this.livreurRepo.create(livreur);
         return this.livreurRepo.save(prepared);
     }
 
-
     private async getUserByIdIfExist(id: number) {
         const user: User = await this.userRepo.findOneByOrFail({id_utilisateur: id});
         if(!user) throw new BadRequestException(`Utilisateur id:${id} Introuvable!`);
 
         return user;
-    }
-
-    private async getCategorieLivreurByIdIfExist(id: string) {
-        const categorieLivreur: CategorieLivreur = await this.categorieRepo.findOneByOrFail({id_categorie_livreur: id});
-        if(!categorieLivreur) throw new BadRequestException(`Utilisateur id:${id} Introuvable!`);
-
-        return categorieLivreur;
     }
 }

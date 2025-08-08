@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import {
   registerDecorator,
   ValidationOptions,
@@ -14,10 +15,18 @@ export function IsFRDate(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: any, args: ValidationArguments) {
-          if (typeof value !== 'string') return false;
+          if (typeof value !== 'string') {
+            throw new BadRequestException(`Le champ ${propertyName} doit être une chaîne de caractères`);
+          }
 
           const parsed = parse(value, 'dd/MM/yyyy', new Date());
-          return isValid(parsed) && format(parsed, 'dd/MM/yyyy') === value;
+          const isValidDate = isValid(parsed) && format(parsed, 'dd/MM/yyyy') === value;
+          
+          if (!isValidDate) {
+            throw new BadRequestException(`Le format de la date pour ${propertyName} doit être en dd/MM/yyyy. Valeur reçue: ${value}`);
+          }
+          
+          return true;
         },
         defaultMessage() {
           return 'Le format de la date doit être en dd/MM/yyyy';

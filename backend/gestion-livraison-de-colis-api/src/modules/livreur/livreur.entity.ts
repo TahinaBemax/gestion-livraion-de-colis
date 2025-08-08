@@ -5,7 +5,7 @@ import { CategorieLivreur } from "./categorie-livreur/categorie-livreur.entity";
 
 @Entity("detail_info_livreur")
 export class Livreur {
-    @PrimaryGeneratedColumn({name: "id_detail_info_livreur"})
+    @PrimaryGeneratedColumn()
     id_livreur: number;
 
     @Column()
@@ -23,11 +23,11 @@ export class Livreur {
     @Column()
     total_livraison_effectue: number;
 
-    @OneToOne(() => CategorieLivreur)
+    @OneToOne(() => CategorieLivreur, {eager: true})
     @JoinColumn({name: "id_categorie_livreur"})
     categorie_livreur: CategorieLivreur;
 
-    @OneToOne(() => User)
+    @OneToOne(() => User, { cascade: true, onUpdate: "CASCADE" })
     @JoinColumn({name:"id_utilisateur"})
     user: User;
 }
