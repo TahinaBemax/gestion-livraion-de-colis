@@ -1,11 +1,14 @@
 import { BadRequestException, Controller, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { ImportBodyDto } from 'src/common/dto/csv-import/import-body-dto';
 import { CsvImportService } from './csv-import.service';
 import { ImportCsvRestult } from 'src/common/dto/csv-import/import-result-dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRole } from 'src/common/enum/user-role.enum';
 
 @Controller('csv-import')
+@Roles(UserRole.Admin)
 export class CsvImportController {
     constructor(private readonly csvImportService: CsvImportService) {}
 
@@ -22,6 +25,7 @@ export class CsvImportController {
     @ApiBadRequestResponse({description: "Données Invalides"})
     @ApiCreatedResponse({type: ImportCsvRestult})
     @ApiInternalServerErrorResponse({description: "Internal Server Error"})
+    @ApiUnauthorizedResponse({description: "Seul Utilisateur Admin a l'accés"})
     async uploadCsv(@UploadedFiles() files: ImportBodyDto)
     {
         if(!files.point_livraison_fichier) throw new BadRequestException("Le point de livraison est obligatoire");
