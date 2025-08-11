@@ -36,7 +36,7 @@ export class ContrainteLivraisonController {
     @ApiBody({type: ContrainteLivraisonDto})
     @ApiCreatedResponse({type: ContrainteLivraisonSwaggerDto})
     @ApiBadRequestResponse({description: "Données Invalides"})
-    update(@Query(":id") id: number, @Body() dto: ContrainteLivraisonDto) {
+    update(@Param("id") id: number, @Body() dto: ContrainteLivraisonDto) {
         return this.contrainteService.update(id, dto);
     }
 }

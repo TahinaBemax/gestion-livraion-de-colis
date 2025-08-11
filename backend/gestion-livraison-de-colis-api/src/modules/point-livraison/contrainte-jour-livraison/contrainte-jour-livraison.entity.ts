@@ -21,5 +21,5 @@ export class ContrainteJourLivraison {
     
     @OneToOne(() => ContrainteLivraison)
     @JoinColumn({name: "id_contrainte_livraison"})
-    contrainte_livraison?: ContrainteLivraison;
+    contrainte_livraison: ContrainteLivraison;
 }

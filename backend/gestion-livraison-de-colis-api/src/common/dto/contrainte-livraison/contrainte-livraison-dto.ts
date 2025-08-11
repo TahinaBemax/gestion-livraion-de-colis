@@ -5,6 +5,11 @@ import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
 
 export class ContrainteLivraisonDto {
+    @IsOptional()
+    @IsNumber()
+    @ApiProperty({example: 1})
+    id_contrainte_livraison?: number;
+
     @IsNotEmpty()
     @ApiProperty({
         example: "Livraison Weekend impossible",

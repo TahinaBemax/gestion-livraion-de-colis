@@ -46,11 +46,23 @@ export class ContrainteLivraisonService {
         return this.contrainteLivaisonRep.save(prepare);
     }
 
-    async update(id: number, dto: ContrainteLivraisonDto):Promise<ContrainteLivraison>{
-        const existing = await this.findById(id);
-        if (!existing) throw new NotFoundException("Contrainte Livraison avec id:${id} est introuvable!");
+    async update(id: number, dto: ContrainteLivraisonDto): Promise<ContrainteLivraison> {
+        if (!dto || !id) throw new BadRequestException("Données Invalides");
 
-        return this.save(dto);
+        const existing = await this.findById(id);
+        if (!existing) throw new NotFoundException(`Contrainte Livraison avec id:${id} est introuvable!`);
+
+        const pl = await this.getPointLivraison(dto.id_point_livraison);
+        const contrainte: ContrainteLivraison = plainToInstance(ContrainteLivraison, dto);
+        
+        contrainte.contrainte_jour_livraisons = await this.getContraintesJoursLivraisons(dto.id_contraintes_jour_livraison);
+        contrainte.point_livraison = pl;
+
+        // Update the existing entity with new values
+        Object.assign(existing, contrainte);
+        existing.id_contrainte_livraison = id;
+        
+        return this.contrainteLivaisonRep.save(existing);
     }
 
 
@@ -61,7 +73,7 @@ export class ContrainteLivraisonService {
     }
 
     private async getContraintesJoursLivraisons(ids?: number[]): Promise<ContrainteJourLivraison[]|undefined> {
-        if(!ids) return ids;
+        if(!ids) return [];
 
         return Promise.all(ids.map(id => {
             return this.contrainteJourService.findById(id)
