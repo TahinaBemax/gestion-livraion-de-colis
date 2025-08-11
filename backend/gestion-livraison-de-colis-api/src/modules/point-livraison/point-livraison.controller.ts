@@ -22,6 +22,7 @@ export class PointLivraisonController {
     }
 
     @Put("/:id")
+    @Roles(UserRole.Admin)
     update(@Param("id") id: number, @Body() data: PointLivraisonCreateDto){
         return this.plService.update(id, data);
     }
