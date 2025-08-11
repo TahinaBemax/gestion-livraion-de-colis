@@ -1,7 +1,7 @@
 import { AnimationVilleService } from './animation-ville/animation-ville.service';
 import { In, Repository } from 'typeorm';
 import { PointLivraison } from './point-livraison.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PointLivraisonCreateDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
 import { plainToInstance } from 'class-transformer';
@@ -15,6 +15,7 @@ export class PointLivraisonService {
         @InjectRepository(PointLivraison)
         private readonly pointLivraisonRep: Repository<PointLivraison>,
         private readonly prestataireService: PrestataireService,
+        @Inject(forwardRef(() => ContrainteLivraisonService))
         private readonly containteLivraisonService: ContrainteLivraisonService,
         private readonly animationVilleService: AnimationVilleService
     ){}

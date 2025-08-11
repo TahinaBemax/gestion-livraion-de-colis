@@ -13,6 +13,6 @@ import { ContrainteJourLivraison } from './contrainte-jour-livraison.entity';
   ],
   providers: [ContrainteJourLivraisonService],
   controllers: [ContrainteJourLivraisonController],
-  exports:[ContrainteJourLivraisonModule]
+  exports:[ContrainteJourLivraisonService]
 })
 export class ContrainteJourLivraisonModule {}

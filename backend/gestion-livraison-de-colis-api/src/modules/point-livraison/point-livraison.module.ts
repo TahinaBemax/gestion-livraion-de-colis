@@ -11,13 +11,12 @@ import { PointLivraison } from './point-livraison.entity';
 import { PrestataireModule } from '../prestataire/prestataire.module';
 import { PrestataireService } from '../prestataire/prestataire.service';
 import { AnimationVilleService } from './animation-ville/animation-ville.service';
-import { ContrainteLivraisonService } from './contrainte-livraison/contrainte-livraison.service';
 import { User } from '../user/user.entity';
 import { PointLivraisonService } from './point-livraison.service';
 
 @Module({
   imports: [
-    ContrainteLivraisonModule, 
+    forwardRef(() => ContrainteLivraisonModule), 
     ContrainteJourLivraisonModule,
     forwardRef(() => PrestataireModule),
     forwardRef(() => AnimationVilleModule),
@@ -25,8 +24,7 @@ import { PointLivraisonService } from './point-livraison.service';
   ],
   providers: [
     PointLivraisonService,
-    PrestataireService, 
-    ContrainteLivraisonService,
+    PrestataireService,
     AnimationVilleService
   ],
   controllers: [PointLivraisonController],

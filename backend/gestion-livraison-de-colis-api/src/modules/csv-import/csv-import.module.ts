@@ -13,28 +13,18 @@ import { Prestataire } from '../prestataire/prestataire.entity';
 import { ContrainteJourLivraisonService } from '../point-livraison/contrainte-jour-livraison/contrainte-jour-livraison.service';
 import { ContrainteLivraisonService } from '../point-livraison/contrainte-livraison/contrainte-livraison.service';
 import { User } from '../user/user.entity';
-
+import { ContrainteJourLivraison } from '../point-livraison/contrainte-jour-livraison/contrainte-jour-livraison.entity';
 @Module({
   imports: [
     MulterModule.register({
       dest: "./uploads"
     }),
     TypeOrmModule.forFeature([
-      PointLivraison,
-      AnimationVille, 
-      ContrainteLivraison, 
-      ContrainteLivraison, 
-      Prestataire,
-      User
+      PointLivraison
     ])
   ],
   providers: [
-    CsvImportService, 
-    PointLivraisonService,
-    PrestataireService,
-    ContrainteJourLivraisonService,
-    AnimationVilleService,
-    ContrainteLivraisonService,
+    CsvImportService
   ],
   controllers: [CsvImportController]
 })
