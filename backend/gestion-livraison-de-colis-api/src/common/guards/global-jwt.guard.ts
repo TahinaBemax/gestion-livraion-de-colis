@@ -20,6 +20,10 @@ export class GlobalJwtGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
+    if(request.method === 'OPTIONS') {  
+      return true;
+    }
+    
     const token = this.extractTokenFromHeader(request);
     
     if (!token) {

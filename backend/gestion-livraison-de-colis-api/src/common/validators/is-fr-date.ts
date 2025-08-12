@@ -16,7 +16,11 @@ export function IsFRDate(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: any, args: ValidationArguments) {
           if (typeof value !== 'string') {
-            throw new BadRequestException(`Le champ ${propertyName} doit être une chaîne de caractères`);
+            try {
+              value = value.toString();
+            } catch (error) {
+              throw new BadRequestException(`Le champ ${propertyName} doit être une chaîne de caractères`);
+            }
           }
 
           const parsed = parse(value, 'dd/MM/yyyy', new Date());

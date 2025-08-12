@@ -15,6 +15,7 @@ import { ExistsInDatabase, ExistsInDatabaseConstraint } from './common/validator
 import { IsPrestataireExistsInDatabaseConstraint } from './common/validators/is-existing-prestataire';
 import { SharedModule } from './common/validators/sharded-module';
 import { CsvImportModule } from './modules/csv-import/csv-import.module';
+import { ContrainteAnimationVilleModule } from './modules/contrainte-animation-ville/contrainte-animation-ville.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { CsvImportModule } from './modules/csv-import/csv-import.module';
     AuthModule,
     PointLivraisonModule,
     CsvImportModule,
+    ContrainteAnimationVilleModule,
   ],
   controllers: [AppController],
   providers: [

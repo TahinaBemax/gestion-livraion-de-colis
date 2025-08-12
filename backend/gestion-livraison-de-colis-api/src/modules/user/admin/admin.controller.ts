@@ -12,6 +12,7 @@ import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerEr
 import { UserSwaggerDto } from 'src/common/swagger-dto/user/user-swagger-dto';
 import { PrestataireSwaggerDto } from 'src/common/swagger-dto/prestataire/prestataire-swagger-dto';
 import { LivreurSwaggerDto } from 'src/common/swagger-dto/livreur/livreur-swagger-dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags("admin")
 @Controller('admin')
@@ -23,6 +24,7 @@ export class AdminController {
         private readonly livreurService: LivreurService
     ){}
 
+    @Public()
     @Post("/users")
     @ApiBody({type: CreateUserDto})
     @ApiOperation({summary: "Crée un utilisateur pour Tempo One ou pour un Prestataire"})

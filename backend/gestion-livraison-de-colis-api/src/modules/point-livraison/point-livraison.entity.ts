@@ -2,8 +2,9 @@ import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn
 import { Prestataire } from "../prestataire/prestataire.entity";
 import { ContrainteLivraison } from "./contrainte-livraison/contrainte-livraison.entity";
 import { AnimationVille } from "./animation-ville/animation-ville.entity";
+import { ContrainteAnimationVille } from "../contrainte-animation-ville/contrainte-animation-ville.entity";
 
-@Entity("points_livraison")
+@Entity("points_livraisons")
 @Unique(["numero_magasin"])
 export class PointLivraison {
     forEach(arg0: (pl: any) => void) {
@@ -47,7 +48,7 @@ export class PointLivraison {
     @JoinColumn({name: "id_contrainte_livraison"})
     contraintes_livraison?: ContrainteLivraison[];
 
-    @OneToMany(() => AnimationVille, (animation) => animation.point_livraison, {eager: true, cascade:true, onUpdate: "CASCADE"})
-    @JoinColumn({name: "id_animation"})
-    animations_ville?: AnimationVille[];
+    @OneToMany(() => ContrainteAnimationVille, (animation) => animation.point_livraison, {eager: true, cascade:true, onUpdate: "CASCADE"})
+    @JoinColumn({name: "id_contrainte_animation_ville"})
+    animations_ville?: ContrainteAnimationVille[];
 }

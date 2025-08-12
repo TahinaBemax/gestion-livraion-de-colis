@@ -1,8 +1,7 @@
 import { PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, Entity, Timestamp } from "typeorm";
 import { ContrainteLivraison } from "../contrainte-livraison/contrainte-livraison.entity";
-import { timestamp } from "rxjs";
 
-@Entity("contrainte_jour_livraison")
+@Entity("contraintes_jours_livraisons")
 export class ContrainteJourLivraison {
     @PrimaryGeneratedColumn()
     id_contrainte_jour_livraison: number;

@@ -1,3 +1,15 @@
+/*
+DO $$ 
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+        -- Drop each table, CASCADE handles dependencies
+        EXECUTE 'DROP TABLE IF EXISTS public.' || r.tablename || ' CASCADE';
+    END LOOP;
+END $$;
+*/
+
 CREATE TABLE roles(
    id_role VARCHAR(50) ,
    nom_role TEXT NOT NULL,
@@ -19,6 +31,7 @@ CREATE TABLE prestataire(
    code_postal VARCHAR(50)  NOT NULL,
    telephone VARCHAR(16)  NOT NULL,
    email TEXT NOT NULL,
+   est_active BOOLEAN NOT NULL DEFAULT TRUE,
    PRIMARY KEY(id_prestataire),
    UNIQUE(nom_entreprise),
    UNIQUE(NIF),
@@ -27,7 +40,7 @@ CREATE TABLE prestataire(
    UNIQUE(email)
 );
 
-CREATE TABLE points_livraison(
+CREATE TABLE points_livraisons(
    id_point_livraison SERIAL,
    numero_magasin TEXT NOT NULL,
    nom_rue TEXT,
@@ -35,8 +48,8 @@ CREATE TABLE points_livraison(
    departement TEXT,
    ville TEXT NOT NULL,
    pays TEXT,
-   latitute DOUBLE PRECISION,
-   logitude DOUBLE PRECISION,
+   latitude DOUBLE PRECISION,
+   longitude DOUBLE PRECISION,
    code_postal TEXT NOT NULL,
    complement_adresse TEXT,
    id_prestataire INTEGER,
@@ -44,7 +57,7 @@ CREATE TABLE points_livraison(
    FOREIGN KEY(id_prestataire) REFERENCES prestataire(id_prestataire)
 );
 
-CREATE TABLE plannings_livraison(
+CREATE TABLE plannings_livraisons(
    id_planning_livraison SERIAL,
    date_debut DATE NOT NULL,
    date_fin DATE NOT NULL,
@@ -58,7 +71,7 @@ CREATE TABLE plannings_livraison(
    PRIMARY KEY(id_planning_livraison)
 );
 
-CREATE TABLE contraintes_livraison(
+CREATE TABLE contraintes_livraisons(
    id_contrainte_livraison SERIAL,
    intitule_contrainte TEXT NOT NULL,
    heure_debut TIME,
@@ -68,7 +81,7 @@ CREATE TABLE contraintes_livraison(
    priorite_contrainte TEXT,
    id_point_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_contrainte_livraison),
-   FOREIGN KEY(id_point_livraison) REFERENCES points_livraison(id_point_livraison)
+   FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison)
 );
 
 CREATE TABLE types_utilisateurs(
@@ -85,18 +98,18 @@ CREATE TABLE categories_livreurs(
    UNIQUE(categorie_livreur)
 );
 
-CREATE TABLE contrainte_jour_livraison(
+CREATE TABLE contraintes_jours_livraisons(
    id_contrainte_jour_livraison SERIAL,
    jour TEXT NOT NULL,
    est_livrable BOOLEAN NOT NULL,
-   heure_debut_livraison TIME,
-   heure_fin_livraison TIME,
+   heure_debut TIME,
+   heure_fin TIME,
    id_contrainte_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_contrainte_jour_livraison),
-   FOREIGN KEY(id_contrainte_livraison) REFERENCES contraintes_livraison(id_contrainte_livraison)
+   FOREIGN KEY(id_contrainte_livraison) REFERENCES contraintes_livraisons(id_contrainte_livraison)
 );
 
-CREATE TABLE problemes_livraison(
+CREATE TABLE problemes_livraisons(
    id_probleme_livraison SERIAL,
    description TEXT NOT NULL,
    PRIMARY KEY(id_probleme_livraison),
@@ -112,16 +125,23 @@ CREATE TABLE destinataires(
    PRIMARY KEY(id_destinataire)
 );
 
-CREATE TABLE animations_ville(
+CREATE TABLE animations_villes(
    id_animation_ville SERIAL,
    intitule_animation TEXT NOT NULL,
    date_debut DATE NOT NULL,
    date_fin DATE NOT NULL,
    heure_debut TIME,
-   heure_fin VARCHAR(50) ,
+   heure_fin TIME,
+   PRIMARY KEY(id_animation_ville)
+);
+
+CREATE TABLE contraintes_animations_villes(
+   id_contrainte_animation_ville SERIAL,
    id_point_livraison INTEGER NOT NULL,
-   PRIMARY KEY(id_animation_ville),
-   FOREIGN KEY(id_point_livraison) REFERENCES points_livraison(id_point_livraison)
+   id_animation_ville INTEGER NOT NULL,
+   PRIMARY KEY(id_contrainte_animation_ville),
+   FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison),
+   FOREIGN KEY(id_animation_ville) REFERENCES animations_villes(id_animation_ville)
 );
 
 CREATE TABLE utilisateurs(
@@ -134,7 +154,7 @@ CREATE TABLE utilisateurs(
    email TEXT NOT NULL,
    login TEXT NOT NULL,
    mot_de_passe TEXT NOT NULL,
-   est_active CHAR(3)  NOT NULL DEFAULT TRUE,
+   est_active BOOLEAN NOT NULL DEFAULT TRUE,
    photo_profil TEXT,
    id_prestataire INTEGER,
    id_role VARCHAR(50)  NOT NULL,
@@ -161,7 +181,7 @@ CREATE TABLE notifications(
    FOREIGN KEY(id_utilisateur_1) REFERENCES utilisateurs(id_utilisateur)
 );
 
-CREATE TABLE itineraires_livraison(
+CREATE TABLE itineraires_livraisons(
    id_itineraire_livraison SERIAL,
    rang INTEGER NOT NULL,
    date_tournee DATE NOT NULL,
@@ -173,20 +193,20 @@ CREATE TABLE itineraires_livraison(
    id_planning_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_itineraire_livraison),
    FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
-   FOREIGN KEY(id_point_livraison) REFERENCES points_livraison(id_point_livraison),
-   FOREIGN KEY(id_planning_livraison) REFERENCES plannings_livraison(id_planning_livraison)
+   FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison),
+   FOREIGN KEY(id_planning_livraison) REFERENCES plannings_livraisons(id_planning_livraison)
 );
 
 CREATE TABLE detail_info_livreur(
-   id_detail_info_liveur SERIAL,
+   id_livreur SERIAL,
    total_points DOUBLE PRECISION NOT NULL DEFAULT 0,
-   rang_global INTEGER NOT NULL,
+   rang_global INTEGER NOT NULL DEFAULT 0,
    peut_faire_chargement_colis BOOLEAN NOT NULL DEFAULT TRUE,
    qr_code TEXT,
    total_livraison_effectue INTEGER NOT NULL DEFAULT 0,
    id_categorie_livreur TEXT NOT NULL,
    id_utilisateur INTEGER NOT NULL,
-   PRIMARY KEY(id_detail_info_liveur),
+   PRIMARY KEY(id_livreur),
    UNIQUE(id_utilisateur),
    FOREIGN KEY(id_categorie_livreur) REFERENCES categories_livreurs(id_categorie_livreur),
    FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
@@ -207,16 +227,16 @@ CREATE TABLE livraisons(
    preuve_livraison TEXT,
    id_itineraire_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_livraison),
-   FOREIGN KEY(id_itineraire_livraison) REFERENCES itineraires_livraison(id_itineraire_livraison)
+   FOREIGN KEY(id_itineraire_livraison) REFERENCES itineraires_livraisons(id_itineraire_livraison)
 );
 
 CREATE TABLE positions_gps_livreur(
    id_position_gps_livreur SERIAL,
-   coordonnee_depart GEOGRAPHY NOT NULL,
-   coordonnee_final GEOGRAPHY NOT NULL,
-   id_detail_info_liveur INTEGER NOT NULL,
+   coordonnee_depart DOUBLE PRECISION NOT NULL,
+   coordonnee_final DOUBLE PRECISION NOT NULL,
+   id_livreur INTEGER NOT NULL,
    PRIMARY KEY(id_position_gps_livreur),
-   FOREIGN KEY(id_detail_info_liveur) REFERENCES detail_info_livreur(id_detail_info_liveur)
+   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur)
 );
 
 CREATE TABLE colis(
@@ -262,6 +282,5 @@ CREATE TABLE incident_livraison(
    date_incident TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    PRIMARY KEY(id_livraison, id_probleme_livraison),
    FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison),
-   FOREIGN KEY(id_probleme_livraison) REFERENCES problemes_livraison(id_probleme_livraison)
+   FOREIGN KEY(id_probleme_livraison) REFERENCES problemes_livraisons(id_probleme_livraison)
 );
-

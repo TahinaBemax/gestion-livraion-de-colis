@@ -13,6 +13,7 @@ import { PrestataireService } from '../prestataire/prestataire.service';
 import { AnimationVilleService } from './animation-ville/animation-ville.service';
 import { User } from '../user/user.entity';
 import { PointLivraisonService } from './point-livraison.service';
+import { ContrainteAnimationVille } from '../contrainte-animation-ville/contrainte-animation-ville.entity';
 
 @Module({
   imports: [
@@ -20,7 +21,14 @@ import { PointLivraisonService } from './point-livraison.service';
     ContrainteJourLivraisonModule,
     forwardRef(() => PrestataireModule),
     forwardRef(() => AnimationVilleModule),
-    TypeOrmModule.forFeature([Prestataire, User,ContrainteLivraison, AnimationVille, PointLivraison])
+    TypeOrmModule.forFeature([
+      Prestataire, 
+      User,
+      ContrainteLivraison,
+      AnimationVille,
+      PointLivraison,
+      ContrainteAnimationVille
+    ])
   ],
   providers: [
     PointLivraisonService,

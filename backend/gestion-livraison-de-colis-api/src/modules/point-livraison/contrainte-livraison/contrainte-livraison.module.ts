@@ -12,6 +12,7 @@ import { PrestataireService } from 'src/modules/prestataire/prestataire.service'
 import { AnimationVilleService } from '../animation-ville/animation-ville.service';
 import { User } from 'src/modules/user/user.entity';
 import { PointLivraisonModule } from '../point-livraison.module';
+import { ContrainteAnimationVille } from 'src/modules/contrainte-animation-ville/contrainte-animation-ville.entity';
 
 @Module({
   imports:[
@@ -23,6 +24,7 @@ import { PointLivraisonModule } from '../point-livraison.module';
       AnimationVille, 
       User,
       PointLivraison, 
+      ContrainteAnimationVille
     ])
   ],
   providers: [

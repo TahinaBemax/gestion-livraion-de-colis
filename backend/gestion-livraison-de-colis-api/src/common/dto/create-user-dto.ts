@@ -32,7 +32,7 @@ export class CreateUserDto {
         description: "Date de naissance de l'utilisateur, format français (jj/mm/aaaa)",
         example: "15/04/1985",
     })
-    @IsDateString()
+    @IsNotEmpty()
     @IsFRDate()
     date_naissance: string;
 

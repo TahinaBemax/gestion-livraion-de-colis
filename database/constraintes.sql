@@ -11,7 +11,7 @@ ALTER TABLE
    roles 
 ADD CONSTRAINT 
    roles_check 
-CHECK(nom_role = 'Admin' OR nom_role = 'Utilisateur', OR 'Responsable Exploitation');
+CHECK(nom_role = 'Admin' OR nom_role = 'Utilisateur' OR nom_role ='Responsable Exploitation');
 
 
 ALTER TABLE 

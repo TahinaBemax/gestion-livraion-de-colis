@@ -8,6 +8,7 @@ import { plainToInstance } from 'class-transformer';
 import { PrestataireService } from '../prestataire/prestataire.service';
 import { ContrainteLivraisonService } from './contrainte-livraison/contrainte-livraison.service';
 import { Prestataire } from '../prestataire/prestataire.entity';
+import { ContrainteAnimationVille } from '../contrainte-animation-ville/contrainte-animation-ville.entity';
 
 @Injectable()
 export class PointLivraisonService {
@@ -62,19 +63,32 @@ export class PointLivraisonService {
     }
 
 
-    private async prepareChildrensData(dto: PointLivraisonCreateDto, pointLivraison: PointLivraison){
-        const prestataire = dto.prestataire !== undefined ? await this.prestataireService.findById(dto.prestataire) : undefined;
-        pointLivraison.prestataire = prestataire;
-        
-        dto.contraintes_livraison?.forEach(async (c) => {
-            const contrainte = await this.containteLivraisonService.findById(c);
-            pointLivraison.contraintes_livraison?.push(contrainte);
-        });
+    private async prepareChildrensData(dto: PointLivraisonCreateDto, pointLivraison: PointLivraison) {
+        // 1. Assign prestataire if it exists
+        if (dto.prestataire !== undefined) {
+            const prestataire = await this.prestataireService.findById(dto.prestataire);
+            pointLivraison.prestataire = prestataire;
+        }
 
-        dto.animations_ville?.forEach(async (c) => {
-            const contrainte = await this.animationVilleService.findById(c);
-            pointLivraison.animations_ville?.push(contrainte);
-        });
+        // 2. Ensure contraintes_livraison array exists and fill it
+        if (dto.contraintes_livraison) {
+            pointLivraison.contraintes_livraison = pointLivraison.contraintes_livraison || []; // Initialize if undefined
+            for (const contrainteId of dto.contraintes_livraison) {
+                const contrainte = await this.containteLivraisonService.findById(contrainteId);
+                pointLivraison.contraintes_livraison.push(contrainte);
+            }
+        }
+
+        // 3. Ensure animations_ville array exists and fill it with ContrainteAnimationVille
+        if (dto.animations_ville) {
+            pointLivraison.animations_ville = pointLivraison.animations_ville || []; // Initialize if undefined
+            for (const animationId of dto.animations_ville) {
+                const animation = await this.animationVilleService.findById(animationId);
+                const contrainte_animation = new ContrainteAnimationVille();
+                contrainte_animation.animation_ville = animation;
+                pointLivraison.animations_ville.push(contrainte_animation);
+            }
+        }
     }
 
     async assignDeliveryPointsToProvider(prestataire: Prestataire, id_points_livraison:number[]): Promise<{message: string}>{

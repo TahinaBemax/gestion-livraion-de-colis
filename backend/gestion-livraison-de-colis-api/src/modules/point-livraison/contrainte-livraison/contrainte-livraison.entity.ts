@@ -2,7 +2,7 @@ import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn
 import { PointLivraison } from "../point-livraison.entity";
 import { ContrainteJourLivraison } from "../contrainte-jour-livraison/contrainte-jour-livraison.entity";
 
-@Entity("contraintes_livraison")
+@Entity("contraintes_livraisons")
 @Unique(["intitule_contrainte"])
 export class ContrainteLivraison {
     @PrimaryGeneratedColumn()
