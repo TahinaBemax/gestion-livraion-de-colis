@@ -70,6 +70,15 @@ export class PointLivraisonService {
         return this.pointLivraisonRep.save(prepared);
     }
 
+    async findByCityNumeroMagasin(city: string, numMagasin: string): Promise<PointLivraisonEntity[]> {
+        if(!city && !numMagasin) throw new BadRequestException("La ville et le numero de magasin sont obligatoire!");
+
+        return this.pointLivraisonRep.find({
+            where: {ville: city, numero_magasin: numMagasin},
+            relations: ["contraintes_livraison", "contraintes_evenements"]
+        });
+    }
+
 
     /*private async prepareChildrensData(dto: PointLivraisonCreateDto, pointLivraison: PointLivraisonEntity) {
         // 1. Assign prestataire if it exists
