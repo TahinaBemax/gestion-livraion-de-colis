@@ -1,5 +1,7 @@
 export enum TypeEvenementEnum {
-    FETE = "Fête",
+    CELEBRATION = "Célébration",
     MARCHE = "Marché",
-    FERMETURE_RUE = "Férmeture de la rue"
+    FERMETURE_RUE = "Férmeture de la rue",
+    CONCERT = "Concert",
+    AUTRES = "Autres"
 }

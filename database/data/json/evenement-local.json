@@ -1,0 +1,42 @@
+[
+  {
+    "nom_evenement": "Fête de l'indépendance",
+    "jour_semaine": "Lundi",
+    "date_debut": "25/06/2025",
+    "date_fin": "26/06/2025",
+    "type": "Célébration",
+    "frequence": "Annuel"
+  },
+  {
+    "nom_evenement": "Concert de musique",
+    "jour_semaine": "Vendredi",
+    "date_debut": "15/08/2025",
+    "date_fin": "16/08/2025",
+    "type": "Concert",
+    "frequence": "Mensuel"
+  },
+  {
+    "nom_evenement": "Marché de Noël",
+    "date_debut": "01/12/2025",
+    "date_fin": "25/12/2025",
+    "type": "Marché",
+    "frequence": "Annuel"
+  },
+  {
+    "id": null,
+    "nom_evenement": "Compétition sportive",
+    "jour_semaine": "Samedi",
+    "date_debut": "10/07/2025",
+    "date_fin": "12/07/2025",
+    "type": "Sportif",
+    "frequence": "Unique"
+  },
+  {
+    "nom_evenement": "Exposition d'art",
+    "jour_semaine": "Jeudi",
+    "date_debut": "20/11/2025",
+    "date_fin": "25/11/2025",
+    "type": "Exposition",
+    "frequence": "Unique"
+  }
+]

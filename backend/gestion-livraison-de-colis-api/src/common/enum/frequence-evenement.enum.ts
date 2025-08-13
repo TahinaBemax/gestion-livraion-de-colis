@@ -1,5 +1,6 @@
 export enum FrequenceEvenementEnum{
     SEMAINE = "Semaine",
-    MOIS = "Mois",
-    ANNEE = "Année"
+    MOIS = "Mensuel",
+    ANNEE = "Annuel",
+    UNIQUE = "Unique"
 }

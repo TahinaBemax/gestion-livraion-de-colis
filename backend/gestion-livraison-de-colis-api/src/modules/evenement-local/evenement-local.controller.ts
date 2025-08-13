@@ -3,22 +3,23 @@ import { ApiTags, ApiBody, ApiCreatedResponse } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { EvenementLocalDto } from 'src/common/dto/evenement-local/evenement-local-dto';
-import { UpdateEvenementLocalDto } from 'src/common/dto/evenement-local/update-evenement-local-dto';
 import { EvenementLocalService } from './evenement-local.service';
 import { EvenementLocalEntity } from './evenement-local.entity';
 
-@Controller('animations-villes')
-@ApiTags('Animation Ville')
-@Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+@Controller('evenements-locaux')
+@ApiTags('Evenements Locaux ')
+@Roles(UserRole.Admin)
 export class EvenementLocalController {
     constructor(private readonly evenemtnService: EvenementLocalService){}
 
     @Get()
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     getAll(): Promise<EvenementLocalEntity[]>{
         return this.evenemtnService.findAll();
     }
 
     @Get("/:id")
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     getById(@Param("id", ParseIntPipe) id:number): Promise<EvenementLocalEntity> {
         return this.evenemtnService.findById(id);
     } 
@@ -32,9 +33,9 @@ export class EvenementLocalController {
     }
 
     @Put("/:id")
-    @ApiBody({type: UpdateEvenementLocalDto})
+    @ApiBody({type: EvenementLocalDto})
     @ApiCreatedResponse()
-    update(@Param("id", ParseIntPipe) id:number, @Body() dto: UpdateEvenementLocalDto): Promise<EvenementLocalEntity> {
+    update(@Param("id", ParseIntPipe) id:number, @Body() dto: EvenementLocalDto): Promise<EvenementLocalEntity> {
         return this.evenemtnService.update(id, dto);
     }
 }
