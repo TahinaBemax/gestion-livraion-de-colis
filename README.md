@@ -31,3 +31,7 @@ Modifie le fichier .env dans backend/gestion-livraison-de-colis/.env
 CLIENT_ORIGIN=http://localhost:5173 
 ```
 Le nom de domaine que vous utilisez pour eviter le probleme de CORSS
+
+## Documentation
+
+Tapez http://localhost:votre-port/docs pour voir la documentation d'utilisation de l'API

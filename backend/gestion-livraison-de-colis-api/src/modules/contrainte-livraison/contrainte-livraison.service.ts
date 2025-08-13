@@ -81,6 +81,20 @@ export class ContrainteLivraisonService {
 
     }
 
+    async updateDayConstraints(idConstraint: number, idContrainteJour: number,dto: ContrainteJourDto) {
+        if(!idConstraint || !dto || !idContrainteJour) throw new BadRequestException("Données Invalides");
+
+        const existing: ContrainteJourEntity|null = await this.contrainteJourRep.findOne({where: {id: idContrainteJour}}); 
+        if(!existing) throw new NotFoundException(`Contrainte Jour avec id:${idContrainteJour} est introuvable`);
+
+        const existingConstraint: ContrainteLivraisonEntity = await this.findById(idConstraint);
+        const instance: ContrainteJourEntity = plainToInstance(ContrainteJourEntity, dto);
+        instance.contrainte_livraison = existingConstraint;
+
+        const preapred =this.contrainteJourRep.create(instance);
+        return this.contrainteJourRep.save(preapred);
+    }
+
     async update(id: number, dto: ContrainteLivraisonDto): Promise<ContrainteLivraisonEntity> {
         if (!dto || !id) throw new BadRequestException("Données Invalides");
 
