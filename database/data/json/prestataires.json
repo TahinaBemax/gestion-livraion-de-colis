@@ -1,0 +1,60 @@
+[
+  {
+    "nom_entreprise": "Entreprise Dupont",
+    "nif": "123456789",
+    "stat": "123-4567890",
+    "adresse1": "123 Rue de Paris",
+    "adresse2": "Appartement 45",
+    "departement": "Ile-de-France",
+    "etat": "Île-de-France",
+    "ville": "Paris",
+    "pays": "France",
+    "code_postal": "75001",
+    "telephone": "+33 1 23 45 67 89",
+    "email": "contact@entreprisedupont.com",
+    "est_active": true
+  },
+  {
+    "nom_entreprise": "Tech Innovators",
+    "nif": "987654321",
+    "stat": "987-6543210",
+    "adresse1": "45 Avenue de la Technologie",
+    "adresse2": "Bureau 12",
+    "departement": "Provence-Alpes-Côte d'Azur",
+    "etat": "Bouches-du-Rhône",
+    "ville": "Marseille",
+    "pays": "France",
+    "code_postal": "13001",
+    "telephone": "+33 4 56 78 90 12",
+    "email": "contact@techinnovators.com",
+    "est_active": false
+  },
+  {
+    "nom_entreprise": "Boulangerie Parisienne",
+    "nif": "112233445",
+    "stat": "112-2334455",
+    "adresse1": "10 Rue des Boulangers",
+    "adresse2": "",
+    "departement": "Ile-de-France",
+    "ville": "Paris",
+    "pays": "France",
+    "code_postal": "75002",
+    "telephone": "+33 1 40 12 34 56",
+    "email": "contact@boulangerieparisienne.com",
+    "est_active": true
+  },
+  {
+    "nom_entreprise": "Services Rapides",
+    "nif": "334455667",
+    "stat": "334-4556677",
+    "adresse1": "234 Rue de la Vitesse",
+    "adresse2": "Bâtiment A",
+    "departement": "Rhône-Alpes",
+    "ville": "Lyon",
+    "pays": "France",
+    "code_postal": "69001",
+    "telephone": "+33 4 78 90 12 34",
+    "email": "contact@servicesrapides.com",
+    "est_active": true
+  }
+]

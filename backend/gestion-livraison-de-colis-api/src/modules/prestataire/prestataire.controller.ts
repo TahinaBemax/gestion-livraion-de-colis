@@ -113,6 +113,7 @@ export class PrestataireController {
         return this.plService.assignDeliveryPointsToProvider(prestataire, pointsLivraison.ids);
     }
 
+
     @Get("/:id/points-livraison")
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     @ApiParam({name: "id", description: "ID du prestataire"})

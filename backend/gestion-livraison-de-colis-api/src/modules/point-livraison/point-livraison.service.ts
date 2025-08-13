@@ -9,6 +9,7 @@ import { Prestataire } from '../prestataire/prestataire.entity';
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { EvenementLocalService } from '../evenement-local/evenement-local.service';
 import { ContrainteLivraisonService } from '../contrainte-livraison/contrainte-livraison.service';
+import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 
 
 @Injectable()
@@ -17,8 +18,8 @@ export class PointLivraisonService {
         @InjectRepository(PointLivraisonEntity)
         private readonly pointLivraisonRep: Repository<PointLivraisonEntity>,
         private readonly prestataireService: PrestataireService,
-        @Inject(forwardRef(() => ContrainteLivraisonService))
-        private readonly containteLivraisonService: ContrainteLivraisonService,
+        @InjectRepository(ContrainteLivraisonEntity)
+        private readonly contrainteLivraisonRep: Repository<ContrainteLivraisonEntity>,
         private readonly evenementService: EvenementLocalService
     ){}
 
@@ -35,12 +36,18 @@ export class PointLivraisonService {
     }
 
     async findById(id:number): Promise<PointLivraisonEntity> {
-        return this.pointLivraisonRep.findOneOrFail(
+        const matched = await this.pointLivraisonRep.findOne(
             {
                 where: {id: id},
                 relations: ["contraintes_livraison", "contraintes_evenements"]
             }
         );
+
+        if(!matched){
+            throw new BadRequestException(`Point de Livraison avec id: ${id} introuvable!`) 
+        } 
+
+        return matched; 
     }
 
     async findByPrestataire(id:number): Promise<PointLivraisonEntity[]> {
@@ -93,12 +100,14 @@ export class PointLivraisonService {
     } */
 
     async assignDeliveryPointsToProvider(prestataire: Prestataire, id_points_livraison:number[]): Promise<{message: string}>{
+        if(!id_points_livraison || id_points_livraison.length === 0) throw new BadRequestException("Il faut mettre au moins un point de livraison!");
         const queryRunner = this.pointLivraisonRep.manager.connection.createQueryRunner();
 
         //start a transaction
         await queryRunner.startTransaction();
         try {
             const pls = await this.pointLivraisonRep.findBy({ id: In(id_points_livraison) });
+            if(pls.length === 0) throw new BadRequestException(`Aucun point de livraison pour les identifiants: [${id_points_livraison.toString()}] trouvé!`)
 
             pls.forEach(pl => {
                 if(pl.prestataire) throw new BadRequestException(`Le point de livraison ${pl.numero_magasin} est déja rattaché à un prestataire`);
@@ -110,6 +119,34 @@ export class PointLivraisonService {
             await queryRunner.commitTransaction();
 
             return {message: "Points de livraison rattachés avec succes!"};
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async assignDeliveryConstraintsToPL(idPL: number, idConstraintes: number[]): Promise<{message: string}> {
+        if(!idPL || idConstraintes.length === 0) throw new BadRequestException("Il faut mettre au moins une contrainte de livraison!");
+        const existingPL = await this.findById(idPL);
+        const queryRunner = this.contrainteLivraisonRep.manager.connection.createQueryRunner();
+
+        //start a transaction
+        await queryRunner.startTransaction();
+        try {
+            const constraints = await this.contrainteLivraisonRep.findBy({ id: In(idConstraintes) });
+            if(constraints.length === 0) throw new BadRequestException(`Aucune contrainte de livraison pour les identifiants: [${idConstraintes.toString()}] trouvée!`)
+             
+            for (const c of constraints) {
+                if(c.point_livraison) throw new BadRequestException(`${c.intitule_contrainte} est déja rattachéé à un point de livraison!`);
+                c.point_livraison = existingPL;
+            }
+
+            await queryRunner.manager.save(PointLivraisonEntity, constraints);
+            await queryRunner.commitTransaction();
+
+            return {message: `Contrainte(s) temporelle de livraison rattachée(s) à ${existingPL.numero_magasin}  avec succes!`};
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;

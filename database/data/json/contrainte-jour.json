@@ -1,0 +1,26 @@
+[
+    {
+        "jour": "Lundi",
+        "est_livrable": true,
+        "heure_debut": "08:00",
+        "heure_fin": "18:00",
+        "id_contrainte_livraison": 1
+    },
+    {
+        "jour": "Mardi",
+        "est_livrable": false,
+        "heure_debut": "09:00",
+        "heure_fin": "17:00",
+        "id_contrainte_livraison": 1
+    },
+    {
+        "jour": "Samedi",
+        "est_livrable": true,
+        "heure_debut": "10:00",
+        "heure_fin": "15:00",
+        "id_contrainte_livraison": 3
+    }
+
+
+
+]

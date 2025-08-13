@@ -1,36 +1,19 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
-import { ConvertEmptyToUndefined } from "src/common/decorators/convert-empty-to-undefined.decorator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
-import { IsTime } from "src/common/validators/is-time.validator";
+import { ContrainteJourDto } from "../contrainte-jour/contrainte-jour-dto";
 
 export class ContrainteLivraisonDto {
     @IsOptional()
     @IsNumber()
     @ApiProperty({example: 1})
-    id_contrainte_livraison?: number;
+    id?: number;
 
     @IsNotEmpty()
     @ApiProperty({
         example: "Livraison Weekend impossible",
     })
     intitule_contrainte: string;
-
-    @IsTime()
-    @ConvertEmptyToUndefined()
-    @ApiProperty({
-        required: false,
-        example: "04:23",
-    })
-    heure_debut?: string;
-    
-    @IsTime()
-    @ConvertEmptyToUndefined()
-    @ApiProperty({
-        required: false,
-        example: "14:23",
-    })
-    heure_fin?: string;
 
     @IsFRDate()
     @IsNotEmpty()
@@ -62,12 +45,4 @@ export class ContrainteLivraisonDto {
         example: 1,
     })
     id_point_livraison: number;
-    
-    @IsOptional()
-    @IsNumber()
-    @ApiProperty({
-        example: [1, 2, 3],
-        required: false
-    })
-    id_contraintes_jour_livraison?: number[];
 }
