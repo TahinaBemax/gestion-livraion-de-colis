@@ -100,7 +100,6 @@ export class PrestataireController {
     /* POINT DE LIVRAISON */
     @Post("/:id/points-livraison")
     @Roles(UserRole.Admin)
-
     @ApiParam({name: "id", description: "ID du prestataire"})
     @ApiBody({type: [Number], description: "Les id des points de livraison"})
     @ApiOperation({summary: "Rattacher des points de livraison à un prestataire"})

@@ -1,6 +1,10 @@
-import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
+import { IsNotEmpty, IsNumber, IsNumberString, IsOptional } from "class-validator";
 
-export class PointLivraisonCreateDto {
+export class CreatePointLivraisonDto {
+    @IsOptional()
+    @IsNumber()
+    id?: number;
+
     @IsNotEmpty()
     numero_magasin: string;
 
@@ -23,16 +27,9 @@ export class PointLivraisonCreateDto {
     longitude: number;
 
     @IsNotEmpty()
+    @IsNumberString()
     code_postal: string;
 
+    @IsOptional()
     complement_adresse?: string;
-
-    @IsOptional()
-    prestataire?: number;
-    
-    @IsOptional()
-    contraintes_livraison?: number[];
-    
-    @IsOptional()
-    animations_ville?: number[];
 }

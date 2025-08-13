@@ -136,7 +136,7 @@ export class AdminController {
     @ApiCreatedResponse({description: "Compte desactivé avec succés!", type: "Compte prestataire activé"})
     @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     @ApiInternalServerErrorResponse({description: "Internal server error"})
-    activate(@Param('id') id:number){
+    activatePrestataireAccount(@Param('id') id:number){
         return this.prestataireService.activate(id);
     }
 

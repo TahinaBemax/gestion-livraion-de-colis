@@ -1,17 +1,13 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Prestataire } from "../prestataire/prestataire.entity";
-import { ContrainteLivraison } from "./contrainte-livraison/contrainte-livraison.entity";
-import { AnimationVille } from "./animation-ville/animation-ville.entity";
-import { ContrainteAnimationVille } from "../contrainte-animation-ville/contrainte-animation-ville.entity";
+import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
+import { ContrainteEvenementEntity } from "../contrainte-evenement/contrainte-evenement.entity";
 
 @Entity("points_livraisons")
 @Unique(["numero_magasin"])
-export class PointLivraison {
-    forEach(arg0: (pl: any) => void) {
-        throw new Error('Method not implemented.');
-    }
-    @PrimaryGeneratedColumn()
-    id_point_livraison: number;
+export class PointLivraisonEntity {
+    @PrimaryGeneratedColumn({name: "id_point_livraison"})
+    id: number;
 
     @Column()
     numero_magasin: string;
@@ -40,15 +36,21 @@ export class PointLivraison {
     @Column()
     complement_adresse: string;
 
-    @OneToOne(() => Prestataire)
-    @JoinColumn({name: "id_prestataire"})
+    @ManyToOne(() => Prestataire)
+    @JoinColumn({name: "id_prestataire", referencedColumnName: "id_prestataire"})
     prestataire?: Prestataire;
 
-    @OneToMany(() => ContrainteLivraison, (contrainte) => contrainte.point_livraison, {eager: true, cascade:true, onUpdate: "CASCADE"})
-    @JoinColumn({name: "id_contrainte_livraison"})
-    contraintes_livraison?: ContrainteLivraison[];
+    @OneToMany(() => ContrainteLivraisonEntity, (c) => c.point_livraison, {
+        eager: true, 
+        cascade:true, 
+        onUpdate: "CASCADE"
+    })
+    contraintes_livraison?: ContrainteLivraisonEntity[];
 
-    @OneToMany(() => ContrainteAnimationVille, (animation) => animation.point_livraison, {eager: true, cascade:true, onUpdate: "CASCADE"})
-    @JoinColumn({name: "id_contrainte_animation_ville"})
-    animations_ville?: ContrainteAnimationVille[];
+    @OneToMany(() => ContrainteEvenementEntity, (a) => a.point_livraison, {
+        eager: true, 
+        cascade:true, 
+        onUpdate: "CASCADE"
+    })
+    contraintes_evenements?: ContrainteEvenementEntity[];
 }

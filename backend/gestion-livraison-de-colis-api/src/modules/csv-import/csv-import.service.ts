@@ -3,22 +3,22 @@ import { plainToInstance } from "class-transformer";
 import { ContrainteJourLivraisonCsvDto } from "src/common/dto/csv-import/contrainte-jour-livraison-csv-dto";
 import { ContrainteLivraisonCsvDto } from "src/common/dto/csv-import/contrainte-livraison-csv-dto";
 import { PointLivraisonCsvDto } from "src/common/dto/csv-import/point-livraison-csv-dto";
-import { ContrainteJourLivraison } from "../point-livraison/contrainte-jour-livraison/contrainte-jour-livraison.entity";
-import { ContrainteLivraison } from "../point-livraison/contrainte-livraison/contrainte-livraison.entity";
-import { PointLivraison } from "../point-livraison/point-livraison.entity";
 import { CsvParser, ParsedCsv } from "./parser/csv.parser";
 import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { isValid, parse } from "date-fns";
 import { ImportCsvRestult } from "src/common/dto/csv-import/import-result-dto";
+import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
+import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
+import { ContrainteJourEntity } from "../contrainte-jour/contrainte-jour.entity";
 
 
 
 @Injectable()
 export class CsvImportService {
   constructor(
-    @InjectRepository(PointLivraison)
-    private readonly plRepo: Repository<PointLivraison>
+    @InjectRepository(PointLivraisonEntity)
+    private readonly plRepo: Repository<PointLivraisonEntity>
   ) {}
 
   async importCsv(
@@ -41,8 +41,8 @@ export class CsvImportService {
     }
     
     //points de livraison
-    var existings_points_livraison: PointLivraison[] = await this.plRepo.find();
-    const points_livraison_from_csv = plainToInstance(PointLivraison, parsedPLs.success);
+    var existings_points_livraison: PointLivraisonEntity[] = await this.plRepo.find();
+    const points_livraison_from_csv = plainToInstance(PointLivraisonEntity, parsedPLs.success);
     const existingMagasins = new Set(existings_points_livraison.map(pl => pl.numero_magasin));
     const newPoints = points_livraison_from_csv.filter(pl => !existingMagasins.has(pl.numero_magasin));
 
@@ -74,13 +74,13 @@ export class CsvImportService {
       return (parsedPLs.errors.length > 0 || parsedCKs.errors.length > 0 || parsedDailyCKs.errors.length > 0);
   }
 
-  private async save(pls: PointLivraison[]){
+  private async save(pls: PointLivraisonEntity[]){
     const queryRunner = this.plRepo.manager.connection.createQueryRunner();
 
     //start a transaction
     await queryRunner.startTransaction();
     try {
-      await queryRunner.manager.save(PointLivraison, pls);
+      await queryRunner.manager.save(PointLivraisonEntity, pls);
       await queryRunner.commitTransaction();
 
       return true;
@@ -122,7 +122,7 @@ export class CsvImportService {
   }
 
   private assignConstraintToPL(
-    pl: PointLivraison,
+    pl: PointLivraisonEntity,
     constraints: ContrainteLivraisonCsvDto[],
     dailyConstraints: ContrainteJourLivraisonCsvDto[],
   ) 
@@ -142,17 +142,17 @@ export class CsvImportService {
           throw new BadRequestException("Date fin invalide");
         }
 
-        const ck = plainToInstance(ContrainteLivraison, c);
+        const ck = plainToInstance(ContrainteLivraisonEntity, c);
         ck.date_debut = date_debut;
         ck.date_fin = date_fin;
 
         ck.contrainte_jour_livraisons = dailyConstraints
           .filter(dc => dc.intitule_contrainte === c.intitule_contrainte)
-          .map(dc => plainToInstance(ContrainteJourLivraison, dc));
+          .map(dc => plainToInstance(ContrainteJourEntity, dc));
         return ck;
       });
 
-    (pl.id_point_livraison && pl.contraintes_livraison) 
+    (pl.id && pl.contraintes_livraison) 
       ? pl.contraintes_livraison = pl.contraintes_livraison.concat(relevantConstraints)
       : pl.contraintes_livraison = relevantConstraints;
   }

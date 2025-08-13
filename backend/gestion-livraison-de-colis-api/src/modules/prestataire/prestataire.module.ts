@@ -7,12 +7,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LivreurModule } from '../livreur/livreur.module';
 import { UserModule } from '../user/user.module';
 import { PointLivraisonModule } from '../point-livraison/point-livraison.module';
-import { PointLivraison } from '../point-livraison/point-livraison.entity';
-import { ContrainteLivraisonService } from '../point-livraison/contrainte-livraison/contrainte-livraison.service';
-import { AnimationVilleService } from '../point-livraison/animation-ville/animation-ville.service';
-import { ContrainteLivraison } from '../point-livraison/contrainte-livraison/contrainte-livraison.entity';
-import { AnimationVille } from '../point-livraison/animation-ville/animation-ville.entity';
-import { ContrainteLivraisonModule } from '../point-livraison/contrainte-livraison/contrainte-livraison.module';
+import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
+import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
+import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity';
+import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-livraison.module';
 
 @Module({
   providers: [
@@ -28,9 +26,9 @@ import { ContrainteLivraisonModule } from '../point-livraison/contrainte-livrais
     TypeOrmModule.forFeature([
       Prestataire, 
       User, 
-      PointLivraison, 
-      ContrainteLivraison, 
-      AnimationVille
+      PointLivraisonEntity, 
+      ContrainteLivraisonEntity, 
+      EvenementLocalEntity
     ])
   ],
 })

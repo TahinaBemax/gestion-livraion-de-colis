@@ -1,13 +1,13 @@
 import { IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { ConvertEmptyToUndefined } from "src/common/decorators/convert-empty-to-undefined.decorator";
-import { Jours } from "src/common/enum/jours.enum";
+import { JourSemaine } from "src/common/enum/jour-semaine.enum";
 import { IsBooleanOrBooleanString } from "src/common/validators/is-boolean-or-boolean-string.validator";
 import { IsTime } from "src/common/validators/is-time.validator";
 
 export class ContrainteJourLivraisonCsvDto {
     @IsNotEmpty()
     @IsString()
-    @IsEnum(Jours)
+    @IsEnum(JourSemaine)
     jour: string;
 
     @IsBooleanOrBooleanString()

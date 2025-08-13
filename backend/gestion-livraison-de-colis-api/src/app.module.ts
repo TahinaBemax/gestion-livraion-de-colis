@@ -11,11 +11,13 @@ import { AuthModule } from './core/auth/auth.module';
 import { GlobalJwtGuard } from './common/guards/global-jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { PointLivraisonModule } from './modules/point-livraison/point-livraison.module';
-import { ExistsInDatabase, ExistsInDatabaseConstraint } from './common/validators/is-exist-in-database.validator';
-import { IsPrestataireExistsInDatabaseConstraint } from './common/validators/is-existing-prestataire';
-import { SharedModule } from './common/validators/sharded-module';
+
 import { CsvImportModule } from './modules/csv-import/csv-import.module';
-import { ContrainteAnimationVilleModule } from './modules/contrainte-animation-ville/contrainte-animation-ville.module';
+import { EvenementLocalModule } from './modules/evenement-local/evenement-local.module';
+import { ContrainteEvenementModule } from './modules/contrainte-evenement/contrainte-evenement.module';
+import { CreneauLivraisonModule } from './modules/creneau-livraison/creneau-livraison.module';
+import { ContrainteLivraisonModule } from './modules/contrainte-livraison/contrainte-livraison.module';
+import { ContrainteJourModule } from './modules/contrainte-jour/contrainte-jour.module';
 
 @Module({
   imports: [
@@ -45,7 +47,12 @@ import { ContrainteAnimationVilleModule } from './modules/contrainte-animation-v
     AuthModule,
     PointLivraisonModule,
     CsvImportModule,
-    ContrainteAnimationVilleModule,
+    ContrainteEvenementModule,
+    EvenementLocalModule,
+    ContrainteEvenementModule,
+    CreneauLivraisonModule,
+    ContrainteLivraisonModule,
+    ContrainteJourModule,
   ],
   controllers: [AppController],
   providers: [

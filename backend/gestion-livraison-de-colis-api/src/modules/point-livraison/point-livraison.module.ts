@@ -1,39 +1,39 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { ContrainteLivraisonModule } from './contrainte-livraison/contrainte-livraison.module';
-import { ContrainteJourLivraisonModule } from './contrainte-jour-livraison/contrainte-jour-livraison.module';
-import { AnimationVilleModule } from './animation-ville/animation-ville.module';
 import { PointLivraisonController } from './point-livraison.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Prestataire } from '../prestataire/prestataire.entity';
-import { AnimationVille } from './animation-ville/animation-ville.entity';
-import { ContrainteLivraison } from './contrainte-livraison/contrainte-livraison.entity';
-import { PointLivraison } from './point-livraison.entity';
 import { PrestataireModule } from '../prestataire/prestataire.module';
 import { PrestataireService } from '../prestataire/prestataire.service';
-import { AnimationVilleService } from './animation-ville/animation-ville.service';
 import { User } from '../user/user.entity';
 import { PointLivraisonService } from './point-livraison.service';
-import { ContrainteAnimationVille } from '../contrainte-animation-ville/contrainte-animation-ville.entity';
+import { ContrainteEvenementEntity } from '../contrainte-evenement/contrainte-evenement.entity';
+import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
+import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-livraison.module';
+import { EvenementLocalModule } from '../evenement-local/evenement-local.module';
+import { ContrainteJourModule } from '../contrainte-jour/contrainte-jour.module';
+import { PointLivraisonEntity } from './point-livraison.entity';
+import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity';
+import { EvenementLocalService } from '../evenement-local/evenement-local.service';
 
 @Module({
   imports: [
     forwardRef(() => ContrainteLivraisonModule), 
-    ContrainteJourLivraisonModule,
+    ContrainteJourModule,
     forwardRef(() => PrestataireModule),
-    forwardRef(() => AnimationVilleModule),
+    forwardRef(() => EvenementLocalModule),
     TypeOrmModule.forFeature([
+      PointLivraisonEntity,
       Prestataire, 
       User,
-      ContrainteLivraison,
-      AnimationVille,
-      PointLivraison,
-      ContrainteAnimationVille
+      EvenementLocalEntity,
+      ContrainteEvenementEntity,
+      ContrainteLivraisonEntity,
     ])
   ],
   providers: [
     PointLivraisonService,
     PrestataireService,
-    AnimationVilleService
+    EvenementLocalService
   ],
   controllers: [PointLivraisonController],
   exports:[PointLivraisonService]

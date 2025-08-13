@@ -1,10 +1,10 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { PointLivraisonService } from './point-livraison.service';
-import { PointLivraisonCreateDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
+import { CreatePointLivraisonDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
-import { PointLivraison } from './point-livraison.entity';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse } from '@nestjs/swagger';
+import { PointLivraisonEntity } from './point-livraison.entity';
 
 @Controller('points-livraisons')
 @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
@@ -25,18 +25,17 @@ export class PointLivraisonController {
 
     @Put("/:id")
     @Roles(UserRole.Admin)
-    update(@Param("id") id: number, @Body() data: PointLivraisonCreateDto){
+    update(@Param("id") id: number, @Body() data: CreatePointLivraisonDto){
         return this.plService.update(id, data);
     }
 
     @Post()
     @Roles(UserRole.Admin)
     @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: PointLivraisonCreateDto})
-    @ApiCreatedResponse({type: PointLivraison})
+    @ApiBody({type: CreatePointLivraisonDto})
+    @ApiCreatedResponse({type: PointLivraisonEntity})
     @ApiBadRequestResponse()
-    @ApiNotFoundResponse({example: ""})
-    create( @Body() data: PointLivraisonCreateDto){
+    create( @Body() data: CreatePointLivraisonDto){
         return this.plService.create(data);
     }
 }
