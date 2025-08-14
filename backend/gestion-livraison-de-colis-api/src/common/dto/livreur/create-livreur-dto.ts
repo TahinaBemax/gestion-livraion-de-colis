@@ -16,11 +16,6 @@ export class CreateLivreurDto {
     })
     peut_faire_chargement_colis: boolean;
     
-    @IsNotEmpty()
-    @ApiProperty({
-        example: "qr_code_12132343"
-    })
-    qr_code: string;
     
     @IsEnum(CategorieLivreurEnum)
     @ApiProperty({

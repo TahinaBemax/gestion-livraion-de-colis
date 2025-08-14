@@ -22,6 +22,17 @@ export class AuthService {
         return null;
     }
 
+    async validateQRCodeLogin(qrCodeData: string): Promise<any> {
+        const [login, password] = qrCodeData.split(':');
+        const user = await this.userService.findByLogin(login);
+
+        if (user && user.mot_de_passe === password) {
+            const { mot_de_passe, ...result} = user;
+            return result;
+        }
+        return null;
+    }
+
     login(user: any): LoginResponse {
         const payload = {
             username: user.login, 

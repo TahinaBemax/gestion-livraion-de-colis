@@ -5,6 +5,7 @@ import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LiveurMapper } from './livreur.mapper';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class LivreurService {
@@ -17,13 +18,14 @@ export class LivreurService {
     ){}
 
     async create(dto: CreateLivreurDto): Promise<Livreur> {
-        const preparedData = this.livreurMapper.prepareData(dto);
-        const user = (await preparedData).user;
+        const preparedData = await this.livreurMapper.prepareData(dto);
+        const user = preparedData.user;
         const prestataire = await user.prestataire;
         
         if(!prestataire?.est_active) throw new BadRequestException("Compte Prestataire désactivé ne peut pas créer un Livreur!");
         
-        const livreur = (await preparedData).livreur; 
+        const livreur = preparedData.livreur; 
+        livreur.qr_code = this.generateQRCode(user);
         livreur.user = user;
 
         const prepared = this.livreurRepo.create(livreur);
@@ -53,33 +55,32 @@ export class LivreurService {
         return livreur;
     }
 
-    async desactivateAccount(id_prestataire:number, id: number): Promise<{message: string}>{
+    async changeAccountStatus(id_prestataire:number, id: number, isActivate:boolean): Promise<{message: string}>{
         const matched = await this.findById(id);
         const prestataire = await matched.user.prestataire;
         if(id_prestataire != prestataire?.id_prestataire) 
             throw new UnauthorizedException("Vous n'avez pas le droit de modifier ce livreur!");
 
-        if(matched.user.est_active){
-            matched.user.est_active = false;
+        if(matched.user.est_active !== isActivate){
+            matched.user.est_active = isActivate;
             this.userRepo.save(matched.user);
         }
 
-        return {message: "Compte Livreur désactivé avec succés!"};
+        return {message: `Compte Livreur ${(isActivate) ? 'activé': 'desactivé'} avec succés!`};
     }
 
-    async activateAccount(id_prestataire:number, id: number): Promise<{message: string}>{
+    async canScan(id_prestataire:number, id: number, canScan: boolean): Promise<{message: string}>{
         const matched = await this.findById(id);
         const prestataire = await matched.user.prestataire;
         if(id_prestataire != prestataire?.id_prestataire) 
             throw new UnauthorizedException("Vous n'avez pas le droit de modifier ce livreur!");
 
-        if(!matched.user.est_active){
-            matched.user.est_active = true;
-            this.userRepo.save(matched.user);
-        }
+        matched.peut_faire_chargement_colis = canScan;
+        this.livreurRepo.save(matched);
 
-        return {message: "Compte Livreur activé avec succés!"};
+        return {message: `Scan au moment du chargement du camion ${(canScan) ? 'activé' : 'desactivé'} avec succés!`};
     }
+
 
     async update(id_prestataire: number, livreur: Livreur):Promise<Livreur> {
         const matched = await this.findById(livreur.id_livreur);
@@ -91,10 +92,9 @@ export class LivreurService {
         return this.livreurRepo.save(prepared);
     }
 
-    private async getUserByIdIfExist(id: number) {
-        const user: User = await this.userRepo.findOneByOrFail({id_utilisateur: id});
-        if(!user) throw new BadRequestException(`Utilisateur id:${id} Introuvable!`);
-
-        return user;
+    generateQRCode(user: User): string{
+        const loginDetails = `${user.login}:${user.mot_de_passe}`;
+        return QRCode.toDataUrl(loginDetails);
     }
+
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Put} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseBoolPipe, Post, Put, Query} from '@nestjs/common';
 import { PrestataireService } from './prestataire.service';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { Livreur } from '../livreur/livreur.entity';
@@ -83,7 +83,7 @@ export class PrestataireController {
     @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
     @ApiInternalServerErrorResponse({description: "Internal server error"})
     desactivateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number){
-        return this.livreurService.desactivateAccount(id_prestataire, idLivreur);
+        return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, false);
     }
 
     @Put("/:idPrestataire/livreurs/:idLivreur/activate")
@@ -94,7 +94,17 @@ export class PrestataireController {
     @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
     @ApiInternalServerErrorResponse({description: "Internal server error"})
     activateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number){
-        return this.livreurService.activateAccount(id_prestataire, idLivreur);
+        return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, true);
+    }
+
+    @Put("/:idPrestataire/livreurs/:idLivreur")
+    @ApiParam({name: "idPrestataire", description: "ID du prestataire"})
+    @ApiParam({name: "idLivreur", description: "ID du livreur"})
+    @ApiOperation({summary: "Activer ou désactiver la fonctionnalité de scan au moment du chargement du camion"})
+    @ApiCreatedResponse({description: "Compte activé!", type: "string"})
+    @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
+    changeScanLoadingTruckStatus(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number, @Query("canScan", ParseBoolPipe) canScan: boolean){
+        return this.livreurService.canScan(id_prestataire, idLivreur, canScan);
     }
 
     /* POINT DE LIVRAISON */
