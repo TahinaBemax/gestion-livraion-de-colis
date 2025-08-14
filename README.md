@@ -9,10 +9,10 @@
 * DATABASE_NAME= Le nom de la base de donnée
 
 ``
-### Créer les tables Necessaire
-    Utiliser tables-used.Sql
+### Créer les tables Necessaire dans le dossier database/script-sql
+    Utiliser le fichier tables-used.Sql
 
-### Inserer les données necessaire dans le dossier database/data
+### Inserer les données necessaire dans le dossier database/script-sql
 1. constraintes.sql
 2. default_data.qql
 
