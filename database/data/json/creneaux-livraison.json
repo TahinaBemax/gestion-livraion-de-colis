@@ -1,0 +1,23 @@
+[
+  {
+    "jour_semaine": "Lundi",
+    "heure_debut": "08:00",
+    "heure_fin": "12:00",
+    "annee": 2025,
+    "id_point_livraison": 1
+  },
+  {
+    "jour_semaine": "Mardi",
+    "heure_debut": "14:00",
+    "heure_fin": "18:00",
+    "annee": 2025,
+    "id_point_livraison": 1
+  },
+  {
+    "jour_semaine": "Jeudi",
+    "heure_debut": "10:00",
+    "heure_fin": "15:00",
+    "annee": 2025,
+    "id_point_livraison": 1
+  }
+]

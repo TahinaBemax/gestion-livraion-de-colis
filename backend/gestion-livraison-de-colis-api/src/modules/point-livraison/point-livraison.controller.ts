@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { PointLivraisonService } from './point-livraison.service';
 import { CreatePointLivraisonDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -30,7 +30,7 @@ export class PointLivraisonController {
     }
 
     @Put("/:id")
-    update(@Param("id") id: number, @Body() data: CreatePointLivraisonDto){
+    update(@Param("id", ParseIntPipe) id: number, @Body() data: CreatePointLivraisonDto){
         return this.plService.update(id, data);
     }
 

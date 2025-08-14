@@ -11,7 +11,7 @@ import { CreneauLivraisonEntity } from './creneau-livraison.entity';
 
 @ApiTags('Créneaux de Livraison')
 @Controller('creneaux-livraison')
-@Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+@Roles(UserRole.Admin)
 export class CreneauLivraisonController {
     constructor(
         private readonly creneauLivraisonService: CreneauLivraisonService
@@ -38,6 +38,7 @@ export class CreneauLivraisonController {
         type: CreneauLivraisonResponseDto 
     })
     @ApiBadRequestResponse({ description: 'Créneau de livraison introuvable' })
+    @Roles(UserRole.ResponsableExploitation)
     async findById(@Param('id') id: number): Promise<CreneauLivraisonResponseDto> {
         const entity = await this.creneauLivraisonService.findById(id);
         return CreneauLivraisonMapper.toResponseDto(entity);
@@ -49,6 +50,7 @@ export class CreneauLivraisonController {
         type: CreneauLivraisonListResponseDto 
     })
     @ApiQuery({ name: 'id', description: 'ID du point de livraison' })
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     async findByPointLivraison(@Param('id') id: number): Promise<CreneauLivraisonListResponseDto> {
         const entities = await this.creneauLivraisonService.findByPointLivraison(id);
         const data = CreneauLivraisonMapper.toResponseDtoList(entities);
@@ -65,6 +67,7 @@ export class CreneauLivraisonController {
         type: CreneauLivraisonListResponseDto 
     })
     @ApiQuery({ name: 'annee', description: 'Année des créneaux' })
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
     async findByAnnee(@Param('annee') annee: number): Promise<CreneauLivraisonListResponseDto> {
         const entities = await this.creneauLivraisonService.findByAnnee(annee);
         const data = CreneauLivraisonMapper.toResponseDtoList(entities);
@@ -92,7 +95,6 @@ export class CreneauLivraisonController {
     }
 
     @Post()
-    @Roles(UserRole.Admin)
     @HttpCode(HttpStatus.CREATED)
     @ApiBody({ type: CreateCreneauLivraisonDto })
     @ApiCreatedResponse({ 
@@ -101,12 +103,11 @@ export class CreneauLivraisonController {
     })
     @ApiBadRequestResponse({ description: 'Données invalides' })
     async create(@Body() data: CreateCreneauLivraisonDto): Promise<CreneauLivraisonResponseDto> {
-        const entity = await this.creneauLivraisonService.create(data);
+        const entity = await this.creneauLivraisonService.save(data);
         return CreneauLivraisonMapper.toResponseDto(entity);
     }
 
     @Put('/:id')
-    @Roles(UserRole.Admin)
     @ApiBody({ type: UpdateCreneauLivraisonDto })
     @ApiOkResponse({ 
         description: 'Créneau de livraison mis à jour avec succès', 
@@ -119,7 +120,6 @@ export class CreneauLivraisonController {
     }
 
     @Delete('/:id')
-    @Roles(UserRole.Admin)
     @ApiOkResponse({ 
         description: 'Créneau de livraison supprimé avec succès',
         type: CreneauLivraisonDeleteResponseDto
@@ -130,7 +130,6 @@ export class CreneauLivraisonController {
     }
 
     @Delete('point-livraison/:id')
-    @Roles(UserRole.Admin)
     @ApiOkResponse({ 
         description: 'Créneaux de livraison supprimés avec succès',
         type: CreneauLivraisonDeleteResponseDto

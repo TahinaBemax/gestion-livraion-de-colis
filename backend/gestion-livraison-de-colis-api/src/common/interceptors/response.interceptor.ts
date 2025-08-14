@@ -14,6 +14,7 @@ export class ResponseInterceptor implements NestInterceptor {
       map((data) => ({
         status: 'success',
         data,
+        total: Array.isArray(data) ? data.length : null,
         timestamp: new Date().toISOString()
       })),
     );

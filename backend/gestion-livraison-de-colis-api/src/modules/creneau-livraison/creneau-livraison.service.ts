@@ -5,17 +5,24 @@ import { CreneauLivraisonEntity } from './creneau-livraison.entity';
 import { CreateCreneauLivraisonDto } from 'src/common/dto/creneau-livraison/create-creneau-livraison-dto';
 import { UpdateCreneauLivraisonDto } from 'src/common/dto/creneau-livraison/update-creneau-livraison-dto';
 import { plainToInstance } from 'class-transformer';
+import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 
 @Injectable()
 export class CreneauLivraisonService {
     constructor(
         @InjectRepository(CreneauLivraisonEntity)
-        private readonly creneauLivraisonRep: Repository<CreneauLivraisonEntity>
+        private readonly creneauLivraisonRep: Repository<CreneauLivraisonEntity>,
+        @InjectRepository(PointLivraisonEntity)
+        private readonly pointLivraisonRep: Repository<PointLivraisonEntity>
     ) {}
 
-    async create(dto: CreateCreneauLivraisonDto): Promise<CreneauLivraisonEntity> {
+    async save(dto: CreateCreneauLivraisonDto): Promise<CreneauLivraisonEntity> {
         const creneauLivraison: CreneauLivraisonEntity = plainToInstance(CreneauLivraisonEntity, dto);
+        const existingPL: PointLivraisonEntity|null = await this.pointLivraisonRep.findOneBy({ id: dto.id_point_livraison });
+
+        if(!existingPL) throw new NotFoundException(`Point de Livraison avec ID:${dto.id_point_livraison} est introuvable`);
         
+        creneauLivraison.point_livraison = existingPL;
         const prepared = this.creneauLivraisonRep.create(creneauLivraison);
         return this.creneauLivraisonRep.save(prepared);
     }
@@ -68,10 +75,14 @@ export class CreneauLivraisonService {
         }
 
         const creneauLivraison: CreneauLivraisonEntity = plainToInstance(CreneauLivraisonEntity, dto);
-        creneauLivraison.id = id;
+        creneauLivraison.id = creneauLivraison.id ?? id;
 
-        const prepared = this.creneauLivraisonRep.create(creneauLivraison);
-        return this.creneauLivraisonRep.save(prepared);
+        const existingPL: PointLivraisonEntity|null = await this.pointLivraisonRep.findOneBy({ id: dto.id_point_livraison });
+        if(!existingPL) throw new NotFoundException(`Point de Livraison avec ID:${dto.id_point_livraison} est introuvable`);
+        
+        creneauLivraison.point_livraison = existingPL;
+
+        return this.creneauLivraisonRep.save(creneauLivraison);
     }
 
     async delete(id: number): Promise<{ message: string }> {
