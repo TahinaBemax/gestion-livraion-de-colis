@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class ImportBodyDto {
+export class ImportRequestBodyDto {
     @ApiProperty({example: "point_livraison.csv"})
     point_livraison_fichier: Express.Multer.File[];
     @ApiProperty({example: "contrainte_livraison.csv"})

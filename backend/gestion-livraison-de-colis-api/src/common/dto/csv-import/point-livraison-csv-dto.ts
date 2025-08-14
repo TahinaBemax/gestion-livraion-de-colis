@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsNumberString, IsOptional } from "class-validator";
+import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
 
 export class PointLivraisonCsvDto {
     @IsNotEmpty()

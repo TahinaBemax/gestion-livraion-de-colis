@@ -7,14 +7,6 @@ export class ContrainteLivraisonCsvDto {
     @IsNotEmpty()
     intitule_contrainte: string;
 
-    @IsTime()
-    @ConvertEmptyToUndefined()
-    heure_debut?: string;
-
-    @IsTime()
-    @ConvertEmptyToUndefined()
-    heure_fin: string;
-
     @IsFRDate()
     date_debut: string;
 

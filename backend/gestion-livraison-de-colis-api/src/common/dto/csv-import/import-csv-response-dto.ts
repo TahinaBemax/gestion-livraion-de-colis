@@ -3,7 +3,7 @@ import { ContrainteJourLivraisonCsvDto } from "./contrainte-jour-livraison-csv-d
 import { ContrainteLivraisonCsvDto } from "./contrainte-livraison-csv-dto";
 import { PointLivraisonCsvDto } from "./point-livraison-csv-dto";
 
-export class ImportCsvRestult {
+export class ImportCsvResponseDto {
     @ApiProperty()
     is_success: boolean;
     

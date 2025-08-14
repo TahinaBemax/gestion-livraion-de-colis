@@ -4,19 +4,22 @@ import { CsvImportController } from './csv-import.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
-
+import { FileCleanUpHandlerService } from 'src/common/file-clean-up-handler/file-clean-up-handler.service';
+import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 
 @Module({
   imports: [
     MulterModule.register({
-      dest: "./uploads"
+      dest: "./uploads/csv" // Changed to CSV-specific directory
     }),
     TypeOrmModule.forFeature([
-      PointLivraisonEntity
+      PointLivraisonEntity,
+      ContrainteLivraisonEntity
     ])
   ],
   providers: [
-    CsvImportService
+    CsvImportService,
+    FileCleanUpHandlerService
   ],
   controllers: [CsvImportController]
 })

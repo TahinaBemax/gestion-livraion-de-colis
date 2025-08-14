@@ -18,6 +18,8 @@ import { ContrainteEvenementModule } from './modules/contrainte-evenement/contra
 import { CreneauLivraisonModule } from './modules/creneau-livraison/creneau-livraison.module';
 import { ContrainteLivraisonModule } from './modules/contrainte-livraison/contrainte-livraison.module';
 import { ContrainteJourModule } from './modules/contrainte-jour/contrainte-jour.module';
+import { FileCleanUpHandlerModule } from './common/file-clean-up-handler/file-clean-up-handler.module';
+import { ImageUploadModule } from './modules/image-upload/image-upload.module';
 
 @Module({
   imports: [
@@ -53,6 +55,8 @@ import { ContrainteJourModule } from './modules/contrainte-jour/contrainte-jour.
     CreneauLivraisonModule,
     ContrainteLivraisonModule,
     ContrainteJourModule,
+    FileCleanUpHandlerModule,
+    ImageUploadModule,
   ],
   controllers: [AppController],
   providers: [
