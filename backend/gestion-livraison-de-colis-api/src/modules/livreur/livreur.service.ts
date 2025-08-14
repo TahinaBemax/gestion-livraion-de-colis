@@ -1,10 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Livreur } from './livreur.entity';
-import { plainToInstance } from 'class-transformer';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';
-import { CategorieLivreur } from './categorie-livreur/categorie-livreur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LiveurMapper } from './livreur.mapper';
 
