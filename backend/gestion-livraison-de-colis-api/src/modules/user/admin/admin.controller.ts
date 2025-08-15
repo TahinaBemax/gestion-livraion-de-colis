@@ -1,3 +1,4 @@
+import { EmailService } from './../../../core/email/email.service';
 import { Body, Controller, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { UserService } from '../user.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -21,8 +22,15 @@ export class AdminController {
     constructor(
         private readonly userService: UserService, 
         private readonly prestataireService: PrestataireService,
-        private readonly livreurService: LivreurService
+        private readonly livreurService: LivreurService,
+        private readonly emailService: EmailService
     ){}
+
+    @Get("/users/restauration-mot-de-passe")
+    @Public()
+    passwordReset(@Query("mail") mail:string){
+        return this.emailService.sendPasswordReset(mail);
+    }
 
     @Public()
     @Post("/users")

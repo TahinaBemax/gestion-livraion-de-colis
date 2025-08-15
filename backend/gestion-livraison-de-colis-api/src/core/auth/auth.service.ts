@@ -1,5 +1,5 @@
 import { UserService } from './../../modules/user/user.service';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginResponse } from 'src/common/dto/auth/login-response-dto';
@@ -23,6 +23,7 @@ export class AuthService {
     }
 
     async validateQRCodeLogin(qrCodeData: string): Promise<any> {
+        if(!qrCodeData) throw new BadRequestException("Donnée invalide");
         const [login, password] = qrCodeData.split(':');
         const user = await this.userService.findByLogin(login);
 

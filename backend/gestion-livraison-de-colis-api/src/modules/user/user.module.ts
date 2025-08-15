@@ -11,9 +11,15 @@ import { Prestataire } from '../prestataire/prestataire.entity';
 import { AdminController } from './admin/admin.controller';
 import { PrestataireService } from '../prestataire/prestataire.service';
 import { LivreurModule } from '../livreur/livreur.module';
+import { EmailService } from 'src/core/email/email.service';
 
 @Module({
-  providers: [UserService, UserMapper, PrestataireService],
+  providers: [
+    UserService, 
+    UserMapper, 
+    PrestataireService,
+    EmailService
+  ],
   controllers: [UserController, AdminController],
   imports: [
     TypeUtilisateurModule,
