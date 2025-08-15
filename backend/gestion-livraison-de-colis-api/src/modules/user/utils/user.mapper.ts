@@ -37,7 +37,7 @@ export class UserMapper {
     user.type_utilisateur = await this.typeRepo.findOneOrFail({ where: { id_type_utilisateur: dto.type_utilisateur } });
 
     if (dto.prestataire) {
-      user.prestataire = this.presService.findById(dto.prestataire);
+      user.prestataire = Promise.resolve(await this.presService.findById(dto.prestataire));
     }
     return user;
   }

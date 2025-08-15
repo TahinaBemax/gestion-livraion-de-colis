@@ -36,3 +36,4 @@ export class ImageUploadController {
     return this.imageUploadService.getUploadStats();
   }
 }
+

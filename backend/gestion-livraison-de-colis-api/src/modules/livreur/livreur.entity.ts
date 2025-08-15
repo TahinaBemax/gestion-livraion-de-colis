@@ -1,6 +1,7 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "../user/user.entity";
 import { CategorieLivreur } from "./categorie-livreur/categorie-livreur.entity";
+import { LivreurTemporaireEntity } from "./livreur-temporaire/livreur-temporaire.entity";
 
 
 @Entity("detail_info_livreur")
@@ -27,7 +28,10 @@ export class Livreur {
     @JoinColumn({name: "id_categorie_livreur"})
     categorie_livreur: CategorieLivreur;
 
-    @OneToOne(() => User, { cascade: true, onUpdate: "CASCADE" })
+    @OneToOne(() => User, {eager: true})
     @JoinColumn({name:"id_utilisateur"})
     user: User;
+
+    @OneToMany(() => LivreurTemporaireEntity, (l) => l.livreur_parent)
+    livreurs_temporaire: LivreurTemporaireEntity[];
 }

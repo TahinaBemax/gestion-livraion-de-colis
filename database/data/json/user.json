@@ -12,5 +12,20 @@
         "photo_profil": "https://example.com/photos/mrasoa.jpg",
         "role": "ROLE-01",
         "type_utilisateur": "TYPE-USER-00001"
+    },
+
+    {
+        "nom": "Rakoto",
+        "prenom": "Jean",
+        "civilite": "Monsieur",
+        "date_naissance": "12/01/1987",
+        "telephone": "+261341987654",
+        "email": "rakoto.jean@example.mg",
+        "login": "Rak.jean",
+        "mot_de_passe": "RakotoJean123!",
+        "est_active": true,
+        "photo_profil": null,
+        "role": "ROLE-03",
+        "type_utilisateur": "TYPE-USER-00002"
     }
 ]

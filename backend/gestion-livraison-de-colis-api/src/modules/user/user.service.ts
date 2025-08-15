@@ -109,8 +109,8 @@ export class UserService {
         const temp_user = await this.findById(user.id_utilisateur);
 
         if(!temp_user) throw new NotFoundException(`L'utilisateur id:${user.id_utilisateur} est introuvable`);
-
-        return this.userRepo.save(user);
+        const merged = this.userRepo.merge(temp_user, user)
+        return this.userRepo.save(merged);
     }
 
     async activateUser(id: number):Promise<User> {

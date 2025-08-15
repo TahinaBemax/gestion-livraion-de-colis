@@ -5,8 +5,8 @@ INSERT INTO
     roles(id_role, nom_role)
 VALUES
 ('ROLE-01', 'Admin'),
-('ROLE-03', 'Responsable Exploitation'),
 ('ROLE-02', 'Utilisateur');
+('ROLE-03', 'Responsable Exploitation'),
 /* -- --- --- */
 
 

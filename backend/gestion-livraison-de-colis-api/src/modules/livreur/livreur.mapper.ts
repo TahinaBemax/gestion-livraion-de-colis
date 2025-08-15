@@ -23,6 +23,7 @@ export class LiveurMapper {
         const categorie = await this.getCategorieLivreurByIdIfExist(dto.id_categorie_livreur);
         
         livreur.categorie_livreur = categorie;
+        livreur.peut_faire_chargement_colis = dto.peut_faire_chargement_colis?? false;
         livreur.total_points = 0;
         livreur.rang_global = 0;
         livreur.total_livraison_effectue = 0;

@@ -211,6 +211,22 @@ CREATE TABLE detail_info_livreur(
    FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 );
 
+CREATE TABLE livreurs_temporaire(
+   id_livreur_temporaire SERIAL,
+   nom TEXT NOT NULL,
+   prenom TEXT NOT NULL,
+   date_naissance DATE NOT NULL,
+   telephone TEXT NOT NULL,
+   mot_de_passe TEXT NOT NULL,
+   est_active BOOLEAN NOT NULL,
+   date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   id_livreur INTEGER NOT NULL,
+   PRIMARY KEY(id_livreur_temporaire),
+   UNIQUE(telephone),
+   UNIQUE(mot_de_passe),
+   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur)
+);
+
 CREATE TABLE livraisons(
    id_livraison SERIAL,
    date_livraison DATE NOT NULL,

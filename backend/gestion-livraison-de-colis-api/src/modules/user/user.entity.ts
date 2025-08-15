@@ -48,7 +48,7 @@ export class User {
     @JoinColumn({name: "id_type_utilisateur"})
     type_utilisateur: TypeUtilisateur;
 
-    @OneToOne(() => Prestataire, { nullable: true, lazy: true, cascade: true})
+    @OneToOne(() => Prestataire, { nullable: true, lazy: true})
     @JoinColumn({name: "id_prestataire"})
     prestataire?: Promise<Prestataire>;
 }
