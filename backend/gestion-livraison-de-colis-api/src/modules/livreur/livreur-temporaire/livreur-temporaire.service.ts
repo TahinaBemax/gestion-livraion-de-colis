@@ -1,5 +1,5 @@
 import { isValid } from 'date-fns';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { LivreurTemporaireEntity } from './livreur-temporaire.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -43,6 +43,9 @@ export class LivreurTemporaireService {
         const existingLiveur = await this.livreurRep.findOneBy({id_livreur: idLivreur});
         if(!existingLiveur) throw new NotFoundException(`Livreur avec ID:{${idLivreur}} introuvable`);
 
+        //Verification du Categorie du livreur
+        this.estLivreurPonctuel(existingLiveur);
+        
         const livreur_temp = plainToInstance(LivreurTemporaireEntity, dto);
         const date_naissance = parse(dto.date_naissance, "dd/MM/yyyy", new Date());
 
@@ -57,6 +60,12 @@ export class LivreurTemporaireService {
 
         const prepredDate = this.livreurTempRep.create(livreur_temp);
         return this.livreurTempRep.save(prepredDate);
+    }
+
+    private estLivreurPonctuel(livreur: Livreur){
+        if(livreur.categorie_livreur.id_categorie_livreur !== "CAT-LIVREUR-00002") throw new UnauthorizedException("Seule les livreurs ponctuels peuvent créer un livreur temporaire!");
+
+        return true;
     }
 
 
