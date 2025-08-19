@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGene
 import { Prestataire } from "../prestataire/prestataire.entity";
 import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
 import { ContrainteEvenementEntity } from "../contrainte-evenement/contrainte-evenement.entity";
+import { LivraisonEntity } from "../livraisons/livraison.entity";
 
 @Entity("points_livraisons")
 @Unique(["numero_magasin"])
@@ -53,4 +54,7 @@ export class PointLivraisonEntity {
         onUpdate: "CASCADE"
     })
     contraintes_evenements?: ContrainteEvenementEntity[];
+
+    @OneToMany(() => LivraisonEntity, (l) => l.point_livraison)
+    livraisons: LivraisonEntity[];
 }

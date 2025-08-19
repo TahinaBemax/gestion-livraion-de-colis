@@ -1,3 +1,4 @@
+import { ProblemeColisCreateDto } from './../../common/dto/colis/create-probleme-colis-dto';
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ColisService } from './colis.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -31,5 +32,11 @@ export class ColisController {
     @ApiBody({type: ColisCreateDto})
     update(@Param("id", ParseIntPipe) id: number, @Body() dto: ColisUpdateDto){
         return this.colisService.update(id, dto);
+    }
+
+    @Post("/:id/problemes")
+    @ApiBody({type: ColisCreateDto})
+    signalProblemeColis(@Param("id", ParseIntPipe) id: number, @Body() dto: ProblemeColisCreateDto){
+        return this.colisService.signalProbleme(id, dto);
     }
 }

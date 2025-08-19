@@ -105,13 +105,6 @@ CREATE TABLE contraintes_jours(
    FOREIGN KEY(id_contrainte_livraison) REFERENCES contraintes_livraisons(id_contrainte_livraison)
 );
 
-CREATE TABLE problemes_livraisons(
-   id_probleme_livraison SERIAL,
-   description TEXT NOT NULL,
-   PRIMARY KEY(id_probleme_livraison),
-   UNIQUE(description)
-);
-
 CREATE TABLE evenements_locaux(
    id_evenement SERIAL,
    nom_evenement TEXT NOT NULL,
@@ -153,6 +146,15 @@ CREATE TABLE detail_colis(
    FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
 );
 
+CREATE TABLE problemes_colis(
+   id_probleme_colis SERIAL,
+   titre TEXT NOT NULL,
+   description VARCHAR(50) ,
+   id_colis INTEGER NOT NULL,
+   PRIMARY KEY(id_probleme_colis),
+   FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
+);
+
 CREATE TABLE utilisateurs(
    id_utilisateur SERIAL,
    nom TEXT NOT NULL,
@@ -185,11 +187,12 @@ CREATE TABLE livraisons(
    date_livraison DATE NOT NULL,
    heure_debut TIME,
    heure_fin TIME,
-   departement TEXT,
+   rue TEXT,
    ville TEXT NOT NULL,
    pays TEXT NOT NULL,
+   code_postal TEXT NOT NULL,
    status TEXT NOT NULL,
-   id_point_livraison INTEGER NOT NULL,
+   id_point_livraison INTEGER,
    id_colis INTEGER NOT NULL,
    PRIMARY KEY(id_livraison),
    FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison),
@@ -247,6 +250,15 @@ CREATE TABLE bordereaux_livraison(
    FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
 );
 
+CREATE TABLE problemes_livraison(
+   id_probleme_livraison SERIAL,
+   titre TEXT NOT NULL,
+   description TEXT,
+   id_livraison INTEGER NOT NULL,
+   PRIMARY KEY(id_probleme_livraison),
+   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
+);
+
 CREATE TABLE livreurs_temporaire(
    id_livreur_temporaire SERIAL,
    nom TEXT NOT NULL,
@@ -296,15 +308,6 @@ CREATE TABLE ordres_livraison(
    PRIMARY KEY(id_ordre_livraison),
    FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison),
    FOREIGN KEY(id_tournee) REFERENCES tournees_livraison(id_tournee)
-);
-
-CREATE TABLE incident_livraison(
-   id_livraison INTEGER,
-   id_probleme_livraison INTEGER,
-   date_incident TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   PRIMARY KEY(id_livraison, id_probleme_livraison),
-   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison),
-   FOREIGN KEY(id_probleme_livraison) REFERENCES problemes_livraisons(id_probleme_livraison)
 );
 
 CREATE TABLE ordres_livraison_colis(

@@ -1,3 +1,4 @@
+import { ProblemeColisCreateDto } from './../../common/dto/colis/create-probleme-colis-dto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { ColisEntity } from './colis.entity';
@@ -9,12 +10,15 @@ import * as QRCode from 'qrcode';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisUpdateDto } from 'src/common/dto/colis/update-colis-dto';
 import { DetailColisEntity } from './detail-colis.entity';
+import { ProblemeColisEntity } from './probleme-colis.entity';
 
 @Injectable()
 export class ColisService {
     constructor(
         @InjectRepository(ColisEntity)
-        private readonly colisRep: Repository<ColisEntity>
+        private readonly colisRep: Repository<ColisEntity>,
+        @InjectRepository(ProblemeColisEntity)
+        private readonly problemeRep: Repository<ProblemeColisEntity>
     ){}
 
     async findAll(): Promise<ColisEntity[]>
@@ -72,8 +76,19 @@ export class ColisService {
         existing.nom_destinataire = dto.nom_destinataire;
         existing.status = dto.status;
         existing.details_colis = plainToInstance(DetailColisEntity, dto.details_colis);
-
+        
         return this.colisRep.save(existing);
+    }
+    
+    async signalProbleme(id: number, dto: ProblemeColisCreateDto): Promise<ProblemeColisEntity>{
+        if(!id || !dto) throw new BadRequestException("Données Colis invalides!");
+        
+        const existing = await this.findById(id);
+        const probleme = plainToInstance(ProblemeColisEntity, dto);
+        probleme.colis = existing;
+
+        const prepared = this.problemeRep.create(probleme);
+        return this.problemeRep.save(prepared);
     }
 
     private getSumWeight(detailsColis: DetailColisDto[]) {

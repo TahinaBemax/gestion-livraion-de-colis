@@ -22,6 +22,7 @@ import { FileCleanUpHandlerModule } from './common/file-clean-up-handler/file-cl
 import { ImageUploadModule } from './modules/image-upload/image-upload.module';
 import { EmailModule } from './core/email/email.module';
 import { ColisModule } from './modules/colis/colis.module';
+import { LivraisonsModule } from './modules/livraisons/livraisons.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { ColisModule } from './modules/colis/colis.module';
     ImageUploadModule,
     EmailModule,
     ColisModule,
+    LivraisonsModule,
   ],
   controllers: [AppController],
   providers: [

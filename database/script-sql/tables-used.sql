@@ -179,4 +179,39 @@ CREATE TABLE detail_colis(
    FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
 );
 
+CREATE TABLE problemes_colis(
+   id_probleme_colis SERIAL,
+   titre TEXT NOT NULL,
+   description VARCHAR(50) ,
+   id_colis INTEGER NOT NULL,
+   PRIMARY KEY(id_probleme_colis),
+   FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
+);
+
+CREATE TABLE livraisons(
+   id_livraison SERIAL,
+   notes TEXT,
+   date_livraison DATE NOT NULL,
+   heure_debut TIME,
+   heure_fin TIME,
+   rue TEXT,
+   ville TEXT NOT NULL,
+   pays TEXT NOT NULL,
+   code_postal TEXT NOT NULL,
+   status TEXT NOT NULL,
+   id_point_livraison INTEGER,
+   id_colis INTEGER NOT NULL,
+   PRIMARY KEY(id_livraison),
+   FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison),
+   FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
+);
+
+CREATE TABLE problemes_livraison(
+   id_probleme_livraison SERIAL,
+   titre TEXT NOT NULL,
+   description TEXT,
+   id_livraison INTEGER NOT NULL,
+   PRIMARY KEY(id_probleme_livraison),
+   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
+);
 
