@@ -154,3 +154,29 @@ CREATE TABLE detail_info_livreur(
    FOREIGN KEY(id_categorie_livreur) REFERENCES categories_livreurs(id_categorie_livreur),
    FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 );
+
+
+CREATE TABLE colis(
+   id_colis SERIAL,
+   nom_destinataire TEXT NOT NULL,
+   qrcode TEXT,
+   qrcode_client TEXT,
+   poids_total DOUBLE PRECISION,
+   status TEXT NOT NULL,
+   PRIMARY KEY(id_colis),
+   UNIQUE(qrcode),
+   UNIQUE(qrcode_client)
+);
+
+
+CREATE TABLE detail_colis(
+   id_detail_colis SERIAL,
+   description TEXT,
+   poids DOUBLE PRECISION NOT NULL DEFAULT 0,
+   valeur_declaree NUMERIC(15,2)   NOT NULL,
+   id_colis INTEGER NOT NULL,
+   PRIMARY KEY(id_detail_colis),
+   FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
+);
+
+

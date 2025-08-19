@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { QueryRunner, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Livreur } from './livreur.entity';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';

@@ -21,6 +21,7 @@ import { ContrainteJourModule } from './modules/contrainte-jour/contrainte-jour.
 import { FileCleanUpHandlerModule } from './common/file-clean-up-handler/file-clean-up-handler.module';
 import { ImageUploadModule } from './modules/image-upload/image-upload.module';
 import { EmailModule } from './core/email/email.module';
+import { ColisModule } from './modules/colis/colis.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { EmailModule } from './core/email/email.module';
     FileCleanUpHandlerModule,
     ImageUploadModule,
     EmailModule,
+    ColisModule,
   ],
   controllers: [AppController],
   providers: [
