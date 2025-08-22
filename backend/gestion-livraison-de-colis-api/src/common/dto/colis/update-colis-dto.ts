@@ -20,5 +20,5 @@ export class ColisUpdateDto{
     
     @IsNotEmpty()
     @ApiProperty()
-    details_colis: DetailColisUpdateDto[];    
+    details_colis: DetailColisUpdateDto[];   
 }

@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsNumberString } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsNumberString } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
+import { ColisCreateDto } from "../colis/create-colis-dto";
 
 export class LivraisonCreateDto {
     @ApiProperty()
@@ -20,28 +21,26 @@ export class LivraisonCreateDto {
     @IsNotEmpty()
     @ApiProperty()
     heure_fin: string;
-    
+         
     @IsNotEmpty()
-    @ApiProperty()
-    rue: string;
-
-    @IsNotEmpty()
-    @ApiProperty()
-    ville: string;
-    
-    @IsNotEmpty()
-    @ApiProperty()
-    pays: string;
-
-    @IsNotEmpty()
-    @IsNumberString()
-    @ApiProperty()
-    code_postal: string;   
-    
-    @IsNotEmpty()
-    @IsNumber()
-    @ApiProperty()
-    id_colis: number;
+    @IsArray()
+    @ApiProperty({
+        type: ColisCreateDto,
+        example: [
+            {
+                nom_destinataire: "",
+                details_colis: 
+                [
+                    {
+                        description: "",
+                        poids: 0,
+                        valeur_declaree: 20
+                    }
+                ]
+            }
+        ]
+    })
+    colis: ColisCreateDto[];
     
     @IsNotEmpty()
     @IsNumber()

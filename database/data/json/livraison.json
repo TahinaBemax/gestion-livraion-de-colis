@@ -1,12 +1,28 @@
 {
   "notes": "Livraison urgente, merci de vérifier les informations",
-  "date_livraison": "2025-08-21",
+  "date_livraison": "25/08/2025",
   "heure_debut": "09:00",
   "heure_fin": "12:00",
   "rue": "15 Rue des Champs",
   "ville": "Paris",
   "pays": "France",
   "code_postal": "75001",
-  "id_colis": 12345,
-  "id_point_livraison": 67890
+  "id_point_livraison": 67890,
+  "colis": [
+      {
+        "nom_destinataire": "MAG-1",
+        "details_colis": [
+          {
+            "description": "T-shirt en coton",
+            "poids": 0.25,
+            "valeur_declaree": 20.0
+          },
+          {
+            "description": "Livre de cuisine",
+            "poids": 0.5,
+            "valeur_declaree": 15.0
+          }
+        ]
+      }
+  ]
 }

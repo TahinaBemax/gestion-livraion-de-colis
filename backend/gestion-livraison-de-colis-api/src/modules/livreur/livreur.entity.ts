@@ -2,6 +2,8 @@ import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn
 import { User } from "../user/user.entity";
 import { CategorieLivreur } from "./categorie-livreur/categorie-livreur.entity";
 import { LivreurTemporaireEntity } from "./livreur-temporaire/livreur-temporaire.entity";
+import { TourneeLivraisonEntity } from "../tournee-livraison/tournee-livraison.entity";
+import { BordereauLivraisonEntity } from "../bordereau-livraison/bordereau-livraison.entity";
 
 
 @Entity("detail_info_livreur")
@@ -34,4 +36,10 @@ export class Livreur {
 
     @OneToMany(() => LivreurTemporaireEntity, (l) => l.livreur_parent)
     livreurs_temporaire: LivreurTemporaireEntity[];
+
+    @OneToMany(() => TourneeLivraisonEntity, (t) => t.livreur)
+    tournees_livraison: TourneeLivraisonEntity[];
+    
+    @OneToMany(() => BordereauLivraisonEntity, (b) => b.livreur)
+    bordereaux_livraison: BordereauLivraisonEntity[];
 }

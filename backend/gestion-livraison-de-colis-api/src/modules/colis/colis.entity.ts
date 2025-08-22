@@ -1,10 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { DetailColisEntity } from "./detail-colis.entity";
 import { ProblemeColisEntity } from "./probleme-colis.entity";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
 
 @Entity("colis")
-@Unique(["qrcode_client", "qrcode"])
+@Unique(["code_barre", "code_barre_client"])
 export class ColisEntity{
     @PrimaryGeneratedColumn({name: "id_colis"})
     id: number;
@@ -13,10 +13,10 @@ export class ColisEntity{
     nom_destinataire:string;
     
     @Column()
-    qrcode: string;
+    code_barre: string;
     
     @Column()
-    qrcode_client: string;
+    code_barre_client: string;
     
     @Column()
     poids_total: number;
@@ -36,6 +36,7 @@ export class ColisEntity{
     })
     problemes: ProblemeColisEntity[];
 
-    @OneToMany(() => LivraisonEntity, (l) => l.colis)
+    @ManyToOne(() => LivraisonEntity, (l) => l.colis)
+    @JoinColumn({name: "id_livraison", referencedColumnName: "id"})
     livraisons: LivraisonEntity[];
 }

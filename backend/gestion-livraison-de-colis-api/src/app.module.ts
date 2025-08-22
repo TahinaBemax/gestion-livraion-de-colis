@@ -23,6 +23,10 @@ import { ImageUploadModule } from './modules/image-upload/image-upload.module';
 import { EmailModule } from './core/email/email.module';
 import { ColisModule } from './modules/colis/colis.module';
 import { LivraisonsModule } from './modules/livraisons/livraisons.module';
+import { PlanningLivraisonModule } from './modules/planning-livraison/planning-livraison.module';
+import { TourneeLivraisonModule } from './modules/tournee-livraison/tournee-livraison.module';
+import { OrdreLivraisonModule } from './modules/ordre-livraison/ordre-livraison.module';
+import { BordereauLivraisonModule } from './modules/bordereau-livraison/bordereau-livraison.module';
 
 @Module({
   imports: [
@@ -63,6 +67,10 @@ import { LivraisonsModule } from './modules/livraisons/livraisons.module';
     EmailModule,
     ColisModule,
     LivraisonsModule,
+    PlanningLivraisonModule,
+    TourneeLivraisonModule,
+    OrdreLivraisonModule,
+    BordereauLivraisonModule,
   ],
   controllers: [AppController],
   providers: [

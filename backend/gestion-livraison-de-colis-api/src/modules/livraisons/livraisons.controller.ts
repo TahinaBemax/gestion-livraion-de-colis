@@ -1,21 +1,26 @@
 import { ProblemeLivraisonCreateDto } from './../../common/dto/livraison/create-probleme-livraison-dto';
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { LivraisonsService } from './livraisons.service';
 import { LivraisonCreateDto } from 'src/common/dto/livraison/create-livraison-dto';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRole } from 'src/common/enum/user-role.enum';
+import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
 
 @Controller('livraisons')
+@Roles(UserRole.Admin)
 export class LivraisonsController {
     constructor(
         private readonly livraisonService: LivraisonsService
     ){}
-
+    
     @Get()
     getAll(){
         return this.livraisonService.findAll();
     }
     
     @Get("/:id")
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)
     getById(@Param("id", ParseIntPipe) id: number){
         return this.livraisonService.findById(id);
     }
@@ -35,16 +40,26 @@ export class LivraisonsController {
     @ApiCreatedResponse()
     @ApiBadRequestResponse()
     @ApiNotFoundResponse()
-    update(@Param("id", ParseIntPipe) id: number, @Body() dto: LivraisonCreateDto){
+    update(@Param("id", ParseIntPipe) id: number, @Body() dto: LivraisonUpdateDto){
         return this.livraisonService.update(id, dto);
     }
 
+    @Put("/:id/change-statut")
+    @HttpCode(HttpStatus.CREATED)
+    @ApiCreatedResponse()
+    @ApiBadRequestResponse()
+    @ApiNotFoundResponse()
+    changeStatuts(@Param("id", ParseIntPipe) id: number, @Query("statut") statut: string){
+        return this.livraisonService.updateStatut(id, statut);
+    }
+    
     @Post("/:id/problemes")
     @HttpCode(HttpStatus.CREATED)
     @ApiBody({type: ProblemeLivraisonCreateDto})
     @ApiCreatedResponse()
     @ApiBadRequestResponse()
     @ApiNotFoundResponse()
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)
     signalProbleme(@Param("id", ParseIntPipe) id: number, @Body() dto: ProblemeLivraisonCreateDto){
         return this.livraisonService.signalProbleme(id, dto);
     }

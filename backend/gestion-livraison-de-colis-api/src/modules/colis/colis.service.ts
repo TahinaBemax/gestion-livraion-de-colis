@@ -11,6 +11,7 @@ import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisUpdateDto } from 'src/common/dto/colis/update-colis-dto';
 import { DetailColisEntity } from './detail-colis.entity';
 import { ProblemeColisEntity } from './probleme-colis.entity';
+import { LivraisonEntity } from '../livraisons/livraison.entity';
 
 @Injectable()
 export class ColisService {
@@ -18,7 +19,9 @@ export class ColisService {
         @InjectRepository(ColisEntity)
         private readonly colisRep: Repository<ColisEntity>,
         @InjectRepository(ProblemeColisEntity)
-        private readonly problemeRep: Repository<ProblemeColisEntity>
+        private readonly problemeRep: Repository<ProblemeColisEntity>,
+        @InjectRepository(LivraisonEntity)
+        private readonly livraisonRep: Repository<LivraisonEntity>
     ){}
 
     async findAll(): Promise<ColisEntity[]>
@@ -38,10 +41,34 @@ export class ColisService {
         return mathced;
     }
 
+    async findByCode_barre(code: string): Promise<ColisEntity>
+    {
+        const mathced = await this.colisRep.findOne({
+            where: {code_barre: code},
+            relations: ["details_colis"]
+        });
+
+        if(!mathced) throw new NotFoundException(`Colis introuvable!`);
+
+        return mathced;
+    }
+
+    async findByCodeBarreClient(code: string): Promise<ColisEntity>
+    {
+        const mathced = await this.colisRep.findOne({
+            where: {code_barre_client: code},
+            relations: ["details_colis"]
+        });
+
+        if(!mathced) throw new NotFoundException(`Colis introuvable!`);
+
+        return mathced;
+    }
+
     async save(dto: ColisCreateDto): Promise<ColisEntity> {
         if(!dto) throw new BadRequestException("Données Colis invalides!");
 
-        const colis: ColisEntity = plainToClass(ColisEntity, dto); 
+        const colis: ColisEntity = plainToInstance(ColisEntity, dto); 
         colis.status = StatusColis.EN_ATTENTE;
         colis.poids_total = this.getSumWeight(dto.details_colis);
 
@@ -52,8 +79,8 @@ export class ColisService {
         try {
             const savedColis = await queryRunner.manager.save(ColisEntity, colis);
 
-            savedColis.qrcode_client = await this.generateQRCodeClient(savedColis);
-            savedColis.qrcode = await this.generateQRCode(savedColis);
+            savedColis.code_barre_client = await this.generateCodeBarreClient(savedColis);
+            savedColis.code_barre = await this.generateCodeBarre(savedColis);
 
             const updated = await queryRunner.manager.save(ColisEntity, savedColis);
             await queryRunner.commitTransaction()
@@ -91,6 +118,14 @@ export class ColisService {
         return this.problemeRep.save(prepared);
     }
 
+    async delete(id: number):Promise<string>{
+        if(!id) throw new BadRequestException("ID colis invalide!");
+        const existing = await this.findById(id); 
+        
+        await this.colisRep.delete(id);
+        return "Colis supprimé avec succés"!
+    }
+
     private getSumWeight(detailsColis: DetailColisDto[]) {
         let sum = 0;
         if(!detailsColis || detailsColis.length === 0) return sum;
@@ -102,13 +137,13 @@ export class ColisService {
         return sum;
     }
 
-    private async generateQRCode(colis: ColisEntity): Promise<string> {
+    private async generateCodeBarre(colis: ColisEntity): Promise<string> {
         const data: string = `${colis.id}`;
         
         return QRCode.toDataURL(data);
     }
 
-    private async generateQRCodeClient(colis: ColisEntity): Promise<string> {
+    private async generateCodeBarreClient(colis: ColisEntity): Promise<string> {
         const data: string = `${colis.id}:${colis.nom_destinataire}`;
         
         return QRCode.toDataURL(data);

@@ -13,6 +13,6 @@ export class ColisCreateDto{
     nom_destinataire:string;
     
     @IsNotEmpty()
-    @ApiProperty()
-    details_colis: DetailColisDto[];    
+    @ApiProperty({type: [DetailColisDto]})
+    details_colis: DetailColisDto[];
 }

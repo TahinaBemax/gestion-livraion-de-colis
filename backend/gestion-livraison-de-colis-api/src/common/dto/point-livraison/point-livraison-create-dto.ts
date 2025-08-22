@@ -9,7 +9,10 @@ export class CreatePointLivraisonDto {
     numero_magasin: string;
 
     @IsNotEmpty()
-    nom_rue?: string;
+    nom_rue: string;
+
+    @IsNotEmpty()
+    numero_rue: string;
 
     @IsNotEmpty()
     departement: string;

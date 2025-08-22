@@ -45,15 +45,28 @@ CREATE TABLE points_livraisons(
    FOREIGN KEY(id_prestataire) REFERENCES prestataire(id_prestataire)
 );
 
+CREATE TABLE livraisons(
+   id_livraison SERIAL,
+   notes TEXT,
+   date_livraison DATE NOT NULL,
+   heure_debut TIME,
+   heure_fin TIME,
+   rue TEXT,
+   ville TEXT NOT NULL,
+   pays TEXT NOT NULL,
+   code_postal TEXT NOT NULL,
+   status TEXT NOT NULL,
+   id_point_livraison INTEGER,
+   PRIMARY KEY(id_livraison),
+   FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison)
+);
+
 CREATE TABLE plannings_livraison(
    id_planning_livraison SERIAL,
    date_debut DATE NOT NULL,
    date_fin DATE NOT NULL,
-   heure_debut TIME NOT NULL,
-   heure_fin TIME NOT NULL,
-   nombre_livraison INTEGER NOT NULL,
    priorite_livraison TEXT NOT NULL,
-   statut_planning TEXT NOT NULL,
+   statut TEXT NOT NULL,
    PRIMARY KEY(id_planning_livraison)
 );
 
@@ -78,13 +91,15 @@ CREATE TABLE types_utilisateurs(
 CREATE TABLE colis(
    id_colis SERIAL,
    nom_destinataire TEXT NOT NULL,
-   qrcode TEXT,
-   qrcode_client TEXT,
+   code_barre TEXT,
+   code_barre_client TEXT,
    poids_total DOUBLE PRECISION,
    status TEXT NOT NULL,
+   id_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_colis),
-   UNIQUE(qrcode),
-   UNIQUE(qrcode_client)
+   UNIQUE(code_barre),
+   UNIQUE(code_barre_client),
+   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
 );
 
 CREATE TABLE categories_livreurs(
@@ -103,6 +118,15 @@ CREATE TABLE contraintes_jours(
    id_contrainte_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_contrainte_jour),
    FOREIGN KEY(id_contrainte_livraison) REFERENCES contraintes_livraisons(id_contrainte_livraison)
+);
+
+CREATE TABLE problemes_livraison(
+   id_probleme_livraison SERIAL,
+   titre TEXT NOT NULL,
+   description TEXT,
+   id_livraison INTEGER NOT NULL,
+   PRIMARY KEY(id_probleme_livraison),
+   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
 );
 
 CREATE TABLE evenements_locaux(
@@ -181,24 +205,6 @@ CREATE TABLE utilisateurs(
    FOREIGN KEY(id_type_utilisateur) REFERENCES types_utilisateurs(id_type_utilisateur)
 );
 
-CREATE TABLE livraisons(
-   id_livraison SERIAL,
-   notes TEXT,
-   date_livraison DATE NOT NULL,
-   heure_debut TIME,
-   heure_fin TIME,
-   rue TEXT,
-   ville TEXT NOT NULL,
-   pays TEXT NOT NULL,
-   code_postal TEXT NOT NULL,
-   status TEXT NOT NULL,
-   id_point_livraison INTEGER,
-   id_colis INTEGER NOT NULL,
-   PRIMARY KEY(id_livraison),
-   FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison),
-   FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
-);
-
 CREATE TABLE notifications(
    id_notification SERIAL,
    titre TEXT NOT NULL,
@@ -224,39 +230,6 @@ CREATE TABLE detail_info_livreur(
    UNIQUE(id_utilisateur),
    FOREIGN KEY(id_categorie_livreur) REFERENCES categories_livreurs(id_categorie_livreur),
    FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
-);
-
-CREATE TABLE bordereaux_livraison(
-   id_bordereau_livraison SERIAL,
-   code_barre TEXT NOT NULL,
-   nom_entreprise TEXT NOT NULL,
-   adresse_entreprise TEXT NOT NULL,
-   contact_entreprise TEXT NOT NULL,
-   nom_destinataire TEXT NOT NULL,
-   adresse_destinataire TEXT NOT NULL,
-   contact_destinataire TEXT NOT NULL,
-   date_livraison DATE NOT NULL,
-   date_signature_livreur TIMESTAMP NOT NULL DEFAULT TIMESTAMP,
-   date_accuse_reception TIMESTAMP NOT NULL DEFAULT TIMESTAMP,
-   remarque TEXT,
-   id_colis INTEGER NOT NULL,
-   id_livreur INTEGER NOT NULL,
-   id_livraison INTEGER NOT NULL,
-   PRIMARY KEY(id_bordereau_livraison),
-   UNIQUE(id_livraison),
-   UNIQUE(code_barre),
-   FOREIGN KEY(id_colis) REFERENCES colis(id_colis),
-   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur),
-   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
-);
-
-CREATE TABLE problemes_livraison(
-   id_probleme_livraison SERIAL,
-   titre TEXT NOT NULL,
-   description TEXT,
-   id_livraison INTEGER NOT NULL,
-   PRIMARY KEY(id_probleme_livraison),
-   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
 );
 
 CREATE TABLE livreurs_temporaire(
@@ -289,7 +262,6 @@ CREATE TABLE tournees_livraison(
    date_tournee DATE NOT NULL,
    heure_debut TIME NOT NULL DEFAULT CURRENT_TIME,
    heure_fin TIME NOT NULL DEFAULT CURRENT_TIME,
-   nbr_colis INTEGER NOT NULL,
    statut TEXT NOT NULL,
    id_livreur INTEGER NOT NULL,
    id_planning_livraison INTEGER NOT NULL,
@@ -301,8 +273,9 @@ CREATE TABLE tournees_livraison(
 CREATE TABLE ordres_livraison(
    id_ordre_livraison SERIAL,
    point_obtenu DOUBLE PRECISION NOT NULL DEFAULT 0,
-   feedback TEXT,
-   estimation_retard TIMESTAMP,
+   estimation_retard TIME,
+   nbr_colis_prevu SMALLINT NOT NULL,
+   nbr_colis_reel SMALLINT NOT NULL,
    id_point_livraison INTEGER NOT NULL,
    id_tournee INTEGER NOT NULL,
    PRIMARY KEY(id_ordre_livraison),
@@ -310,10 +283,26 @@ CREATE TABLE ordres_livraison(
    FOREIGN KEY(id_tournee) REFERENCES tournees_livraison(id_tournee)
 );
 
-CREATE TABLE ordres_livraison_colis(
-   id_colis INTEGER,
+CREATE TABLE bordereaux_livraison(
+   id_bordereau_livraison SERIAL,
+   code_barre TEXT NOT NULL,
+   date_livraison DATE NOT NULL,
+   date_signature_livreur TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   date_accuse_reception TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   remarque TEXT,
+   id_ordre_livraison INTEGER NOT NULL,
+   id_livreur INTEGER NOT NULL,
+   PRIMARY KEY(id_bordereau_livraison),
+   UNIQUE(id_ordre_livraison),
+   UNIQUE(code_barre),
+   FOREIGN KEY(id_ordre_livraison) REFERENCES ordres_livraison(id_ordre_livraison),
+   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur)
+);
+
+CREATE TABLE details_ordre_livraison(
+   id_livraison INTEGER,
    id_ordre_livraison INTEGER,
-   PRIMARY KEY(id_colis, id_ordre_livraison),
-   FOREIGN KEY(id_colis) REFERENCES colis(id_colis),
+   PRIMARY KEY(id_livraison, id_ordre_livraison),
+   FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison),
    FOREIGN KEY(id_ordre_livraison) REFERENCES ordres_livraison(id_ordre_livraison)
 );

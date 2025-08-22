@@ -3,6 +3,7 @@ import { Prestataire } from "../prestataire/prestataire.entity";
 import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
 import { ContrainteEvenementEntity } from "../contrainte-evenement/contrainte-evenement.entity";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
+import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
 
 @Entity("points_livraisons")
 @Unique(["numero_magasin"])
@@ -15,6 +16,9 @@ export class PointLivraisonEntity {
 
     @Column()
     nom_rue: string;
+
+    @Column()
+    numero_rue: string;
 
     @Column()
     departement: string;
@@ -57,4 +61,7 @@ export class PointLivraisonEntity {
 
     @OneToMany(() => LivraisonEntity, (l) => l.point_livraison)
     livraisons: LivraisonEntity[];
+
+    @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.point_livraison)
+    ordres_livraison: OrdreLivraisonEntity[];
 }
