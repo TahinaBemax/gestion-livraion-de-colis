@@ -10,16 +10,16 @@ export class LivraisonEntity {
     id: number; 
 
     @Column()
-    notes: string;
+    notes?: string;
 
     @Column({type: "date"})
     date_livraison: string;
     
     @Column({type: "time"})
-    heure_debut: string;
+    heure_debut?: string;
     
     @Column({type: "time"})
-    heure_fin: string;
+    heure_fin?: string;
     
     @Column()
     rue: string;
@@ -28,17 +28,17 @@ export class LivraisonEntity {
     ville: string;
     
     @Column()
-    pays: string;
+    pays?: string;
 
     @Column()
     code_postal: string;
     
     @Column()
-    status: string;
+    statut_livraison: string;
 
     @OneToMany(() => ColisEntity, (c) => c.livraisons, {
         eager: true,
-        cascade: true, 
+        cascade: ['insert'], 
         lazy:false,
         onUpdate: "CASCADE"
     })

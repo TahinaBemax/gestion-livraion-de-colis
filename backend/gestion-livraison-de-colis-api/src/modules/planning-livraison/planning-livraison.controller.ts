@@ -1,9 +1,8 @@
 import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { PlanningLivraisonCreateDto } from 'src/common/dto/planning-livraison/create-planning-dto';
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { PlanningLivraisonService } from './planning-livraison.service';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { StatutPlanningLivaison } from 'src/common/enum/status-planning-livraison';
 import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
 
 @Controller('plannings')

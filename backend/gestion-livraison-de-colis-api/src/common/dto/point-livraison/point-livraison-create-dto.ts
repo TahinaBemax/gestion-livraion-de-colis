@@ -15,24 +15,29 @@ export class CreatePointLivraisonDto {
     numero_rue: string;
 
     @IsNotEmpty()
-    departement: string;
-
+    @IsOptional()
+    departement?: string;
+    
     @IsNotEmpty()
     ville: string;
-
+    
     @IsNotEmpty()
-    pays: string;
-
-    @IsNumber()
-    latitude: number;
+    @IsOptional()
+    pays?: string;
     
     @IsNumber()
-    longitude: number;
-
+    @IsOptional()
+    latitude?: number;
+    
+    @IsNumber()
+    @IsOptional()
+    longitude?: number;
+    
     @IsNotEmpty()
     @IsNumberString()
     code_postal: string;
-
+    
+    @IsOptional()
     @IsOptional()
     complement_adresse?: string;
 }

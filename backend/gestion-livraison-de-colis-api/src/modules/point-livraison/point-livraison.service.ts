@@ -1,14 +1,11 @@
 
 import { In, Repository } from 'typeorm';
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePointLivraisonDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
 import { plainToInstance } from 'class-transformer';
-import { PrestataireService } from '../prestataire/prestataire.service';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { PointLivraisonEntity } from './point-livraison.entity';
-import { EvenementLocalService } from '../evenement-local/evenement-local.service';
-import { ContrainteLivraisonService } from '../contrainte-livraison/contrainte-livraison.service';
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 
 
@@ -17,10 +14,8 @@ export class PointLivraisonService {
     constructor(
         @InjectRepository(PointLivraisonEntity)
         private readonly pointLivraisonRep: Repository<PointLivraisonEntity>,
-        private readonly prestataireService: PrestataireService,
         @InjectRepository(ContrainteLivraisonEntity)
         private readonly contrainteLivraisonRep: Repository<ContrainteLivraisonEntity>,
-        private readonly evenementService: EvenementLocalService
     ){}
 
 

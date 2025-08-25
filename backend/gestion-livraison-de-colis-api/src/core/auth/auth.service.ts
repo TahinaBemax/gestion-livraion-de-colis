@@ -15,7 +15,7 @@ export class AuthService {
         const user = await this.userService.findByLogin(login);
 
         if(user && await bcrypt.compare(password, user.mot_de_passe)){
-            const { mot_de_passe, ...result} = user;
+            const { mot_de_passe, prestataire, est_active, photo_profil, ...result} = user;
             return result;
         }
 
@@ -23,12 +23,13 @@ export class AuthService {
     }
 
     async validateQRCodeLogin(qrCodeData: string): Promise<any> {
-        if(!qrCodeData) throw new BadRequestException("Donnée invalide");
+        if(!qrCodeData) throw new BadRequestException("QRCode invalide");
+
         const [login, password] = qrCodeData.split(':');
         const user = await this.userService.findByLogin(login);
 
         if (user && user.mot_de_passe === password) {
-            const { mot_de_passe, ...result} = user;
+            const { mot_de_passe, prestataire, est_active, photo_profil, ...result} = user;
             return result;
         }
         return null;
@@ -36,9 +37,10 @@ export class AuthService {
 
     login(user: any): LoginResponse {
         const payload = {
-            username: user.login, 
+            username: user.adresse_mail, 
             sub: user.id_utilisateur, 
-            role: user.role?.id
+            role: user.role?.id,
+            type_utilisateur: user.type_utilisateur.id
         };
 
         const access_token = this.jwtService.sign(payload);

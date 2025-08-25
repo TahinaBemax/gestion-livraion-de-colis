@@ -11,15 +11,15 @@ export class EvenementLocalEntity {
     @Column()
     jour_semaine: string;
 
-    @Column()
-    date_debut: Date;
+    @Column({type: 'date'})
+    date_debut: string;
+
+    @Column({type: 'date'})
+    date_fin: string;
 
     @Column()
-    date_fin: Date;
+    type_evenement: string;
 
     @Column()
-    type: string;
-
-    @Column()
-    frequence: string;   
+    frequence_evenement: string;   
 }

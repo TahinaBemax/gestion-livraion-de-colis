@@ -16,7 +16,7 @@ export class PlanningLivraisonEntity {
     priorite_livraison: string;
 
     @Column()
-    statut: string;
+    statut_planning: string;
 
     @OneToMany(() => TourneeLivraisonEntity, (t) => t.planning_livraison, {
         eager: true,

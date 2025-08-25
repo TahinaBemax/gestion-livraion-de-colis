@@ -4,7 +4,7 @@ ALTER TABLE
    types_utilisateurs 
 ADD CONSTRAINT 
    type_check
-CHECK(type = 'Livreur' OR type = 'Prestataire' OR type = 'Personnel');
+CHECK(type = 'Livreur' OR type = 'Prestataire' OR type = 'Tempo One');
 
 
 ALTER TABLE 

@@ -19,7 +19,7 @@ export class EvenementLocalDto {
     @ApiProperty({example: "Fête de l'indepadance"})
     @IsOptional()
     @IsEnum(JourSemaine)
-    jour_semaine?: string;
+    jour_semaine: string;
     
     @IsFRDate()
     @ApiProperty({example: "25/06/2025"})
@@ -31,9 +31,9 @@ export class EvenementLocalDto {
     
     @IsEnum(TypeEvenementEnum)
     @IsNotEmpty()
-    type: string;
+    type_evenement: string;
     
     @IsEnum(FrequenceEvenementEnum)
     @IsNotEmpty()
-    frequence: string; 
+    frequence_evenement: string; 
 }

@@ -5,7 +5,9 @@ import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { User } from '../user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LiveurMapper } from './livreur.mapper';
-import * as QRCode from 'qrcode';
+import { Prestataire } from '../prestataire/prestataire.entity';
+import { Utils } from 'src/common/utils/utils';
+import { LivreurUpdateDto } from 'src/common/dto/livreur/update-livreur-dto';
 
 @Injectable()
 export class LivreurService {
@@ -14,40 +16,32 @@ export class LivreurService {
         private readonly livreurRepo: Repository<Livreur>, 
         @InjectRepository(User)
         private readonly userRepo: Repository<User>,
-        private readonly livreurMapper: LiveurMapper
+        @InjectRepository(Prestataire)
+        private readonly prestataireRep: Repository<Prestataire>,
+        private readonly livreurMapper: LiveurMapper,
     ){}
 
-    async create(dto: CreateLivreurDto): Promise<Livreur> {
+    async create(idPrestataire: number, dto: CreateLivreurDto): Promise<Livreur> {
         if (!dto) throw new BadRequestException("Données Livreur invalides");
-
+        if (!idPrestataire) throw new BadRequestException("L'IdPrestataire est null");
         const queryRunner = this.livreurRepo.manager.connection.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
 
         try {
-            const preparedData = await this.livreurMapper.prepareData(dto);
-            const user = preparedData.user;
-            const prestataire = await user.prestataire;
+            const prestataire = await this.prestataireRep.findOneBy({id_prestataire: idPrestataire});
+            if(!prestataire) throw new NotFoundException(`Prestataire id:${idPrestataire} Introuvable!`);
+    
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+
+
+            const livreur = await this.livreurMapper.prepareData(prestataire, dto);
+            var savedLivreur = await queryRunner.manager.save(Livreur, livreur);
             
-            if (!prestataire?.est_active) {
-                throw new BadRequestException("Compte Prestataire désactivé ne peut pas créer un Livreur!");
-            }
+            livreur.qr_code = await Utils.generateUserQRCode(savedLivreur.user.adresse_email, savedLivreur.user.mot_de_passe);
+            savedLivreur = await queryRunner.manager.save(Livreur, livreur);
             
-            const livreur = preparedData.livreur; 
-            livreur.qr_code = await this.generateQRCode(user);
-
-            // Save User first
-            const savedUser = await queryRunner.manager.save(User, user);
-
-            // Assign user to livreur
-            livreur.user = savedUser;
-
-            // Save Livreur
-            const savedLivreur = await queryRunner.manager.save(Livreur, livreur);
-
             await queryRunner.commitTransaction();
-            return savedLivreur;
-
+            return { ...savedLivreur, user: { ...savedLivreur.user, mot_de_passe: "" } };
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
@@ -65,9 +59,10 @@ export class LivreurService {
     async findAllLivreursByPrestataire(id:number): Promise<Livreur[]>{
         return this.livreurRepo
             .createQueryBuilder('livreur')
-            .leftJoinAndSelect('livreur.user', 'user')
-            .leftJoinAndSelect('user.prestataire', 'prestataire')
-            .where('prestataire.id_prestataire = :id', { id })
+            .innerJoinAndSelect('livreur.user', 'user')
+            .innerJoin(Prestataire, 'p', 'p.id_prestataire = user.id_prestataire')
+            .addSelect('p')
+            .where('p.id_prestataire = :id', { id })
             .getMany();
     }
 
@@ -97,7 +92,7 @@ export class LivreurService {
 
     async canScan(id_prestataire:number, id: number, canScan: boolean): Promise<{message: string}>{
         const matched = await this.findById(id);
-        const prestataire = await matched.user.prestataire;
+        const prestataire = matched.user.prestataire;
         if(id_prestataire != prestataire?.id_prestataire) 
             throw new UnauthorizedException("Vous n'avez pas le droit de modifier ce livreur!");
 
@@ -108,19 +103,15 @@ export class LivreurService {
     }
 
 
-    async update(id_prestataire: number, livreur: Livreur):Promise<Livreur> {
-        const matched = await this.findById(livreur.id_livreur);
+    async update(idLivreur: number, data: LivreurUpdateDto):Promise<Livreur> {
+        if(!data) throw new BadRequestException("Données Livreur invalides");
+        if(!idLivreur) throw new BadRequestException("L'id du livreur est null");
 
-        if(id_prestataire !== (await matched.user.prestataire)?.id_prestataire) 
-            throw new BadRequestException("Vous n'avez pas le droit de modifier ce livreur!");
+        const matched = await this.findById(idLivreur);
+        matched.user = {...matched.user, ...data};
+        matched.categorie_livreur = data.id_categorie_livreur ? await this.livreurMapper['getCategorieLivreurByIdIfExist'](data.id_categorie_livreur) : matched.categorie_livreur;
 
-        const prepared = this.livreurRepo.merge(livreur);
-        return this.livreurRepo.save(prepared);
+        const updated = await this.livreurRepo.save(matched);
+        return { ...updated, user: { ...updated.user, mot_de_passe: "" } };
     }
-
-    async generateQRCode(user: User): Promise<string>{
-        const loginDetails = `${user.login}:${user.mot_de_passe}`;
-        return await QRCode.toDataURL(loginDetails);
-    }
-
 }

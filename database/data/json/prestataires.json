@@ -1,19 +1,22 @@
 [
   {
+    "user": {
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "telephone": "+261341234578",
+      "email": "jean.dupont@example.com",
+      "mot_de_passe": "MotDePasse123!"
+    },
     "nom_entreprise": "Entreprise Dupont",
     "nif": "123456789",
     "stat": "123-4567890",
-    "adresse1": "123 Rue de Paris",
-    "adresse2": "Appartement 45",
-    "departement": "Ile-de-France",
-    "etat": "Île-de-France",
-    "ville": "Paris",
-    "pays": "France",
-    "code_postal": "75001",
-    "telephone": "+33 1 23 45 67 89",
-    "email": "contact@entreprisedupont.com",
-    "est_active": true
+    "adresse_principale": "123 Rue de Paris",
+    "numero_telephone": "+33 1 23 45 67 89",
+    "adresse_email": "contact@entreprisedupont.com",
+    "nom_image_logo": "images/logos/entreprise_dupont_logo.png"
   },
+
+  
   {
     "nom_entreprise": "Tech Innovators",
     "nif": "987654321",

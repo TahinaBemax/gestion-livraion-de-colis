@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsNotEmpty } from "class-validator";
+import { IsBoolean, IsEnum } from "class-validator";
 import { CreateUserDto } from "../create-user-dto";
 import { CategorieLivreurEnum } from "src/common/enum/categorie-livreur.enum";
 import { ApiProperty } from "@nestjs/swagger";
@@ -8,14 +8,7 @@ export class CreateLivreurDto {
         type: CreateUserDto,
         example: {nom: "tahina", prenom:"bemax", etc:"..."}
     })
-    user: CreateUserDto;
-
-    @IsBoolean()
-    @ApiProperty({
-        example: true
-    })
-    peut_faire_chargement_colis: boolean;
-    
+    user: CreateUserDto;    
     
     @IsEnum(CategorieLivreurEnum)
     @ApiProperty({

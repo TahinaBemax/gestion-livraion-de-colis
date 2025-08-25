@@ -1,26 +1,42 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsNotEmpty, IsNumber, IsNumberString } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
 import { ColisCreateDto } from "../colis/create-colis-dto";
 
 export class LivraisonCreateDto {
-    @ApiProperty()
-    notes: string;
-
-    @IsFRDate()
-    @ApiProperty()
-    date_livraison: string;
-
-    @IsNotEmpty()
-    @ApiProperty()
-    @IsTime()
-    heure_debut: string;
+    @ApiProperty({description: "Une petite note"})
+    @IsOptional()
+    notes?: string;
     
+    @IsFRDate()
+    @ApiProperty({example: "12/05/2025"})
+    date_livraison: string;
+    
+    @ApiProperty({example: "10:20:00"})
+    @IsTime()
+    @IsOptional()
+    heure_debut?: string;
+    
+    @ApiProperty({example: "14:00:00"})
     @IsTime()
     @IsNotEmpty()
-    @ApiProperty()
-    heure_fin: string;
+    heure_fin?: string;
+    
+    @ApiProperty({example: "Avenue, RN7"})
+    @IsNotEmpty()
+    rue: string;
+    
+    @ApiProperty({example: "Antananarivo"})
+    @IsNotEmpty()
+    ville: string;
+    
+    @IsOptional()
+    pays?: string;
+    
+    @ApiProperty({example: "BII 101"})
+    @IsNotEmpty()
+    code_postal: string;
          
     @IsNotEmpty()
     @IsArray()
@@ -43,7 +59,8 @@ export class LivraisonCreateDto {
     colis: ColisCreateDto[];
     
     @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
-    @ApiProperty()
-    id_point_livraison: number;
+    @ApiProperty({example: 1})
+    id_point_livraison?: number;
 }

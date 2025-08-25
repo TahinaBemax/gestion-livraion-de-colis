@@ -11,7 +11,7 @@ export class ContrainteJourDto {
 
     @IsEnum(JourSemaine)
     @ApiProperty({example: "Lundi"})
-    jour:string;
+    jour_semaine:string;
     
     @IsBoolean()
     @IsNotEmpty()
@@ -21,12 +21,12 @@ export class ContrainteJourDto {
     @IsTime()
     @IsNotEmpty()
     @ApiProperty({example: "08:00"})
-    heure_debut: string;
+    heure_debut_livraison: string;
     
     @IsTime()
     @IsNotEmpty()
     @ApiProperty({example: "18:00"})
-    heure_fin: string;
+    heure_fin_livraison: string;
     
     @IsNumber()
     @IsNotEmpty()

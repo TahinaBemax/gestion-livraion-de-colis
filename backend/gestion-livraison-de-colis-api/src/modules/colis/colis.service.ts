@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { ColisEntity } from './colis.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ColisCreateDto } from 'src/common/dto/colis/create-colis-dto';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 import * as QRCode from 'qrcode';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
@@ -44,7 +44,7 @@ export class ColisService {
     async findByCode_barre(code: string): Promise<ColisEntity>
     {
         const mathced = await this.colisRep.findOne({
-            where: {code_barre: code},
+            where: {code_barre_colis: code},
             relations: ["details_colis"]
         });
 
@@ -56,7 +56,7 @@ export class ColisService {
     async findByCodeBarreClient(code: string): Promise<ColisEntity>
     {
         const mathced = await this.colisRep.findOne({
-            where: {code_barre_client: code},
+            where: {code_barre_colis: code},
             relations: ["details_colis"]
         });
 
@@ -69,7 +69,7 @@ export class ColisService {
         if(!dto) throw new BadRequestException("Données Colis invalides!");
 
         const colis: ColisEntity = plainToInstance(ColisEntity, dto); 
-        colis.status = StatusColis.EN_ATTENTE;
+        colis.statut_colis = StatusColis.EN_ATTENTE;
         colis.poids_total = this.getSumWeight(dto.details_colis);
 
         const queryRunner = this.colisRep.manager.connection.createQueryRunner();
@@ -79,8 +79,8 @@ export class ColisService {
         try {
             const savedColis = await queryRunner.manager.save(ColisEntity, colis);
 
-            savedColis.code_barre_client = await this.generateCodeBarreClient(savedColis);
-            savedColis.code_barre = await this.generateCodeBarre(savedColis);
+            savedColis.code_barre_client_colis = await this.generateCodeBarreClient(savedColis);
+            savedColis.code_barre_colis = await this.generateCodeBarre(savedColis);
 
             const updated = await queryRunner.manager.save(ColisEntity, savedColis);
             await queryRunner.commitTransaction()
@@ -101,7 +101,7 @@ export class ColisService {
         
         existing.poids_total = this.getSumWeight(dto.details_colis);
         existing.nom_destinataire = dto.nom_destinataire;
-        existing.status = dto.status;
+        existing.statut_colis = dto.status;
         existing.details_colis = plainToInstance(DetailColisEntity, dto.details_colis);
         
         return this.colisRep.save(existing);
@@ -131,7 +131,7 @@ export class ColisService {
         if(!detailsColis || detailsColis.length === 0) return sum;
 
         detailsColis.forEach(d => {
-            sum += d.poids;
+            sum += d.poids_produit;
         });
 
         return sum;

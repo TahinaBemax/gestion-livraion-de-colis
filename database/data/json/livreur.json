@@ -15,6 +15,5 @@
         "type_utilisateur": "TYPE-USER-00003",
         "prestataire": 1
     },
-    "peut_faire_chargement_colis": true,
     "id_categorie_livreur": "CAT-LIVREUR-00001"
 }

@@ -1,21 +1,25 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ColisEntity } from './colis.entity';
+import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
 
-@Entity("detail_colis")
+@Entity("produits")
 export class DetailColisEntity {
-    @PrimaryGeneratedColumn({name: "id_detail_colis"})
-    id: number;
+    @PrimaryGeneratedColumn({name: "ref_produit"})
+    id: string;
     
     @Column()
-    description:string;
+    description_produit:string;
 
     @Column()
-    poids: number;
+    poids_produit: number;
     
     @Column()
-    valeur_declaree: number;
+    valeur_produit: number;
 
     @ManyToOne(() => ColisEntity, (c) => c.details_colis)
     @JoinColumn({name: "id_colis", referencedColumnName: "id"})
     colis: ColisEntity;
+
+    @ManyToMany(() => BordereauLivraisonEntity, (bl) => bl.contenu)
+    bordereaux_livraison: BordereauLivraisonEntity[];
 }

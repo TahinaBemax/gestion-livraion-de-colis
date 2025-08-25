@@ -34,7 +34,7 @@ export class PlanningLivraisonService {
         Utils.isValidDateInterval(dto.date_debut, dto.date_fin);
         
         const planning = plainToInstance(PlanningLivraisonEntity, dto);
-        planning.statut = StatutPlanningLivaison.BROUILLON;
+        planning.statut_planning = StatutPlanningLivaison.BROUILLON;
 
         const prepared = this.planningRep.create(planning);
         return this.planningRep.save(prepared);
@@ -45,7 +45,7 @@ export class PlanningLivraisonService {
         Utils.isValidStatus(statut, StatutPlanningLivaison);
         
         const planning = await this.findById(id);
-        planning.statut = statut;
+        planning.statut_planning = statut;
         await this.planningRep.save(planning);
         
         return "Statuts modifié avec succés!";
@@ -56,8 +56,8 @@ export class PlanningLivraisonService {
         Utils.isValidDateInterval(dto.date_debut, dto.date_fin);
         const existing = await this.findById(id);
 
-        if(existing.statut !== StatutPlanningLivaison.BROUILLON && existing.statut !== StatutPlanningLivaison.PLANIFIE){
-            throw new BadRequestException(`Planning de livraison avec statuts: ${existing.statut} ne peut plus être modifier!`);
+        if(existing.statut_planning !== StatutPlanningLivaison.BROUILLON && existing.statut_planning !== StatutPlanningLivaison.PLANIFIE){
+            throw new BadRequestException(`Planning de livraison avec statuts: ${existing.statut_planning} ne peut plus être modifier!`);
         }
 
         existing.priorite_livraison = dto.priorite_livraison;
@@ -69,11 +69,11 @@ export class PlanningLivraisonService {
         if(!id) throw new BadRequestException("Id planning livraison invalide");
         const existing = await this.findById(id);
 
-        if(existing.statut !== StatutPlanningLivaison.BROUILLON && existing.statut !== StatutPlanningLivaison.PLANIFIE){
-            throw new BadRequestException(`Planning de livraison avec statuts: ${existing.statut} ne peut plus être supprimer!`);
+        if(existing.statut_planning !== StatutPlanningLivaison.BROUILLON && existing.statut_planning !== StatutPlanningLivaison.PLANIFIE){
+            throw new BadRequestException(`Planning de livraison avec statuts: ${existing.statut_planning} ne peut plus être supprimer!`);
         }
 
-        return this.planningRep.delete(existing);
+        return this.planningRep.delete(existing.id);
     }
 
 

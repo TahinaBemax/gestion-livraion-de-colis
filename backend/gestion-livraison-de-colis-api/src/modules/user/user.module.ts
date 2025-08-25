@@ -20,7 +20,10 @@ import { EmailService } from 'src/core/email/email.service';
     PrestataireService,
     EmailService
   ],
-  controllers: [UserController, AdminController],
+  controllers: [
+    UserController, 
+    AdminController
+  ],
   imports: [
     TypeUtilisateurModule,
     forwardRef(() => LivreurModule),

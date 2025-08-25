@@ -1,5 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { isValid, parse } from "date-fns";
+import * as bcrypt from "bcrypt";
+import * as QRCode from 'qrcode';
 
 export class Utils {
     static parseToFRDate(date: string): Date{
@@ -27,5 +29,14 @@ export class Utils {
             throw new BadRequestException(`Statuts autorisés:${statutArray}`);
 
         return true;
+    }
+
+    static hashPassword(password: string): string {
+        return  bcrypt.hashSync(password, 10);
+    }
+
+    static async generateUserQRCode(adresse_email, mot_de_passe): Promise<string>{
+        const loginDetails = `${adresse_email}:${mot_de_passe}`;
+        return await QRCode.toDataURL(loginDetails);
     }
 }

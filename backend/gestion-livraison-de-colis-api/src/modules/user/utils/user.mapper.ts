@@ -9,6 +9,10 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { format, isValid, parse } from "date-fns";
 import * as bcrypt from 'bcrypt';
 import { PrestataireService } from "src/modules/prestataire/prestataire.service";
+import { Utils } from "src/common/utils/utils";
+import { Prestataire } from "src/modules/prestataire/prestataire.entity";
+import { UpdateUserDto } from "src/common/dto/update-user-dto";
+import { Livreur } from "src/modules/livreur/livreur.entity";
 
 @Injectable()
 export class UserMapper {
@@ -20,25 +24,78 @@ export class UserMapper {
     private readonly presService: PrestataireService
   ) {}
 
-  async fromDto(dto: CreateUserDto): Promise<User> {
-    const parsed = parse(dto.date_naissance, 'dd/MM/yyyy', new Date());
-    const isValidDate = isValid(parsed) && format(parsed, 'dd/MM/yyyy') === dto.date_naissance;
-          
-    if (!isValidDate) {
-        throw new BadRequestException(`Le format de la date de naissance doit être en dd/MM/yyyy. Valeur reçue: ${dto.date_naissance}`);
-    }
+  async fromDtoToUser(dto: CreateUserDto): Promise<User> {
+    if(!dto) throw new BadRequestException("Le dto est null");
+    
+    const role =  new Role();
+    const type_utilisateur = new TypeUtilisateur();
+
+    type_utilisateur.id_type_utilisateur = "TYPE-USER-00001"; // Type utilisateur Interne
+    role.id = dto.role;
 
     const user = plainToInstance(User, dto);
-    user.telephone = dto.telephone != null ? dto.telephone.replace(/\s+/g, '') : undefined;
-    user.mot_de_passe = await bcrypt.hash(dto.mot_de_passe, 10);
+    user.adresse_email = dto.email;
+    user.mot_de_passe = Utils.hashPassword(dto.mot_de_passe);
+    user.role = role;
+    user.type_utilisateur = type_utilisateur;
 
-    user.date_naissance = parsed;
-    user.role = await this.roleRepo.findOneOrFail({ where: { id: dto.role } });
-    user.type_utilisateur = await this.typeRepo.findOneOrFail({ where: { id_type_utilisateur: dto.type_utilisateur } });
+    return user;
+  }
 
-    if (dto.prestataire) {
-      user.prestataire = Promise.resolve(await this.presService.findById(dto.prestataire));
-    }
+  fromDtoWithPrestataire(dto: CreateUserDto, idPrestataire: number): User {
+    if(!dto) throw new BadRequestException("Le dto est null");
+    if(!idPrestataire) throw new BadRequestException("L'id de prestataire est null");
+
+    const role =  new Role();
+    const type_utilisateur = new TypeUtilisateur();
+    const prestataire = new Prestataire();
+
+    prestataire.id_prestataire = idPrestataire;
+    type_utilisateur.id_type_utilisateur = "TYPE-02"; // Type utilisateur Prestataire
+    role.id = dto.role;
+
+    const user = plainToInstance(User, dto);
+    user.adresse_email = dto.email;
+    user.mot_de_passe = Utils.hashPassword(dto.mot_de_passe);
+    user.role = role;
+    user.type_utilisateur = type_utilisateur;
+    user.prestataire = prestataire;
+
+    return user;
+  }
+
+  async mapUpdateUserDtoToUser(user: User, dto: UpdateUserDto): Promise<User> {
+    if(!dto) throw new BadRequestException("Le dto est null");
+
+    const role =  new Role();
+    role.id = dto.role?? user.role.id;
+    user.nom = dto.nom?? user.nom;
+    user.prenom = dto.prenom?? user.prenom; 
+    user.role = role;
+
+    user.civilite = dto.civilite?? user.civilite;
+    user.date_naissance = dto.date_naissance?? user.date_naissance; 
+    user.numero_telephone = dto.numero_telephone?? user.numero_telephone;
+    user.adresse_email = dto.adresse_email?? user.adresse_email;
+    if(dto.photo_profil) user.photo_profil = dto.photo_profil;
+    
+    return user;
+  }
+
+  mapToLivreur(dto: CreateUserDto, idPrestatare?: number): User {
+    if(!dto) throw new BadRequestException("Le dto est null");
+
+    const user = this.fromDtoWithPrestataire(dto, idPrestatare?? 0);
+    const role =  new Role();
+    const type_user = new TypeUtilisateur();
+    
+    type_user.id_type_utilisateur = "TYPE-USER-00003"; // Type utilisateur Livreur 
+    role.id = "ROLE-02"; // Role Livreur
+
+    user.role = role;
+    user.type_utilisateur = type_user;
+    user.prestataire = undefined
+    
     return user;
   }
 }

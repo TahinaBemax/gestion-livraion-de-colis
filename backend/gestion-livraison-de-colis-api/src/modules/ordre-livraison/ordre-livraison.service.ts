@@ -188,10 +188,10 @@ export class OrdreLivraisonService {
     ): Promise<void> {
         if (incompleteLivraisons.length > 0) {
             for (const l of incompleteLivraisons) {
-                const reliquats = l.colis.filter(c => c.status !== StatusColis.LIVRE);
+                const reliquats = l.colis.filter(c => c.statut_colis !== StatusColis.LIVRE);
                 if (reliquats.length > 0) {
                     const updatedColis = reliquats.map((colis) => {
-                        colis.status = StatusColis.RELIQUAT;
+                        colis.statut_colis = StatusColis.RELIQUAT;
                         return colis;
                     });
                     if (queryRunner) {
@@ -215,10 +215,10 @@ export class OrdreLivraisonService {
         ordre_livraison.point_livraison = dto.pointLivraion;
 
         for (const livraison of ordre_livraison.livraisons) {
-            livraison.status = StatusLivraison.DISTRIBUEUR_ASSIGNÉ;
+            livraison.statut_livraison = StatusLivraison.DISTRIBUEUR_ASSIGNÉ;
             livraison.colis.forEach(c => {
-                if(c.status !== StatusColis.RELIQUAT){
-                    c.status = StatusColis.A_CHARGE_DANS_LA_CAMION
+                if(c.statut_colis !== StatusColis.RELIQUAT){
+                    c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION
                 }
             });
         }

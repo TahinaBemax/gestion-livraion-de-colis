@@ -10,22 +10,24 @@ CREATE TABLE prestataire(
    nom_entreprise TEXT NOT NULL,
    NIF TEXT,
    STAT TEXT,
-   adresse1 TEXT,
-   adresse2 TEXT,
-   departement TEXT NOT NULL,
+   adresse_principale TEXT NOT NULL,
+   adresse_complementaire TEXT,
+   departement TEXT,
    etat TEXT,
-   ville TEXT NOT NULL,
-   pays TEXT NOT NULL,
-   code_postal VARCHAR(50)  NOT NULL,
-   telephone VARCHAR(16)  NOT NULL,
-   email TEXT NOT NULL,
+   ville TEXT,
+   pays TEXT,
+   code_postal VARCHAR(50) ,
+   numero_telephone VARCHAR(16)  NOT NULL,
+   adresse_email TEXT NOT NULL,
+   nom_image_logo TEXT,
    est_active BOOLEAN NOT NULL DEFAULT TRUE,
    PRIMARY KEY(id_prestataire),
    UNIQUE(nom_entreprise),
    UNIQUE(NIF),
    UNIQUE(STAT),
-   UNIQUE(telephone),
-   UNIQUE(email)
+   UNIQUE(numero_telephone),
+   UNIQUE(adresse_email),
+   UNIQUE(nom_image_logo)
 );
 
 CREATE TABLE points_livraisons(
@@ -55,7 +57,7 @@ CREATE TABLE livraisons(
    ville TEXT NOT NULL,
    pays TEXT NOT NULL,
    code_postal TEXT NOT NULL,
-   status TEXT NOT NULL,
+   statut_livraison TEXT NOT NULL,
    id_point_livraison INTEGER,
    PRIMARY KEY(id_livraison),
    FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison)
@@ -66,7 +68,7 @@ CREATE TABLE plannings_livraison(
    date_debut DATE NOT NULL,
    date_fin DATE NOT NULL,
    priorite_livraison TEXT NOT NULL,
-   statut TEXT NOT NULL,
+   statut_planning TEXT NOT NULL,
    PRIMARY KEY(id_planning_livraison)
 );
 
@@ -91,14 +93,18 @@ CREATE TABLE types_utilisateurs(
 CREATE TABLE colis(
    id_colis SERIAL,
    nom_destinataire TEXT NOT NULL,
-   code_barre TEXT,
-   code_barre_client TEXT,
+   code_barre_colis TEXT,
+   code_barre_client_colis TEXT,
    poids_total DOUBLE PRECISION,
-   status TEXT NOT NULL,
+   statut_colis TEXT NOT NULL,
+   date_heure_chargement TIMESTAMP,
+   date_heure_dechargement TIMESTAMP,
+   date_heure_accuse_reception TIMESTAMP,
+   date_heure_retour_expediteur TIMESTAMP,
    id_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_colis),
-   UNIQUE(code_barre),
-   UNIQUE(code_barre_client),
+   UNIQUE(code_barre_colis),
+   UNIQUE(code_barre_client_colis),
    FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison)
 );
 
@@ -111,10 +117,10 @@ CREATE TABLE categories_livreurs(
 
 CREATE TABLE contraintes_jours(
    id_contrainte_jour SERIAL,
-   jour TEXT NOT NULL,
+   jour_semaine TEXT NOT NULL,
    est_livrable BOOLEAN NOT NULL,
-   heure_debut TIME,
-   heure_fin TIME,
+   heure_debut_livraison TIME,
+   heure_fin_livraison TIME,
    id_contrainte_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_contrainte_jour),
    FOREIGN KEY(id_contrainte_livraison) REFERENCES contraintes_livraisons(id_contrainte_livraison)
@@ -135,8 +141,8 @@ CREATE TABLE evenements_locaux(
    jour_semaine TEXT,
    date_debut DATE,
    date_fin DATE,
-   type TEXT NOT NULL,
-   frequence TEXT NOT NULL,
+   type_evenement TEXT NOT NULL,
+   frequence_evenement TEXT NOT NULL,
    PRIMARY KEY(id_evenement)
 );
 
@@ -160,13 +166,13 @@ CREATE TABLE creneaux_livraison(
    FOREIGN KEY(id_point_livraison) REFERENCES points_livraisons(id_point_livraison)
 );
 
-CREATE TABLE detail_colis(
-   id_detail_colis SERIAL,
-   description TEXT,
-   poids DOUBLE PRECISION NOT NULL DEFAULT 0,
-   valeur_declaree NUMERIC(15,2)   NOT NULL,
+CREATE TABLE produits(
+   ref_produit SERIAL,
+   description_produit TEXT NOT NULL,
+   poids_produit DOUBLE PRECISION NOT NULL CHECK (poids_produit>= 0),
+   valeur_produit NUMERIC(15,2)   NOT NULL CHECK (valeur_produit >= 0),
    id_colis INTEGER NOT NULL,
-   PRIMARY KEY(id_detail_colis),
+   PRIMARY KEY(ref_produit),
    FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
 );
 
@@ -174,6 +180,7 @@ CREATE TABLE problemes_colis(
    id_probleme_colis SERIAL,
    titre TEXT NOT NULL,
    description VARCHAR(50) ,
+   dateheure TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    id_colis INTEGER NOT NULL,
    PRIMARY KEY(id_probleme_colis),
    FOREIGN KEY(id_colis) REFERENCES colis(id_colis)
@@ -183,11 +190,10 @@ CREATE TABLE utilisateurs(
    id_utilisateur SERIAL,
    nom TEXT NOT NULL,
    prenom TEXT NOT NULL,
-   civilite TEXT NOT NULL,
-   date_naissance DATE NOT NULL,
-   telephone VARCHAR(16)  NOT NULL,
-   email TEXT NOT NULL,
-   login TEXT NOT NULL,
+   civilite TEXT,
+   date_naissance DATE,
+   numero_telephone VARCHAR(16) ,
+   adresse_email TEXT NOT NULL,
    mot_de_passe TEXT NOT NULL,
    est_active BOOLEAN NOT NULL DEFAULT TRUE,
    photo_profil TEXT,
@@ -195,9 +201,8 @@ CREATE TABLE utilisateurs(
    id_role VARCHAR(50)  NOT NULL,
    id_type_utilisateur VARCHAR(50)  NOT NULL,
    PRIMARY KEY(id_utilisateur),
-   UNIQUE(telephone),
-   UNIQUE(email),
-   UNIQUE(login),
+   UNIQUE(numero_telephone),
+   UNIQUE(adresse_email),
    UNIQUE(mot_de_passe),
    UNIQUE(photo_profil),
    FOREIGN KEY(id_prestataire) REFERENCES prestataire(id_prestataire),
@@ -217,10 +222,9 @@ CREATE TABLE notifications(
    FOREIGN KEY(id_utilisateur_1) REFERENCES utilisateurs(id_utilisateur)
 );
 
-CREATE TABLE detail_info_livreur(
+CREATE TABLE livreur_information(
    id_livreur SERIAL,
    total_points DOUBLE PRECISION NOT NULL DEFAULT 0,
-   rang_global INTEGER NOT NULL DEFAULT 0,
    peut_faire_chargement_colis BOOLEAN NOT NULL DEFAULT TRUE,
    qr_code TEXT,
    total_livraison_effectue INTEGER NOT NULL DEFAULT 0,
@@ -245,7 +249,7 @@ CREATE TABLE livreurs_temporaire(
    PRIMARY KEY(id_livreur_temporaire),
    UNIQUE(telephone),
    UNIQUE(mot_de_passe),
-   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur)
+   FOREIGN KEY(id_livreur) REFERENCES livreur_information(id_livreur)
 );
 
 CREATE TABLE positions_gps_livreur(
@@ -254,7 +258,7 @@ CREATE TABLE positions_gps_livreur(
    coordonnee_final DOUBLE PRECISION NOT NULL,
    id_livreur INTEGER NOT NULL,
    PRIMARY KEY(id_position_gps_livreur),
-   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur)
+   FOREIGN KEY(id_livreur) REFERENCES livreur_information(id_livreur)
 );
 
 CREATE TABLE tournees_livraison(
@@ -266,7 +270,7 @@ CREATE TABLE tournees_livraison(
    id_livreur INTEGER NOT NULL,
    id_planning_livraison INTEGER NOT NULL,
    PRIMARY KEY(id_tournee),
-   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur),
+   FOREIGN KEY(id_livreur) REFERENCES livreur_information(id_livreur),
    FOREIGN KEY(id_planning_livraison) REFERENCES plannings_livraison(id_planning_livraison)
 );
 
@@ -284,19 +288,21 @@ CREATE TABLE ordres_livraison(
 );
 
 CREATE TABLE bordereaux_livraison(
-   id_bordereau_livraison SERIAL,
-   code_barre TEXT NOT NULL,
+   ref_bordereau_livraison TEXT,
+   nom_expediteur TEXT NOT NULL,
+   adresse_expediteur TEXT NOT NULL,
+   contact_expediteur TEXT NOT NULL,
+   nom_destinataire TEXT NOT NULL,
+   adresse_destinataire TEXT NOT NULL,
+   contact_destinataire TEXT,
+   date_bordereau DATE NOT NULL DEFAULT CURRENT_DATE,
    date_livraison DATE NOT NULL,
-   date_signature_livreur TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   date_accuse_reception TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   remarque TEXT,
    id_ordre_livraison INTEGER NOT NULL,
    id_livreur INTEGER NOT NULL,
-   PRIMARY KEY(id_bordereau_livraison),
+   PRIMARY KEY(ref_bordereau_livraison),
    UNIQUE(id_ordre_livraison),
-   UNIQUE(code_barre),
    FOREIGN KEY(id_ordre_livraison) REFERENCES ordres_livraison(id_ordre_livraison),
-   FOREIGN KEY(id_livreur) REFERENCES detail_info_livreur(id_livreur)
+   FOREIGN KEY(id_livreur) REFERENCES livreur_information(id_livreur)
 );
 
 CREATE TABLE details_ordre_livraison(
@@ -305,4 +311,12 @@ CREATE TABLE details_ordre_livraison(
    PRIMARY KEY(id_livraison, id_ordre_livraison),
    FOREIGN KEY(id_livraison) REFERENCES livraisons(id_livraison),
    FOREIGN KEY(id_ordre_livraison) REFERENCES ordres_livraison(id_ordre_livraison)
+);
+
+CREATE TABLE contenu_livraison(
+   ref_bordereau_livraison TEXT,
+   ref_produit INTEGER,
+   PRIMARY KEY(ref_bordereau_livraison, ref_produit),
+   FOREIGN KEY(ref_bordereau_livraison) REFERENCES bordereaux_livraison(ref_bordereau_livraison),
+   FOREIGN KEY(ref_produit) REFERENCES produits(ref_produit)
 );

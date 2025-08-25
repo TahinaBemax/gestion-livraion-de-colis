@@ -1,28 +1,46 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNumber, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
 
 export class LivraisonUpdateDto {
-    @ApiProperty()
-    notes: string;
-
+    @ApiProperty({description: "Une petite note"})
+    @IsOptional()
+    notes?: string;
+    
+    @ApiProperty({example: "12/05/2025"})
     @IsFRDate()
-    @ApiProperty()
-    date_livraison: string;
-
-    @IsNotEmpty()
-    @ApiProperty()
-    @IsTime()
-    heure_debut: string;
+    @IsOptional()
+    date_livraison?: string;
     
+    @ApiProperty({example: "10:20:00"})
     @IsTime()
-    @IsNotEmpty()
-    @ApiProperty()
-    heure_fin: string; 
+    @IsOptional()
+    heure_debut?: string;
     
-    @IsNotEmpty()
+    @ApiProperty({example: "14:00:00"})
+    @IsTime()
+    @IsOptional()
+    heure_fin?: string;
+    
+    @ApiProperty({example: "Avenue, RN7"})
+    @IsOptional()
+    rue?: string;
+    
+    @ApiProperty({example: "Antananarivo"})
+    @IsOptional()
+    ville?: string;
+    
+    @ApiProperty({example: "Madagascar"})
+    @IsOptional()
+    pays?: string;
+    
+    @ApiProperty({example: "BII 101"})
+    @IsOptional()
+    code_postal?: string;
+    
+    @IsOptional()
     @IsNumber()
-    @ApiProperty()
-    id_point_livraison: number;
+    @ApiProperty({example: 1})
+    id_point_livraison?: number;
 }

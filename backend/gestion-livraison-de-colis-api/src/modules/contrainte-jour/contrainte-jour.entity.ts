@@ -7,16 +7,16 @@ export class ContrainteJourEntity {
     id: number;
 
     @Column()
-    jour:string;
+    jour_semaine:string;
     
     @Column()
     est_livrable: boolean;
 
     @Column({type: "time"})
-    heure_debut: string;
+    heure_debut_livraison: string;
 
     @Column({type: "time"})
-    heure_fin: string;
+    heure_fin_livraison: string;
     
     @ManyToOne(() => ContrainteLivraisonEntity, (cl) => cl.contrainte_jour_livraisons)
     @JoinColumn({referencedColumnName: "id", name:"id_contrainte_livraison"})

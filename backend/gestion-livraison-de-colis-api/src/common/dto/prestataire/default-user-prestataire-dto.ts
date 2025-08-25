@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsEmail, IsEnum, IsStrongPassword } from 'class-validator';
-import { UserRole } from '../enum/user-role.enum';
+import { IsNotEmpty, IsEmail, IsPhoneNumber, IsStrongPassword } from 'class-validator';
 
-export class CreateUserDto {
+export class DefaulPrestataireAdminUserDto {
     @ApiProperty({
         description: "Nom de l'utilisateur",
         example: "Dupont",
@@ -16,6 +15,14 @@ export class CreateUserDto {
     })
     @IsNotEmpty()
     prenom: string;
+
+
+    @ApiProperty({
+        description: "Numéro de téléphone de l'utilisateur",
+        example: "+261341234578",
+    })
+    @IsPhoneNumber()
+    telephone: string;
 
     @ApiProperty({
         description: "Adresse email de l'utilisateur",
@@ -32,11 +39,4 @@ export class CreateUserDto {
     @IsNotEmpty()
     @IsStrongPassword()
     mot_de_passe: string;
-
-    @ApiProperty({
-        description: "Rôle de l'utilisateur (ex: Admin, Utilisateur, Responsable Exploitation)",
-        example: "ROLE-01",
-    })
-    @IsEnum(UserRole)
-    role: string;
 }

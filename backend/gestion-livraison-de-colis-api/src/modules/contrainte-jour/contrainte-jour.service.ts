@@ -29,9 +29,7 @@ export class ContrainteJourService {
     async save(dto: ContrainteJourDto): Promise<ContrainteJourEntity> {
         if(!dto) throw new BadRequestException("Données Invalides");
 
-        const contrainteLivrasion = await this.contrainteLivraisonEntityRep.findOneOrFail({
-            where: {id: dto.id_contrainte_livraison}
-        });
+        const contrainteLivrasion = await this.getContrainteLivraison(dto.id_contrainte_livraison);
 
         const temp = plainToInstance(ContrainteJourEntity, dto);
         temp.contrainte_livraison = contrainteLivrasion;
@@ -45,16 +43,23 @@ export class ContrainteJourService {
         const existing = await this.findById(id);
         (!dto.id) ? id : dto.id;
 
-        const contrainteLivrasion = await this.contrainteLivraisonEntityRep.findOneOrFail({
-            where: {id: dto.id_contrainte_livraison}
-        });
+        const contrainteLivrasion = await this.getContrainteLivraison(dto.id_contrainte_livraison);
+        existing.est_livrable = dto.est_livrable;
+        existing.heure_debut_livraison = dto.heure_debut_livraison;
+        existing.heure_fin_livraison = dto.heure_fin_livraison;
+        existing.jour_semaine = dto.jour_semaine;   
+        existing.contrainte_livraison = contrainteLivrasion;
 
-        const temp = plainToInstance(ContrainteJourEntity, dto);
-        temp.contrainte_livraison = contrainteLivrasion;
-
-        Object.assign(existing, temp);
         return this.contrainteJourRepo.save(existing);
     }
 
 
+    private async getContrainteLivraison(id: number): Promise<ContrainteLivraisonEntity> {
+        const cl = await this.contrainteLivraisonEntityRep.findOne({
+            where: {id: id}
+        })
+        if(cl == null) throw new BadRequestException("Contrainte de Livraison Inexistante");
+
+        return cl;
+    }
 }

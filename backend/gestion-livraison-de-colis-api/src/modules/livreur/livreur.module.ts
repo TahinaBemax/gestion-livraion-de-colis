@@ -11,6 +11,7 @@ import { LivreurTemporaireModule } from './livreur-temporaire/livreur-temporaire
 import { LivreurController } from './livreur.controller';
 import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporaire.service';
 import { LivreurTemporaireEntity } from './livreur-temporaire/livreur-temporaire.entity';
+import { Prestataire } from '../prestataire/prestataire.entity';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { LivreurTemporaireEntity } from './livreur-temporaire/livreur-temporaire
       Livreur, 
       User, 
       CategorieLivreur,
-      LivreurTemporaireEntity
+      LivreurTemporaireEntity,
+      Prestataire
     ]),
     LivreurTemporaireModule
   ],

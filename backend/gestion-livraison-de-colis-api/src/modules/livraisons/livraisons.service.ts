@@ -5,25 +5,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ColisEntity } from '../colis/colis.entity';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 import { LivraisonCreateDto } from 'src/common/dto/livraison/create-livraison-dto';
-import { Utils } from 'src/common/utils/utils';
-import { plainToClass, plainToInstance } from 'class-transformer';
 import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
 import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-probleme-livraison-dto';
 import { ProblemeLivraisonEntity } from './probleme-livraison.entity';
 import { ColisCreateDto } from 'src/common/dto/colis/create-colis-dto';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
-import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 import { BarcodeService } from 'src/core/code_barre/code_barre.service';
 import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
+import { plainToInstance } from 'class-transformer';
+import { DetailColisEntity } from '../colis/detail-colis.entity';
 
 @Injectable()
 export class LivraisonsService {
     constructor(
-        private readonly barcodeService: BarcodeService,
         @InjectRepository(LivraisonEntity)
         private readonly livraisonRep: Repository<LivraisonEntity>,
-        @InjectRepository(ColisEntity)
-        private readonly colisRep: Repository<ColisEntity>,
         @InjectRepository(PointLivraisonEntity)
         private readonly plRep: Repository<PointLivraisonEntity>,
         @InjectRepository(ProblemeLivraisonEntity)
@@ -38,16 +34,16 @@ export class LivraisonsService {
             .innerJoinAndSelect("l.point_livraison", "pl")
             .innerJoinAndSelect("l.colis", "c")
             .where("pl.id =:id", { id: idPL })
-            .andWhere("(l.status =:echec OR l.status =:retourne_expediteur OR l.status =:partielle)", {
+            .andWhere("(l.statut_livraison =:echec OR l.statut_livraison =:retourne_expediteur OR l.statut_livraison =:partielle)", {
                 echec: StatusLivraison.ECHEC_LIVRAISON,
                 retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR,
                 partielle: StatusLivraison.LIVRAISON_PARTIELLE,
             })
             .getMany();
-        }
+    }
         
-        async findByDateTourneeAndPointLivraison(idPL: number, dateTournee: string, heure_debut: string, heure_fin: string): Promise<LivraisonEntity[]> {
-            return this.livraisonRep
+    async findByDateTourneeAndPointLivraison(idPL: number, dateTournee: string, heure_debut: string, heure_fin: string): Promise<LivraisonEntity[]> {
+        return this.livraisonRep
             .createQueryBuilder("l")
             .innerJoinAndSelect("l.point_livraison", "pl")
             .innerJoinAndSelect("l.colis", "c")
@@ -57,7 +53,7 @@ export class LivraisonsService {
                 debut: heure_debut,
                 fin: heure_fin,
             })
-            .andWhere("(l.status != :annule)", {
+            .andWhere("(l.statut_livraison != :annule)", {
                 annule: StatusLivraison.ANNULE
             })
             .getMany();
@@ -98,17 +94,7 @@ export class LivraisonsService {
     async save(dto: LivraisonCreateDto): Promise<LivraisonEntity>{
         if(!dto) throw new BadRequestException("Données invalides");
 
-        const livraison = plainToInstance(LivraisonEntity, dto);
-        const pl: PointLivraisonEntity|null = await this.plRep.findOne({where: {id: dto.id_point_livraison}});
-        if(!pl) throw new NotFoundException(`Point de livraison avec ID:{${dto.id_point_livraison}} est introuvable!`);
-
-        livraison.status = StatusLivraison.EN_ATTENTE;
-        livraison.colis = this.getColis(dto.colis);
-        livraison.point_livraison = pl;
-        livraison.code_postal = pl.code_postal;
-        livraison.pays = pl.pays;
-        livraison.rue = pl.nom_rue + "-" + pl.numero_rue;
-        livraison.ville = pl.ville;
+        const livraison = await this.mapToLivraisonEntity(dto);
 
         const queryRunner = this.livraisonRep.manager.connection.createQueryRunner();
         await queryRunner.connect();
@@ -117,6 +103,7 @@ export class LivraisonsService {
         try {
             const savedLivraison = await queryRunner.manager.save(LivraisonEntity, livraison);
             savedLivraison.colis = await this.batchGenerateCodeBarre(savedLivraison.colis);
+
             const updated = await queryRunner.manager.save(ColisEntity, savedLivraison.colis);
             await queryRunner.commitTransaction();
 
@@ -133,20 +120,7 @@ export class LivraisonsService {
     async update(id: number, dto: LivraisonUpdateDto): Promise<LivraisonEntity>{
         if(!dto || !id) throw new BadRequestException("Données invalides");
         
-        const existing = await this.findById(id);
-        const pl = await this.plRep.findOne({where: {id: dto.id_point_livraison}});
-        if(!pl) throw new NotFoundException(`Point de livraison avec ID:{${dto.id_point_livraison}} est introuvable!`);
-
-        existing.notes = dto.notes;
-        existing.heure_debut = dto.heure_debut;
-        existing.heure_fin = dto.heure_fin;
-        existing.code_postal = pl.code_postal;
-        existing.pays = pl.pays;
-        existing.rue = pl.nom_rue + "-" + pl.numero_rue;
-        existing.ville = pl.ville;
-        existing.status = StatusLivraison.EN_ATTENTE;
-        existing.point_livraison = pl;
-
+        const existing = await this.mapUpdateDtoToLivraisonEntity(id, dto);
         return this.livraisonRep.save(existing);
     }
 
@@ -158,7 +132,7 @@ export class LivraisonsService {
 
         if(!matched || matched.length === 0) throw new BadRequestException(`Statut: {${statut}} inconnue! Voici les statuts acceptés: ${statuts}`);
         
-        existing.status = statut;
+        existing.statut_livraison = statut;
 
         await this.livraisonRep.save(existing);
         return "Statut modifié avec succés!";
@@ -181,19 +155,19 @@ export class LivraisonsService {
 
         const colis: ColisEntity[] = plainToInstance(ColisEntity, dto);
         return colis.map(c => {
-            c.status = StatusColis.EN_ATTENTE;
+            c.statut_colis = StatusColis.EN_ATTENTE;
             c.poids_total = this.getSumWeight(c.details_colis);  
             
             return c;
         });
     } 
 
-    private getSumWeight(detailsColis: DetailColisDto[]) {
+    private getSumWeight(detailsColis: DetailColisEntity[]) {
         let sum = 0;
         if(!detailsColis || detailsColis.length === 0) return sum;
 
         detailsColis.forEach(d => {
-            sum += d.poids;
+            sum += d.poids_produit;
         });
 
         return sum;
@@ -201,13 +175,56 @@ export class LivraisonsService {
 
     private batchGenerateCodeBarre(colis: ColisEntity[]){
         return Promise.all(colis.map(async c => {
-            c.code_barre = this.generateSequentialBarcode(c.id, "COLIS");
-            c.code_barre_client = this.generateSequentialBarcode(c.id, "REF-CLIENT");
+            c.code_barre_colis = this.generateSequentialBarcode(c.id, "COLIS");
+            c.code_barre_client_colis = this.generateSequentialBarcode(c.id, "REF-CLIENT");
             return c;
         }));
     }
 
     private generateSequentialBarcode(id: number, prefix = 'PROD'): string {
         return `${prefix}-${id.toString().padStart(6, '0')}`;
+    }
+
+    private async mapToLivraisonEntity(dto: LivraisonCreateDto){
+        const livraison: LivraisonEntity = new LivraisonEntity();
+
+        livraison.notes = dto.notes;
+        livraison.date_livraison = dto.date_livraison;
+        livraison.heure_debut =dto.heure_debut;
+        livraison.heure_fin = dto.heure_fin;
+        livraison.rue = dto.rue;
+        livraison.ville = dto.ville;
+        livraison.pays = dto.pays;
+        livraison.code_postal = dto.code_postal;
+        livraison.statut_livraison = StatusLivraison.EN_ATTENTE;
+        livraison.colis = this.getColis(dto.colis);
+
+        if(dto.id_point_livraison){
+            const point_livraison = await this.plRep.findOneBy({id: dto.id_point_livraison});
+            if(!point_livraison) throw new BadRequestException("Point de livraison inexistant.");
+            livraison.point_livraison = point_livraison;
+        }
+
+        return livraison;
+    }
+
+    private async mapUpdateDtoToLivraisonEntity(id: number, dto: LivraisonUpdateDto){
+        const existing = await this.findById(id);
+
+        existing.notes = dto.notes;
+        existing.date_livraison = dto.date_livraison?? existing.date_livraison;
+        existing.heure_debut =dto.heure_debut;
+        existing.heure_fin = dto.heure_fin;
+        existing.rue = dto.rue??existing.rue;
+        existing.ville = dto.ville??existing.ville;
+        existing.pays = dto.pays;
+        existing.code_postal = dto.code_postal??existing.code_postal;
+
+        if(dto.id_point_livraison){
+            const point_livraison = await this.plRep.findOneBy({id: dto.id_point_livraison});
+            if(!point_livraison) throw new BadRequestException("Point de livraison inexistant.");
+            existing.point_livraison = point_livraison;
+        }
+        return existing;
     }
 }

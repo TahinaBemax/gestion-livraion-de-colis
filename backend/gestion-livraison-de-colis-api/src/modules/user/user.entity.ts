@@ -1,14 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, JoinColumn, OneToOne } from 'typeorm';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { Role } from '../role/role.entity';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
 
 
 @Entity("utilisateurs")
-@Unique(["email", "telephone", "photo_profil", "mot_de_passe", "login"])
+@Unique(["adresse_email", "numero_telephone", "photo_profil", "mot_de_passe"])
 export class User {
     @PrimaryGeneratedColumn()
-    id_utilisateur?: number;
+    id_utilisateur: number;
 
     @Column()
     nom: string;
@@ -16,20 +16,17 @@ export class User {
     @Column()
     prenom: string;
 
-    @Column({nullable: false})
+    @Column({nullable: true})
     civilite: string;
     
-    @Column()
-    date_naissance: Date;
-
-    @Column({nullable: true})
-    telephone?: string;
+    @Column({type: 'date', nullable: true})
+    date_naissance: string;
 
     @Column()
-    email: string;
+    numero_telephone: string;
 
-    @Column({nullable: false})
-    login: string;
+    @Column()
+    adresse_email: string;
 
     @Column()
     mot_de_passe: string;
@@ -48,7 +45,7 @@ export class User {
     @JoinColumn({name: "id_type_utilisateur"})
     type_utilisateur: TypeUtilisateur;
 
-    @OneToOne(() => Prestataire, { nullable: true, lazy: true})
+    @OneToOne(() => Prestataire, { nullable: true})
     @JoinColumn({name: "id_prestataire"})
-    prestataire?: Promise<Prestataire>;
+    prestataire?: Prestataire;
 }

@@ -145,10 +145,10 @@ export class TourneeLivraisonService {
         const livreur: Livreur = await this.getLivreur(dto.id_livreur);
         const planning_livraison: PlanningLivraisonEntity= await this.getPlanning(idPlanning);
 
-        if(planning_livraison.statut === StatutPlanningLivaison.ANNULE 
-            || planning_livraison.statut === StatutPlanningLivaison.BROUILLON
-            || planning_livraison.statut === StatutPlanningLivaison.TERMINE
-        ) throw new BadRequestException(`Impossible de créer un tournée de livraison pour un planning de livraison avec statut: ${planning_livraison.statut}`);
+        if(planning_livraison.statut_planning === StatutPlanningLivaison.ANNULE 
+            || planning_livraison.statut_planning === StatutPlanningLivaison.BROUILLON
+            || planning_livraison.statut_planning === StatutPlanningLivaison.TERMINE
+        ) throw new BadRequestException(`Impossible de créer un tournée de livraison pour un planning de livraison avec statut: ${planning_livraison.statut_planning}`);
 
         this.isDateTourneeBetween(dto.date_tournee, planning_livraison.date_debut, planning_livraison.date_fin);
 

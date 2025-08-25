@@ -4,7 +4,7 @@ import { ProblemeColisEntity } from "./probleme-colis.entity";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
 
 @Entity("colis")
-@Unique(["code_barre", "code_barre_client"])
+@Unique(["code_barre_colis", "code_barre_client_colis"])
 export class ColisEntity{
     @PrimaryGeneratedColumn({name: "id_colis"})
     id: number;
@@ -13,16 +13,28 @@ export class ColisEntity{
     nom_destinataire:string;
     
     @Column()
-    code_barre: string;
+    code_barre_colis: string;
     
     @Column()
-    code_barre_client: string;
+    code_barre_client_colis: string;
     
     @Column()
     poids_total: number;
+
+    @Column({"type": "timestamp"})
+    date_heure_chargement: string;
+
+    @Column({"type": "timestamp"})
+    date_heure_dechargement: string;
+
+    @Column({"type": "timestamp"})
+    date_heure_accuse_reception: string;
+
+    @Column({"type": "timestamp"})
+    date_heure_retour_expediteur: string;
     
     @Column()
-    status: string;
+    statut_colis: string;
 
     @OneToMany(() => DetailColisEntity, (d) => d.colis, {
         eager: true, 

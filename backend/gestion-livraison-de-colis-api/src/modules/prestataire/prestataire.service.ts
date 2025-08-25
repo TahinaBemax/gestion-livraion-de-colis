@@ -5,6 +5,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
 import { plainToInstance } from 'class-transformer';
 import { User } from '../user/user.entity';
+import { Role } from '../role/role.entity';
+import { TypeUtilisateur } from '../user/type-utilisateur/type-utilisateur.entity';
+import { Utils } from 'src/common/utils/utils';
+import { PrestataireUpdateDto } from 'src/common/dto/prestataire/update-prestataire-dto';
 
 @Injectable()
 export class PrestataireService {
@@ -16,11 +20,8 @@ export class PrestataireService {
     ){}
 
     async create(prestataireCreateDto: PrestataireCreateDto): Promise<Prestataire>{
-        const prestatire: Prestataire = plainToInstance(Prestataire, prestataireCreateDto);
-        prestatire.telephone = prestatire.telephone?.replaceAll(/\s+/g, '');
-
+        const prestatire: Prestataire = this.mapDtoToPrestataire(prestataireCreateDto);
         const prepared = this.prestataireRepo.create(prestatire);
-        
         return await this.prestataireRepo.save(prepared);
     }
 
@@ -79,12 +80,61 @@ export class PrestataireService {
         return {message: "Prestatiare activé avec succés"};
     }
 
-    async update(prestataire: Prestataire): Promise<Prestataire> {
-        const matchedPrestataire = await this.findById(prestataire.id_prestataire);
-        matchedPrestataire.telephone = matchedPrestataire.telephone?.replaceAll(/\s+/g, '')
+    async update(id: number, dto: PrestataireUpdateDto): Promise<Prestataire> {
+        const matched = await this.findById(id);
 
-        const prepared = this.prestataireRepo.create(matchedPrestataire);
+        matched.nom_entreprise = dto.nom_entreprise?? matched.nom_entreprise; 
+        matched.nif = dto.nif?? matched.nif;
+        matched.stat = dto.stat?? matched.stat;
+        matched.adresse_principale = dto.adresse_principale?? matched.adresse_principale;
+        matched.adresse_complementaire = dto.adresse_complementaire;
+        matched.departement = dto.departement;
+        matched.etat = dto.etat;
+        matched.ville = dto.ville;
+        matched.pays = dto.pays;
+        matched.code_postal = dto.code_postal;
+        matched.adresse_email = dto.adresse_email?? matched.adresse_email;
+        matched.nom_image_logo = dto.nom_image_logo;
+        matched.numero_telephone = matched.numero_telephone?.replaceAll(/\s+/g, '')
 
-        return this.prestataireRepo.save(prepared);
+        return this.prestataireRepo.save(matched);
+    }
+
+    private mapDtoToPrestataire(dto: PrestataireCreateDto): Prestataire {
+        const prestataire = new Prestataire();
+
+        prestataire.nom_entreprise = dto.nom_entreprise; 
+        prestataire.nif = dto.nif;
+        prestataire.stat = dto.stat;
+        prestataire.adresse_principale = dto.adresse_principale;
+        prestataire.numero_telephone = dto.numero_telephone?.replaceAll(/\s+/g, '');
+        prestataire.adresse_email = dto.adresse_email;
+        prestataire.nom_image_logo = dto.nom_image_logo;
+        prestataire.est_active = true;
+
+        prestataire.users = [this.mapDtoToUser(dto)];
+
+        return prestataire;
+    }
+
+    private mapDtoToUser(dto: PrestataireCreateDto): User {
+        const user = new User();
+        const role = new Role();
+        const typeUtilisateur = new TypeUtilisateur();
+
+        user.nom = dto.user.nom;
+        user.prenom = dto.user.prenom;
+        user.numero_telephone = dto.user.telephone;
+        user.adresse_email = dto.user.email;
+        user.mot_de_passe = Utils.hashPassword(dto.user.mot_de_passe);
+        user.est_active = true;
+        user.photo_profil = undefined;
+        
+        typeUtilisateur.id_type_utilisateur = 'TYPE-USER-00002'; // Default type for Prestataire
+        user.type_utilisateur = typeUtilisateur;
+
+        role.id = 'ROLE-01'; // Admin
+        user.role = role;
+        return user;
     }
 }

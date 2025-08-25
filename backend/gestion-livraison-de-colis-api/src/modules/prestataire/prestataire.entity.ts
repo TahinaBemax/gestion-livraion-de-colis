@@ -3,7 +3,7 @@ import { User } from "../user/user.entity";
 import { IsBoolean, IsEmail, IsNotEmpty, IsNumberString, IsOptional, IsPhoneNumber } from "class-validator";
 
 @Entity()
-@Unique(["nom_entreprise", "nif", "stat", "email", "telephone"])
+@Unique(["nom_entreprise", "nif", "stat", "adresse_email", "numero_telephone", "nom_image_logo"])
 export class Prestataire {
     @PrimaryGeneratedColumn()
     id_prestataire: number;
@@ -14,24 +14,24 @@ export class Prestataire {
     
     @Column()
     @IsNotEmpty()
-    nif?: string;
+    nif: string;
     
     @Column()
     @IsNotEmpty()
-    stat?: string;
+    stat: string;
     
     @Column()
     @IsNotEmpty()
-    adresse1: string;
+    adresse_principale: string;
     
     @Column()
     @IsOptional()
     @IsNotEmpty()
-    adresse2?: string;
+    adresse_complementaire?: string;
     
     @Column()
     @IsNotEmpty()
-    departement: string;
+    departement?: string;
     
     @Column()
     @IsOptional()
@@ -40,31 +40,37 @@ export class Prestataire {
     
     @Column()
     @IsNotEmpty()
-    ville: string;
+    ville?: string;
     
     @Column()
     @IsNotEmpty()
-    pays: string;
+    pays?: string;
     
     @Column()
     @IsNotEmpty()
     @IsNumberString()
     @IsNumberString()
-    code_postal: string;
+    code_postal?: string;
 
     @Column()
     @IsPhoneNumber()
-    telephone?: string;
+    numero_telephone: string;
 
     @Column()
     @IsEmail()
-    email: string;
+    adresse_email: string;
+
+    @Column()
+    nom_image_logo?: string;
 
     @Column({nullable: false, default: true})
     @IsBoolean()
     est_active: boolean;
 
-    @OneToMany(() => User, (user) => user.prestataire, {lazy: true})
+    @OneToMany(() => User, (user) => user.prestataire, {
+        lazy: true,
+        cascade: ['insert']
+    })
     @JoinColumn({name:"id_utilisateur"})
     users: User[];
 }

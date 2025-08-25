@@ -9,15 +9,15 @@ export class DetailColisUpdateDto{
     
     @IsNotEmpty()
     @ApiProperty()
-    description:string;
+    description_produit:string;
 
     @IsNotEmpty()
     @ApiProperty()
     @IsNumber()
-    poids:number;
+    poids_produit:number;
     
     @IsNotEmpty()
     @IsNumber()
     @ApiProperty()
-    valeur_declaree: number;    
+    valeur_produit: number;    
 }

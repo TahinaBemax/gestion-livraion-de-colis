@@ -6,16 +6,13 @@ import { TourneeLivraisonEntity } from "../tournee-livraison/tournee-livraison.e
 import { BordereauLivraisonEntity } from "../bordereau-livraison/bordereau-livraison.entity";
 
 
-@Entity("detail_info_livreur")
+@Entity("livreur_information")
 export class Livreur {
     @PrimaryGeneratedColumn()
     id_livreur: number;
 
     @Column()
     total_points: number;
-
-    @Column()
-    rang_global: number;
 
     @Column()
     peut_faire_chargement_colis: boolean;
@@ -30,7 +27,10 @@ export class Livreur {
     @JoinColumn({name: "id_categorie_livreur"})
     categorie_livreur: CategorieLivreur;
 
-    @OneToOne(() => User, {eager: true})
+    @OneToOne(() => User, {
+        eager: true,
+        cascade: ['insert']
+    })
     @JoinColumn({name:"id_utilisateur"})
     user: User;
 
