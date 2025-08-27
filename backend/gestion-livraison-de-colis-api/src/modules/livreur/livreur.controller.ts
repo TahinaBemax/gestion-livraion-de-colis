@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporaire.service';
 import { LivreurTemporaireDto } from 'src/common/dto/livreur/livreur-temporaire-dto';
@@ -11,15 +11,18 @@ import { Livreur } from './livreur.entity';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
+import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-probleme-livraison-dto';
+import { LivraisonsService } from '../livraisons/livraisons.service';
 
 @Controller('livreurs')
-@Roles(UserRole.User)
+@Roles(UserRole.User, UserRole.ResponsableExploitation)
 @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire)
 @ApiTags("Livreur Temporaire")
 export class LivreurController {
     constructor(
         private readonly livreurTempService: LivreurTemporaireService,
         private readonly livreurService: LivreurService,
+        private readonly livraisonService: LivraisonsService
     ){}
 
     /* LIVREUR */
@@ -134,5 +137,16 @@ export class LivreurController {
         @ApiNotFoundResponse()
     desactivateAccount(@Param("id", ParseIntPipe) id: number){
         return this.livreurTempService.delete(id);
+    }
+
+    /* LIVRAISON */
+    @Post("/:id/livraisons/:idLivraison/problemes")
+        @HttpCode(HttpStatus.CREATED)
+        @ApiBody({type: ProblemeLivraisonCreateDto})
+        @ApiCreatedResponse()
+        @ApiBadRequestResponse()
+        @ApiNotFoundResponse()
+    signalProbleme(@Param("id", ParseIntPipe) idLivraison: number, @Body() dto: ProblemeLivraisonCreateDto){
+        return this.livraisonService.signalProbleme(idLivraison, dto);
     }
 }

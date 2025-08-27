@@ -1,3 +1,4 @@
+import { parse } from 'date-fns';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { In, Repository } from 'typeorm';
 import { LivraisonEntity } from './livraison.entity';
@@ -14,6 +15,7 @@ import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dt
 import { plainToInstance } from 'class-transformer';
 import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { ClientEntity } from '../client/client.entity';
+import { Prestataire } from '../prestataire/prestataire.entity';
 
 @Injectable()
 export class LivraisonsService {
@@ -28,6 +30,42 @@ export class LivraisonsService {
         private readonly clientRep: Repository<ClientEntity>
     ){}
 
+    /**
+     * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
+     * @param statuts 
+     * @returns 
+     */
+    async findByStatuts(statuts: StatusLivraison[]): Promise<LivraisonEntity[]>{
+        return await this.livraisonRep.findBy({statut_livraison: In(statuts)});
+    }
+
+    /**
+     * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
+     * @param statuts 
+     * @returns 
+     */
+    async filterBy(idPrestataire?: string, idClient?: string, date?: string, zoneGeographique?: string): Promise<LivraisonEntity[]>{
+        const query = this.livraisonRep.createQueryBuilder("l")
+        .leftJoinAndSelect("l.point_livraison", "pl")
+        .innerJoin("pl.prestataire", "p")
+        .leftJoinAndSelect("l.client", "c")
+        
+        if(date) query.where("l.date_livraison = :date", {date: date});
+        
+        if(zoneGeographique) query.andWhere("l.code_postal = :code OR l.ville = :ville", {code: zoneGeographique, ville: zoneGeographique});
+
+        if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: parseInt(idPrestataire)});
+
+        if(idClient) query.andWhere("c.id = :idClient", {idClient: parseInt(idClient)});
+
+        return query.getMany();
+    }
+
+    /**
+     * 
+     * @param idPL 
+     * @returns 
+     */
     async findDeliveryNotCompletedByIdPL(idPL: number): Promise<LivraisonEntity[]> {
         if(!idPL) throw new Error(`ID point de livraison invalid!`);
 

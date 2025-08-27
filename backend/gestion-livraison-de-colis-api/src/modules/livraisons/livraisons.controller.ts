@@ -1,27 +1,62 @@
-import { ProblemeLivraisonCreateDto } from './../../common/dto/livraison/create-probleme-livraison-dto';
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { LivraisonsService } from './livraisons.service';
 import { LivraisonCreateDto } from 'src/common/dto/livraison/create-livraison-dto';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
+import { LivraisonEntity } from './livraison.entity';
+import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
+import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 
 @Controller('livraisons')
 @Roles(UserRole.Admin)
+@UserTypes(TypeUtilisateur.TempoOne)
 export class LivraisonsController {
     constructor(
         private readonly livraisonService: LivraisonsService
     ){}
     
+    /**
+     * LISTE DES LIVRAISON EFFECTUES ET EN COURS DE TRAITEMENT
+     * @returns Liste des livraisons
+     */
+    @Get("/historique")
+    async getLivraisonsAvecEncoursEtLivre(): Promise<LivraisonEntity[]>{
+        const statuts: StatusLivraison[] = [
+            StatusLivraison.LIVRE, 
+            StatusLivraison.DISTRIBUEUR_ASSIGNÉ, 
+            StatusLivraison.EN_COURS_LIVRAISON, 
+            StatusLivraison.EN_EXPEDIE, 
+            StatusLivraison.EN_TRANSIT, 
+        ];
+
+        return this.livraisonService.findByStatuts(statuts);
+    }
+
+    /**
+     * FILTRE LES LIVRAISON PAR Prestataire, Client, Date de livraison 
+     * @returns Liste des livraisons
+     */
+    @Get("/filtre")
+    async filterby(
+        @Query("idPrestataire") idPrestataire: string|undefined, 
+        @Query("idClient") idClient: string|undefined,
+        @Query("dateLivraison") dateLivraison: string|undefined,
+    ): Promise<LivraisonEntity[]>
+    {
+
+        return this.livraisonService.filterBy(idPrestataire, idClient, dateLivraison);
+    }
+
     @Get()
-    getAll(){
+    async getAll(){
         return this.livraisonService.findAll();
     }
     
     @Get("/:id")
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)
-    getById(@Param("id", ParseIntPipe) id: number){
+    async getById(@Param("id", ParseIntPipe) id: number){
         return this.livraisonService.findById(id);
     }
 
@@ -51,16 +86,5 @@ export class LivraisonsController {
     @ApiNotFoundResponse()
     changeStatuts(@Param("id", ParseIntPipe) id: number, @Query("statut") statut: string){
         return this.livraisonService.updateStatut(id, statut);
-    }
-    
-    @Post("/:id/problemes")
-    @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: ProblemeLivraisonCreateDto})
-    @ApiCreatedResponse()
-    @ApiBadRequestResponse()
-    @ApiNotFoundResponse()
-    @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)
-    signalProbleme(@Param("id", ParseIntPipe) id: number, @Body() dto: ProblemeLivraisonCreateDto){
-        return this.livraisonService.signalProbleme(id, dto);
     }
 }

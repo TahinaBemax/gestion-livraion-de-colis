@@ -12,6 +12,7 @@ import { AdminController } from './admin/admin.controller';
 import { PrestataireService } from '../prestataire/prestataire.service';
 import { LivreurModule } from '../livreur/livreur.module';
 import { EmailService } from 'src/core/email/email.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   providers: [
@@ -27,8 +28,18 @@ import { EmailService } from 'src/core/email/email.service';
   imports: [
     TypeUtilisateurModule,
     forwardRef(() => LivreurModule),
-    TypeOrmModule.forFeature([User, TypeUtilisateur, Role, Prestataire]),
+    forwardRef(() => NotificationModule),
+    TypeOrmModule.forFeature([
+      User, 
+      TypeUtilisateur, 
+      Role, 
+      Prestataire
+    ]),
   ],
-  exports:[UserService, UserMapper, UserModule]
+  exports:[
+    UserService, 
+    UserMapper, 
+    UserModule
+  ]
 })
 export class UserModule {}

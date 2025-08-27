@@ -166,6 +166,25 @@ CREATE TABLE utilisateurs(
    FOREIGN KEY(id_type_utilisateur) REFERENCES types_utilisateurs(id_type_utilisateur)
 );
 
+CREATE TABLE notifications(
+   id_notification SERIAL ,
+   titre TEXT NOT NULL,
+   dateheure_notification TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   message TEXT NOT NULL,
+   id_envoyeur INTEGER NOT NULL,
+   PRIMARY KEY(id_notification),
+   FOREIGN KEY(id_envoyeur) REFERENCES utilisateurs(id_utilisateur)
+) ;
+
+CREATE TABLE notifications_recus(
+   id_utilisateur INTEGER,
+   id_notification INTEGER,
+   PRIMARY KEY(id_utilisateur, id_notification),
+   FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
+   FOREIGN KEY(id_notification) REFERENCES notifications(id_notification) ON DELETE CASCADE
+);
+
+
 CREATE TABLE livraisons(
    id_livraison SERIAL,
    nom_destinataire TEXT NOT NULL,

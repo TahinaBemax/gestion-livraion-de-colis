@@ -11,22 +11,22 @@ export class EmailService {
   }
 
   private init(){
-    (async () => {
-      const testAccount = await nodemailer.createTestAccount();
+    // (async () => {
+    //   const testAccount = await nodemailer.createTestAccount();
 
-      this.transporter = nodemailer.createTransport({
-        host: testAccount.smtp.host,
-        port: testAccount.smtp.port,
-        secure: testAccount.smtp.secure,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-        tls: {
-            rejectUnauthorized: false, // bypass self-signed cert issue
-        }
-      });
-    })();
+    //   this.transporter = nodemailer.createTransport({
+    //     host: testAccount.smtp.host,
+    //     port: testAccount.smtp.port,
+    //     secure: testAccount.smtp.secure,
+    //     auth: {
+    //       user: testAccount.user,
+    //       pass: testAccount.pass,
+    //     },
+    //     tls: {
+    //         rejectUnauthorized: false, // bypass self-signed cert issue
+    //     }
+    //   });
+    // })();
   }
 
   async sendPasswordReset(email: string) {

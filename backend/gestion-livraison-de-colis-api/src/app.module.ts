@@ -29,6 +29,7 @@ import { OrdreLivraisonModule } from './modules/ordre-livraison/ordre-livraison.
 import { BordereauLivraisonModule } from './modules/bordereau-livraison/bordereau-livraison.module';
 import { ClientModule } from './modules/client/client.module';
 import { PdfModule } from './core/pdf/pdf.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { PdfModule } from './core/pdf/pdf.module';
     BordereauLivraisonModule,
     ClientModule,
     PdfModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

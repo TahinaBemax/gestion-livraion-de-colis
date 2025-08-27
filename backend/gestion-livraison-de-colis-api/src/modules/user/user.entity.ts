@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, JoinColumn, OneToOne } from 'typeorm';
+import { NotificationEntity } from './../notification/notification.entity';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, JoinColumn, OneToOne, OneToMany, ManyToMany } from 'typeorm';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { Role } from '../role/role.entity';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
@@ -48,4 +49,10 @@ export class User {
     @OneToOne(() => Prestataire, { nullable: true})
     @JoinColumn({name: "id_prestataire"})
     prestataire?: Prestataire;
+
+    @OneToMany(() => NotificationEntity, (notif) => notif.envoyeur)
+    notifications_envoye?: NotificationEntity[];
+
+    @ManyToMany(() => NotificationEntity, (notif) => notif.receveurs)
+    notifications_recu?: NotificationEntity[];
 }
