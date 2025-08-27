@@ -105,7 +105,7 @@ export class OrdreLivraisonService {
     async update(id: number, dto: OrdreLivraisonUpdateDto){
         if(!dto || !id) throw new BadRequestException("Données planning livraison invalides");
         const existing = await this.findById(id);
-        this.checkStatutTourneeLivraison(existing.tournee_livraison);
+        this.checkStatutTourneeLivraison((await existing.tournee_livraison));
 
         const livraisons = await this.livraisonService.findManyByIds(dto.id_livraisons);
         if(!livraisons) throw new BadRequestException(`Livraisons avec ID:{${dto.id_livraisons}} est introuvable!`);

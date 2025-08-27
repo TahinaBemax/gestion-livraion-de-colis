@@ -1,6 +1,6 @@
 import { BordereauLivraisonEntity } from './../bordereau-livraison/bordereau-livraison.entity';
 import { TourneeLivraisonEntity } from './../tournee-livraison/tournee-livraison.entity';
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 
@@ -21,9 +21,11 @@ export class OrdreLivraisonEntity {
     @Column()
     nbr_colis_reel: number;
 
-    @ManyToOne(() => TourneeLivraisonEntity, (t) => t.ordres_livraison)
+    @ManyToOne(() => TourneeLivraisonEntity, (t) => t.ordres_livraison, {
+        lazy: true
+    })
     @JoinColumn({referencedColumnName: "id", name: "id_tournee"})
-    tournee_livraison: TourneeLivraisonEntity;
+    tournee_livraison: Promise<TourneeLivraisonEntity>|TourneeLivraisonEntity;
 
     @ManyToMany(() => LivraisonEntity, (l) => l.ordres_livraison, {
         eager: true,
@@ -35,7 +37,9 @@ export class OrdreLivraisonEntity {
     })
     bordereau_livraison: BordereauLivraisonEntity;
 
-    @ManyToOne(() => PointLivraisonEntity, (p) => p.ordres_livraison, {eager: true})
+    @ManyToOne(() => PointLivraisonEntity, (p) => p.ordres_livraison, {
+        eager: true
+    })
     @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
     point_livraison: PointLivraisonEntity;    
 }

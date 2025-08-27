@@ -8,6 +8,7 @@ import { ProblemeLivraisonEntity } from './probleme-livraison.entity';
 import { LivraisonEntity } from './livraison.entity';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 import { BarcodeService } from 'src/core/code_barre/code_barre.service';
+import { ClientEntity } from '../client/client.entity';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { BarcodeService } from 'src/core/code_barre/code_barre.service';
       ColisEntity,
       PointLivraisonEntity,
       ProblemeLivraisonEntity,
-      OrdreLivraisonEntity
+      OrdreLivraisonEntity,
+      ClientEntity
     ]),
   ],
   controllers: [LivraisonsController],

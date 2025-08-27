@@ -8,10 +8,6 @@ export class ColisUpdateDto{
     @ApiProperty({required: false})
     @IsOptional()
     id?: number;
-    
-    @IsNotEmpty()
-    @ApiProperty()
-    nom_destinataire:string;
 
     @IsNotEmpty()
     @ApiProperty()

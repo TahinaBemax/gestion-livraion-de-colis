@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Livreur } from '../livreur/livreur.entity';
 import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
+import { BordereauLivraisonController } from './bordereau-livraison.controller';
+import { PdfService } from 'src/core/pdf/pdf.service';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity'
       DetailColisEntity
     ])
   ],
-  providers: [BordereauLivraisonService]
+  providers: [BordereauLivraisonService, PdfService],
+  controllers: [BordereauLivraisonController]
 })
 export class BordereauLivraisonModule {}

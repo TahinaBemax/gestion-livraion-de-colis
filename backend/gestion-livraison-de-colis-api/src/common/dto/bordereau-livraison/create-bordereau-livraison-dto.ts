@@ -1,15 +1,16 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsNotEmpty } from "class-validator";
+import { IsArray, IsNotEmpty, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 
 export class BordereauLivraisonCreateDto {
-    @IsNotEmpty()
+    @IsOptional()
     @IsFRDate()
     @ApiProperty({ 
         example: '25/12/2023', 
-        description: 'Date du bordereau de livraison au format JJ/MM/AAAA' 
+        description: 'Date du bordereau de livraison au format JJ/MM/AAAA',
+        required: false 
     })
-    date_bordereau: string;
+    date_bordereau?: string;
     
     @IsNotEmpty()
     @IsFRDate()

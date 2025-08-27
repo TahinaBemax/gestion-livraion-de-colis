@@ -22,22 +22,7 @@ export class LivraisonCreateDto {
     @IsTime()
     @IsNotEmpty()
     heure_fin?: string;
-    
-    @ApiProperty({example: "Avenue, RN7"})
-    @IsNotEmpty()
-    rue: string;
-    
-    @ApiProperty({example: "Antananarivo"})
-    @IsNotEmpty()
-    ville: string;
-    
-    @IsOptional()
-    pays?: string;
-    
-    @ApiProperty({example: "BII 101"})
-    @IsNotEmpty()
-    code_postal: string;
-         
+             
     @IsNotEmpty()
     @IsArray()
     @ApiProperty({
@@ -63,4 +48,10 @@ export class LivraisonCreateDto {
     @IsNumber()
     @ApiProperty({example: 1})
     id_point_livraison?: number;
+
+    @IsNotEmpty()
+    @IsOptional()
+    @IsNumber()
+    @ApiProperty({example: 1})
+    id_client?: number;
 }

@@ -4,43 +4,56 @@ import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
 
 export class LivraisonUpdateDto {
-    @ApiProperty({description: "Une petite note"})
+    @IsOptional()
+    @ApiProperty({example: "", required: false})
+    nom_destinataire: string;
+
+    @IsOptional()
+    @ApiProperty({example: "", required: false})
+    complement_adresse?: string;
+
+    @ApiProperty({description: "Une petite note", required: false})
     @IsOptional()
     notes?: string;
     
-    @ApiProperty({example: "12/05/2025"})
+    @ApiProperty({example: "12/05/2025", required: false})
     @IsFRDate()
     @IsOptional()
     date_livraison?: string;
     
-    @ApiProperty({example: "10:20:00"})
+    @ApiProperty({example: "10:20:00", required: false})
     @IsTime()
     @IsOptional()
     heure_debut?: string;
     
-    @ApiProperty({example: "14:00:00"})
+    @ApiProperty({example: "14:00:00", required: false})
     @IsTime()
     @IsOptional()
     heure_fin?: string;
     
-    @ApiProperty({example: "Avenue, RN7"})
+    @ApiProperty({example: "Avenue, RN7", required: false})
     @IsOptional()
-    rue?: string;
+    adresse_principale?: string;
     
-    @ApiProperty({example: "Antananarivo"})
+    @ApiProperty({example: "Antananarivo", required: false})
     @IsOptional()
     ville?: string;
     
-    @ApiProperty({example: "Madagascar"})
+    @ApiProperty({example: "Madagascar", required: false})
     @IsOptional()
     pays?: string;
     
-    @ApiProperty({example: "BII 101"})
+    @ApiProperty({example: "BII 101", required: false})
     @IsOptional()
     code_postal?: string;
     
     @IsOptional()
     @IsNumber()
-    @ApiProperty({example: 1})
+    @ApiProperty({example: 1, required: false})
     id_point_livraison?: number;
+
+    @IsOptional()
+    @IsNumber()
+    @ApiProperty({example: 1, required: false})
+    id_client?: number;
 }

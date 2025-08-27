@@ -10,10 +10,10 @@ import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-prob
 import { ProblemeLivraisonEntity } from './probleme-livraison.entity';
 import { ColisCreateDto } from 'src/common/dto/colis/create-colis-dto';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
-import { BarcodeService } from 'src/core/code_barre/code_barre.service';
 import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
 import { plainToInstance } from 'class-transformer';
 import { DetailColisEntity } from '../colis/detail-colis.entity';
+import { ClientEntity } from '../client/client.entity';
 
 @Injectable()
 export class LivraisonsService {
@@ -23,7 +23,9 @@ export class LivraisonsService {
         @InjectRepository(PointLivraisonEntity)
         private readonly plRep: Repository<PointLivraisonEntity>,
         @InjectRepository(ProblemeLivraisonEntity)
-        private readonly problemeLivraisonRep: Repository<ProblemeLivraisonEntity>
+        private readonly problemeLivraisonRep: Repository<ProblemeLivraisonEntity>,
+        @InjectRepository(ClientEntity)
+        private readonly clientRep: Repository<ClientEntity>
     ){}
 
     async findDeliveryNotCompletedByIdPL(idPL: number): Promise<LivraisonEntity[]> {
@@ -192,17 +194,33 @@ export class LivraisonsService {
         livraison.date_livraison = dto.date_livraison;
         livraison.heure_debut =dto.heure_debut;
         livraison.heure_fin = dto.heure_fin;
-        livraison.rue = dto.rue;
-        livraison.ville = dto.ville;
-        livraison.pays = dto.pays;
-        livraison.code_postal = dto.code_postal;
         livraison.statut_livraison = StatusLivraison.EN_ATTENTE;
         livraison.colis = this.getColis(dto.colis);
-
+        
         if(dto.id_point_livraison){
             const point_livraison = await this.plRep.findOneBy({id: dto.id_point_livraison});
             if(!point_livraison) throw new BadRequestException("Point de livraison inexistant.");
+
+            livraison.nom_destinataire = point_livraison.numero_magasin;
+            livraison.adresse_principale = point_livraison.numero_rue + ", " + point_livraison.nom_rue + ", " + point_livraison.ville;
+            livraison.complement_adresse = point_livraison.complement_adresse;
+            livraison.ville = point_livraison.ville;
+            livraison.pays = point_livraison.pays;
+            livraison.code_postal = point_livraison.code_postal;
             livraison.point_livraison = point_livraison;
+        }
+
+        if(dto.id_client){
+            const client = await this.clientRep.findOneBy({id: dto.id_client});
+            if(!client) throw new BadRequestException("Client inexistant.");
+            livraison.client = client;
+
+            livraison.nom_destinataire = client.nom_client;
+            livraison.adresse_principale = client.numero_rue + ", " + client.nom_rue + ", " + client.ville;
+            livraison.complement_adresse = client.complement_adresse;
+            livraison.ville = client.ville;
+            livraison.pays = client.pays;
+            livraison.code_postal = client.code_postal;
         }
 
         return livraison;
@@ -215,16 +233,33 @@ export class LivraisonsService {
         existing.date_livraison = dto.date_livraison?? existing.date_livraison;
         existing.heure_debut =dto.heure_debut;
         existing.heure_fin = dto.heure_fin;
-        existing.rue = dto.rue??existing.rue;
-        existing.ville = dto.ville??existing.ville;
-        existing.pays = dto.pays;
-        existing.code_postal = dto.code_postal??existing.code_postal;
-
+        
         if(dto.id_point_livraison){
             const point_livraison = await this.plRep.findOneBy({id: dto.id_point_livraison});
             if(!point_livraison) throw new BadRequestException("Point de livraison inexistant.");
+
+            existing.nom_destinataire = point_livraison.numero_magasin;
+            existing.adresse_principale = point_livraison.numero_rue + ", " + point_livraison.nom_rue + ", " + point_livraison.ville;
+            existing.complement_adresse = point_livraison.complement_adresse;
+            existing.ville = point_livraison.ville;
+            existing.pays = point_livraison.pays;
+            existing.code_postal = point_livraison.code_postal;
             existing.point_livraison = point_livraison;
         }
+
+        if(dto.id_client){
+            const client = await this.clientRep.findOneBy({id: dto.id_client});
+            if(!client) throw new BadRequestException("Client inexistant.");
+            existing.client = client;
+
+            existing.nom_destinataire = client.nom_client;
+            existing.adresse_principale = client.numero_rue + ", " + client.nom_rue + ", " + client.ville;
+            existing.complement_adresse = client.complement_adresse;
+            existing.ville = client.ville;
+            existing.pays = client.pays;
+            existing.code_postal = client.code_postal;
+        }
+
         return existing;
     }
 }

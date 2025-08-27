@@ -1,3 +1,9 @@
+-- Create a sequence for generating REF-00001, REF-00002, etc.
+CREATE SEQUENCE ref_bordereau
+    START 1
+    INCREMENT 1
+    MINVALUE 1;
+
 /* DEFAULT DATA*/
 
 /* +++ ROLES +++ */

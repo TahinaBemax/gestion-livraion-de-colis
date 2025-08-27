@@ -3,6 +3,7 @@ import { ColisEntity } from "../colis/colis.entity";
 import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 import { ProblemeLivraisonEntity } from "./probleme-livraison.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
+import { ClientEntity } from "../client/client.entity";
 
 @Entity("livraisons")
 export class LivraisonEntity {
@@ -10,19 +11,13 @@ export class LivraisonEntity {
     id: number; 
 
     @Column()
-    notes?: string;
+    nom_destinataire: string;
 
-    @Column({type: "date"})
-    date_livraison: string;
-    
-    @Column({type: "time"})
-    heure_debut?: string;
-    
-    @Column({type: "time"})
-    heure_fin?: string;
-    
     @Column()
-    rue: string;
+    adresse_principale: string;
+
+    @Column()
+    complement_adresse?: string;
 
     @Column()
     ville: string;
@@ -33,6 +28,18 @@ export class LivraisonEntity {
     @Column()
     code_postal: string;
     
+    @Column({type: "date"})
+    date_livraison: string;
+    
+    @Column({type: "time"})
+    heure_debut?: string;
+    
+    @Column({type: "time"})
+    heure_fin?: string;
+    
+    @Column()
+    notes?: string;
+
     @Column()
     statut_livraison: string;
 
@@ -44,11 +51,12 @@ export class LivraisonEntity {
     })
     colis: ColisEntity[];
 
-    @OneToOne(() => PointLivraisonEntity, (p) => p.livraisons, {
-        eager: true
+    @ManyToOne(() => PointLivraisonEntity, (p) => p.livraisons, {
+        eager: true,
+        nullable: true
     })
     @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
-    point_livraison: PointLivraisonEntity;
+    point_livraison?: PointLivraisonEntity;
 
     @OneToMany(() => ProblemeLivraisonEntity, (p) => p.livraison, {
         eager: true
@@ -62,4 +70,11 @@ export class LivraisonEntity {
         inverseJoinColumn: { name: 'id_ordre_livraison', referencedColumnName: 'id'},
     })    
     ordres_livraison: OrdreLivraisonEntity[];
+
+    @ManyToOne(() => ClientEntity, (c) => c.livraisons, {
+        eager: true,
+        nullable: true
+    })
+    @JoinColumn({name: "id_client", referencedColumnName: "id"})
+    client?: ClientEntity;
 }

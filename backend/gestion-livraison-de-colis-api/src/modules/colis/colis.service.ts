@@ -100,7 +100,6 @@ export class ColisService {
         const existing = await this.findById(id);
         
         existing.poids_total = this.getSumWeight(dto.details_colis);
-        existing.nom_destinataire = dto.nom_destinataire;
         existing.statut_colis = dto.status;
         existing.details_colis = plainToInstance(DetailColisEntity, dto.details_colis);
         
@@ -144,7 +143,7 @@ export class ColisService {
     }
 
     private async generateCodeBarreClient(colis: ColisEntity): Promise<string> {
-        const data: string = `${colis.id}:${colis.nom_destinataire}`;
+        const data: string = `${colis.id}:CLIENT-ID`;
         
         return QRCode.toDataURL(data);
     }

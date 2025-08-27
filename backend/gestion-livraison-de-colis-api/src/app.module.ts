@@ -27,6 +27,8 @@ import { PlanningLivraisonModule } from './modules/planning-livraison/planning-l
 import { TourneeLivraisonModule } from './modules/tournee-livraison/tournee-livraison.module';
 import { OrdreLivraisonModule } from './modules/ordre-livraison/ordre-livraison.module';
 import { BordereauLivraisonModule } from './modules/bordereau-livraison/bordereau-livraison.module';
+import { ClientModule } from './modules/client/client.module';
+import { PdfModule } from './core/pdf/pdf.module';
 
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { BordereauLivraisonModule } from './modules/bordereau-livraison/borderea
     TourneeLivraisonModule,
     OrdreLivraisonModule,
     BordereauLivraisonModule,
+    ClientModule,
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [

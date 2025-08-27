@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ColisEntity } from './colis.entity';
 import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
 

@@ -103,7 +103,7 @@ export class TourneeLivraisonService {
             throw new BadRequestException(`Tournée de livraison avec statuts: ${existing.statut} ne peut plus être supprimer!`);
         }
 
-        return this.tourneeRep.delete(existing);
+        return this.tourneeRep.delete(existing.id);
     }  
 
     private async getLivreur(id: number): Promise<Livreur>{

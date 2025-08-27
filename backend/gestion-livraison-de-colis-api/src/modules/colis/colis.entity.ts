@@ -8,9 +8,6 @@ import { LivraisonEntity } from "../livraisons/livraison.entity";
 export class ColisEntity{
     @PrimaryGeneratedColumn({name: "id_colis"})
     id: number;
-
-    @Column()
-    nom_destinataire:string;
     
     @Column()
     code_barre_colis: string;

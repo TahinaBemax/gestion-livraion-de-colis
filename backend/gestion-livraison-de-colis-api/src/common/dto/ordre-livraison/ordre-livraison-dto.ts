@@ -1,5 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional } from "class-validator";
+
 import { LivraisonEntity } from "src/modules/livraisons/livraison.entity";
 import { PointLivraisonEntity } from "src/modules/point-livraison/point-livraison.entity";
 import { TourneeLivraisonEntity } from "src/modules/tournee-livraison/tournee-livraison.entity";
