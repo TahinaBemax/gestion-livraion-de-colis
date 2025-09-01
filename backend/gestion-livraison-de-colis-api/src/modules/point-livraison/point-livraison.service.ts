@@ -7,6 +7,7 @@ import { plainToInstance } from 'class-transformer';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
+import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
 
 
 @Injectable()
@@ -103,23 +104,18 @@ export class PointLivraisonService {
         }
     }
 
-    async assignDeliveryConstraintsToPL(idPL: number, idConstraintes: number[]): Promise<{message: string}> {
-        if(!idPL || idConstraintes.length === 0) throw new BadRequestException("Il faut mettre au moins une contrainte de livraison!");
+    async assignDeliveryConstraintsToPL(idPL: number, constraintesDto: ContrainteLivraisonDto[]): Promise<{message: string}> {
+        if(!idPL || constraintesDto.length === 0) throw new BadRequestException("Il faut mettre au moins une contrainte de livraison!");
         const existingPL = await this.findById(idPL);
         const queryRunner = this.contrainteLivraisonRep.manager.connection.createQueryRunner();
 
         //start a transaction
         await queryRunner.startTransaction();
         try {
-            const constraints = await this.contrainteLivraisonRep.findBy({ id: In(idConstraintes) });
-            if(constraints.length === 0) throw new BadRequestException(`Aucune contrainte de livraison pour les identifiants: [${idConstraintes.toString()}] trouvée!`)
-             
-            for (const c of constraints) {
-                if(c.point_livraison) throw new BadRequestException(`${c.intitule_contrainte} est déja rattachéé à un point de livraison!`);
-                c.point_livraison = existingPL;
-            }
+            const constraints = this.mapContrainteLivraisonDtoToContrainteLivraisonEntity(constraintesDto);
+            constraints.forEach( c => c.point_livraison = existingPL);
 
-            await queryRunner.manager.save(PointLivraisonEntity, constraints);
+            await queryRunner.manager.save(ContrainteLivraisonEntity, constraints);
             await queryRunner.commitTransaction();
 
             return {message: `Contrainte(s) temporelle de livraison rattachée(s) à ${existingPL.numero_magasin}  avec succes!`};
@@ -146,7 +142,15 @@ export class PointLivraisonService {
         pl.complement_adresse = dto.complement_adresse;
 
         if(dto.contraintes_livraison && dto.contraintes_livraison.length > 0){
-            const contraintes = dto.contraintes_livraison.map(c => {
+            pl.contraintes_livraison = this.mapContrainteLivraisonDtoToContrainteLivraisonEntity(dto.contraintes_livraison);
+        }
+
+        return pl;
+    }
+
+    private mapContrainteLivraisonDtoToContrainteLivraisonEntity(dto: ContrainteLivraisonDto[]){
+        if(dto && dto.length > 0){
+            return dto.map(c => {
                 const contrainte = new ContrainteLivraisonEntity();
 
                 contrainte.intitule_contrainte = c.intitule_contrainte;
@@ -155,11 +159,9 @@ export class PointLivraisonService {
                 contrainte.priorite_contrainte = c.priorite_contrainte;
 
                 return contrainte;
-            })
-
-            pl.contraintes_livraison = contraintes;
+            });
         }
 
-        return pl;
+        return [];
     }
 }

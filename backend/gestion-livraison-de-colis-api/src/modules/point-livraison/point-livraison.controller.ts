@@ -6,6 +6,7 @@ import { UserRole } from 'src/common/enum/user-role.enum';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
+import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
 
 @Controller('points-livraison')
 @Roles(UserRole.Admin)
@@ -68,19 +69,19 @@ export class PointLivraisonController {
         /**
          * RATTACHER DES CONTRAINTES DE LIVRAISON SUR UN POINT DE LIVRAISON
          * @param id ID du point de livraison
-         * @param constraintsLivraison ID des contraintes de livraison
+         * @param constraintsLivraison Contraintes de livraison
          * @returns Liste des contraintes de livraison
          */
-    @Post("/:id/rattacher-contraintes-livraison")
+    @Post("/:id/contraintes-livraison")
         @UserTypes(TypeUtilisateur.TempoOne)
         @UserTypes(TypeUtilisateur.TempoOne)
         @ApiParam({name: "id", description: "ID du point de livraison"})
-        @ApiBody({type: [Number], description: "Les id des contraintes de livraison"})
+        @ApiBody({type: [ContrainteLivraisonDto], description: "Les contraintes de livraison"})
         @ApiOperation({summary: "Rattacher des contraintes de livraison à un point de livraison"})
         @ApiCreatedResponse({description: "Contraintes de livraison rattachée avec succés!", type: String})
         @ApiBadRequestResponse({description: "Données invalides"})
-    async assignDeliveryConstraintsToPL(@Param("id") id: number, @Body() constraintsLivraison: {ids: number[] } ){
-        if(!constraintsLivraison || !id) throw new BadRequestException(`Données invalide`);
-        return this.plService.assignDeliveryConstraintsToPL(id, constraintsLivraison.ids);
+    async assignDeliveryConstraintsToPL(@Param("id") id: number, @Body() dto: ContrainteLivraisonDto[] ){
+        if(!dto || !id) throw new BadRequestException(`Données invalide`);
+        return this.plService.assignDeliveryConstraintsToPL(id, dto);
     }
 }
