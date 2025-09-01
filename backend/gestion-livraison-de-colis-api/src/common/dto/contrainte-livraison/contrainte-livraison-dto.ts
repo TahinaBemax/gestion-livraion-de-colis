@@ -6,7 +6,10 @@ import { ContrainteJourDto } from "../contrainte-jour/contrainte-jour-dto";
 export class ContrainteLivraisonDto {
     @IsOptional()
     @IsNumber()
-    @ApiProperty({example: 1})
+    @ApiProperty({
+        example: 1, 
+        required: false
+    })
     id?: number;
 
     @IsNotEmpty()
@@ -43,6 +46,7 @@ export class ContrainteLivraisonDto {
     @IsNumber()
     @ApiProperty({
         example: 1,
+        required: false
     })
-    id_point_livraison: number;
+    id_point_livraison?: number;
 }

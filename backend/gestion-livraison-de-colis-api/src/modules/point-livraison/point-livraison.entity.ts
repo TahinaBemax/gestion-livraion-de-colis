@@ -21,41 +21,43 @@ export class PointLivraisonEntity {
     numero_rue: string;
 
     @Column()
-    departement: string;
+    departement?: string;
 
     @Column()
     ville: string;
 
-    @Column()
-    pays: string;
+    @Column({nullable : true})
+    pays?: string;
 
-    @Column()
-    latitude: number;
+    @Column({nullable : true})
+    latitude?: number;
 
-    @Column()
-    longitude: number;
+    @Column({nullable : true})
+    longitude?: number;
 
     @Column()
     code_postal: string;
 
-    @Column()
-    complement_adresse: string;
+    @Column({nullable : true})
+    complement_adresse?: string;
 
-    @ManyToOne(() => Prestataire)
+    @ManyToOne(() => Prestataire, {nullable: true})
     @JoinColumn({name: "id_prestataire", referencedColumnName: "id_prestataire"})
     prestataire?: Prestataire;
 
     @OneToMany(() => ContrainteLivraisonEntity, (c) => c.point_livraison, {
         eager: true, 
         cascade:true, 
-        onUpdate: "CASCADE"
+        onUpdate: "CASCADE",
+        nullable: true
     })
     contraintes_livraison?: ContrainteLivraisonEntity[];
 
     @OneToMany(() => ContrainteEvenementEntity, (a) => a.point_livraison, {
         eager: true, 
-        cascade:true, 
-        onUpdate: "CASCADE"
+        cascade: true, 
+        onUpdate: "CASCADE",
+        nullable: true
     })
     contraintes_evenements?: ContrainteEvenementEntity[];
 

@@ -39,7 +39,7 @@ export class ContrainteLivraisonService {
     }
 
     async save(dto: ContrainteLivraisonDto): Promise<ContrainteLivraisonEntity>{
-        if(!dto) throw new BadRequestException("Données Invalides");
+        if(!dto || !dto.id_point_livraison) throw new BadRequestException("Données Invalides");
         
         const pl = await this.getPointLivraison(dto.id_point_livraison);
         const contrainte: ContrainteLivraisonEntity = plainToInstance(ContrainteLivraisonEntity, dto);
@@ -99,7 +99,7 @@ export class ContrainteLivraisonService {
         if (!dto || !id) throw new BadRequestException("Données Invalides");
 
         const existing = await this.findById(id);
-        const pl = await this.getPointLivraison(dto.id_point_livraison);
+        const pl = await this.getPointLivraison(id);
         dto.id = dto.id ?? id;
 
         const contrainte: ContrainteLivraisonEntity = plainToInstance(ContrainteLivraisonEntity, dto);

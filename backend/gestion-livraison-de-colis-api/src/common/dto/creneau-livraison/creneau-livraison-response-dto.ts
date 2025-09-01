@@ -10,7 +10,7 @@ export class CreneauLivraisonResponseDto {
         id: number;
         numero_magasin: string;
         ville: string;
-        departement: string;
+        departement?: string;
     };
 }
 

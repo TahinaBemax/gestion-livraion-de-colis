@@ -1,12 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsNumber, IsNumberString, IsOptional } from "class-validator";
+import { ContrainteLivraisonDto } from "../contrainte-livraison/contrainte-livraison-dto";
 
-export class CreatePointLivraisonDto {
-    @IsOptional()
-    @IsNumber()
-    @ApiProperty({required: false})
-    id?: number;
-    
+export class CreatePointLivraisonDto {    
     @IsNotEmpty()
     @ApiProperty()
     numero_magasin: string;
@@ -21,7 +17,9 @@ export class CreatePointLivraisonDto {
     
     @IsNotEmpty()
     @IsOptional()
-    @ApiProperty({required: false})
+    @ApiProperty({
+        required: false
+    })
     departement?: string;
     
     @IsNotEmpty()
@@ -30,18 +28,23 @@ export class CreatePointLivraisonDto {
     
     @IsNotEmpty()
     @IsOptional()
-    @ApiProperty({required: false})
+    @ApiProperty({
+        required: false
+    })
     pays?: string;
     
     @IsNumber()
     @IsOptional()
-    @ApiProperty({required: false})
+    @ApiProperty({
+        required: false
+    })
     latitude?: number;
     
     @IsNumber()
     @IsOptional()
-    @ApiProperty({required: false})
-    @ApiProperty({required: false})
+    @ApiProperty({
+        required: false
+    })
     longitude?: number;
     
     @IsNotEmpty()
@@ -50,7 +53,15 @@ export class CreatePointLivraisonDto {
     code_postal: string;
     
     @IsOptional()
-    @IsOptional()
-    @ApiProperty({required: false})
+    @ApiProperty({
+        required: false
+    })
     complement_adresse?: string;
+    
+    @IsOptional()
+    @ApiProperty({
+        required: false,
+        type: [ContrainteLivraisonDto]
+    })
+    contraintes_livraison: ContrainteLivraisonDto[];
 }

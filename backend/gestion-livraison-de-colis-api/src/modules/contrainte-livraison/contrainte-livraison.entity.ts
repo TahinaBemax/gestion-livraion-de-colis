@@ -16,8 +16,8 @@ export class ContrainteLivraisonEntity {
     @Column({type: "date"})
     date_fin: Date;
 
-    @Column()
-    priorite_contrainte: string;
+    @Column({nullable: true})
+    priorite_contrainte?: string;
 
     @ManyToOne(() => PointLivraisonEntity, (pl) => pl.contraintes_livraison)
     @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})

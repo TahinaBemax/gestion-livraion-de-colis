@@ -20,7 +20,7 @@ export class PointLivraisonService {
 
 
     async create(dto: CreatePointLivraisonDto): Promise<PointLivraisonEntity>{
-        const pointLivraison: PointLivraisonEntity = plainToInstance(PointLivraisonEntity, dto);
+        const pointLivraison: PointLivraisonEntity = this.mapDtoToPointLivraison(dto);
 
         const prepared = this.pointLivraisonRep.create(pointLivraison);
         return this.pointLivraisonRep.save(prepared);
@@ -74,34 +74,6 @@ export class PointLivraisonService {
         });
     }
 
-
-    /*private async prepareChildrensData(dto: PointLivraisonCreateDto, pointLivraison: PointLivraisonEntity) {
-        // 1. Assign prestataire if it exists
-        if (dto.prestataire !== undefined) {
-            const prestataire = await this.prestataireService.findById(dto.prestataire);
-            pointLivraison.prestataire = prestataire;
-        }
-
-        // 2. Ensure contraintes_livraison array exists and fill it
-        if (dto.contraintes_livraison) {
-            pointLivraison.contraintes_livraison = pointLivraison.contraintes_livraison || []; // Initialize if undefined
-            for (const contrainteId of dto.contraintes_livraison) {
-                const contrainte = await this.containteLivraisonService.findById(contrainteId);
-                pointLivraison.contraintes_livraison.push(contrainte);
-            }
-        }
-
-        // 3. Ensure animations_ville array exists and fill it with ContrainteAnimationVille
-        if (dto.animations_ville) {
-            pointLivraison = pointLivraison || []; // Initialize if undefined
-            for (const animationId of dto) {
-                const animation = await this.evenementService.findById(animationId);
-                const contrainte_animation = new ContrainteAnimationVille();
-                contrainte_animation.animation_ville = animation;
-                pointLivraison.push(contrainte_animation);
-            }
-        }
-    } */
 
     async assignDeliveryPointsToProvider(prestataire: Prestataire, id_points_livraison:number[]): Promise<{message: string}>{
         if(!id_points_livraison || id_points_livraison.length === 0) throw new BadRequestException("Il faut mettre au moins un point de livraison!");
@@ -157,5 +129,37 @@ export class PointLivraisonService {
         } finally {
             await queryRunner.release();
         }
+    }
+
+    private mapDtoToPointLivraison(dto: CreatePointLivraisonDto): PointLivraisonEntity{
+        const pl = new PointLivraisonEntity();
+
+        pl.numero_magasin = dto.numero_magasin;
+        pl.nom_rue = dto.nom_rue;
+        pl.numero_rue = dto.numero_rue;
+        pl.departement = dto.departement;
+        pl.ville = dto.ville;
+        pl.pays = dto.pays;
+        pl.latitude = dto.latitude;
+        pl.longitude = dto.longitude;
+        pl.code_postal = dto.code_postal;
+        pl.complement_adresse = dto.complement_adresse;
+
+        if(dto.contraintes_livraison && dto.contraintes_livraison.length > 0){
+            const contraintes = dto.contraintes_livraison.map(c => {
+                const contrainte = new ContrainteLivraisonEntity();
+
+                contrainte.intitule_contrainte = c.intitule_contrainte;
+                contrainte.date_debut = c.date_debut;
+                contrainte.date_fin = c.date_fin;
+                contrainte.priorite_contrainte = c.priorite_contrainte;
+
+                return contrainte;
+            })
+
+            pl.contraintes_livraison = contraintes;
+        }
+
+        return pl;
     }
 }
