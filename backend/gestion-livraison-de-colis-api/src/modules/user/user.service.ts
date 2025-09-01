@@ -139,6 +139,21 @@ export class UserService {
         });
     }
 
+    async findPrestataireUsers(idPrestataire: number):Promise<User[]>{
+        const users = await this.userRepo.createQueryBuilder("u")
+            .innerJoinAndSelect("u.role", "role")
+            .innerJoinAndSelect("u.type_utilisateur", "tu")
+            .leftJoinAndSelect("u.prestataire", "p")
+            .where("u.est_active = :estActive", { estActive: true })
+            .andWhere("tu.id_type_utilisateur = :typeUtilisateur", { typeUtilisateur: "TYPE-USER-00002" })
+            .andWhere("p.id_prestataire = :idPrestataire", { idPrestataire: idPrestataire })
+            .getMany();
+
+        return users.map(user => {
+            return { ...user, mot_de_passe: "" }
+        });
+    }
+
     async findById(id: number): Promise<User> {
         const user = await this.userRepo.findOne( {
             where: {id_utilisateur: id},
