@@ -11,10 +11,10 @@ export class ContrainteLivraisonEntity {
     intitule_contrainte: string;
 
     @Column({type: "date"})
-    date_debut: Date;
+    date_debut: string;
 
     @Column({type: "date"})
-    date_fin: Date;
+    date_fin: string;
 
     @Column({nullable: true})
     priorite_contrainte?: string;

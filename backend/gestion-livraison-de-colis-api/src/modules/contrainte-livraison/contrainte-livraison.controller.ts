@@ -7,6 +7,7 @@ import { ContrainteLivraisonEntity } from './contrainte-livraison.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { ContrainteJourDto } from 'src/common/dto/contrainte-jour/contrainte-jour-dto';
+import { ContrainteLivraisonUpdateDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-update-dto';
 
 @Controller('contraintes-livraisons')
 @ApiTags("contraintes-livraisons")
@@ -26,23 +27,13 @@ export class ContrainteLivraisonController {
         return this.contrainteService.findAll();
     }
 
-    @Post()
-    @Roles(UserRole.Admin)
-    @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: ContrainteLivraisonDto})
-    @ApiCreatedResponse({type: ContrainteLivraisonDto})
-    @ApiBadRequestResponse({description: "Données Invalides"})
-    save(@Body() dto: ContrainteLivraisonDto){
-        return this.contrainteService.save(dto);
-    }
-
     @Put("/:id")
     @Roles(UserRole.Admin)
     @HttpCode(HttpStatus.CREATED)
     @ApiBody({type: ContrainteLivraisonDto})
     @ApiCreatedResponse({type: ContrainteLivraisonSwaggerDto})
     @ApiBadRequestResponse({description: "Données Invalides"})
-    update(@Param("id", ParseIntPipe) id: number, @Body() dto: ContrainteLivraisonDto) {
+    update(@Param("id", ParseIntPipe) id: number, @Body() dto: ContrainteLivraisonUpdateDto) {
         return this.contrainteService.update(id, dto);
     }
     

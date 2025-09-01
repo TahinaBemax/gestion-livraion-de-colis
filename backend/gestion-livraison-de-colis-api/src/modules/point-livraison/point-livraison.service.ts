@@ -8,6 +8,7 @@ import { Prestataire } from '../prestataire/prestataire.entity';
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
+import { PointLivraisonUpdateDto } from 'src/common/dto/point-livraison/point-livraison-update-dto';
 
 
 @Injectable()
@@ -53,17 +54,24 @@ export class PointLivraisonService {
             .getMany();
     }
 
-    async update(id: number, dto: CreatePointLivraisonDto): Promise<PointLivraisonEntity>{
+    async update(id: number, dto: PointLivraisonUpdateDto): Promise<PointLivraisonEntity>{
         if(!dto || !id) throw new BadRequestException("Données Invalides!");
-        const matched = this.findById(id);
+        const matched = await this.findById(id);
 
         if(!matched) throw new NotFoundException(`Point de Livraison avec id:{${id}} est introuvable!`);
 
-        const pointLivraison: PointLivraisonEntity = plainToInstance(PointLivraisonEntity, dto);
-        pointLivraison.id = pointLivraison.id ?? id;
+        matched.numero_magasin = dto.numero_magasin ?? matched.numero_magasin;
+        matched.nom_rue = dto.nom_rue ?? matched.nom_rue;
+        matched.numero_rue = dto.numero_rue ?? matched.numero_rue;
+        matched.departement = dto.departement;
+        matched.ville = dto.ville ?? matched.ville;
+        matched.pays = dto.pays;
+        matched.latitude = dto.latitude;
+        matched.longitude = dto.longitude;
+        matched.code_postal = dto.code_postal;
+        matched.complement_adresse = dto.complement_adresse;
 
-        const prepared = this.pointLivraisonRep.create(pointLivraison);
-        return this.pointLivraisonRep.save(prepared);
+        return this.pointLivraisonRep.save(matched);
     }
 
     async findByCityNumeroMagasin(city: string, numMagasin: string): Promise<PointLivraisonEntity[]> {

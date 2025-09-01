@@ -1,7 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
-import { ContrainteJourDto } from "../contrainte-jour/contrainte-jour-dto";
 
 export class ContrainteLivraisonDto {
     @IsOptional()
@@ -24,7 +23,7 @@ export class ContrainteLivraisonDto {
         example: "11/08/2025",
         description: "La date doit être en format dd/MM/yyyy"
     })
-    date_debut: Date;
+    date_debut: string;
     
     @IsNotEmpty()
     @IsFRDate()
@@ -32,7 +31,7 @@ export class ContrainteLivraisonDto {
         example: "11/08/2025",
         description: "La date doit être en format dd/MM/yyyy"
     })
-    date_fin: Date;
+    date_fin: string;
     
     @IsOptional()
     @IsNotEmpty()

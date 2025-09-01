@@ -7,6 +7,7 @@ import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOperation, ApiPa
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
+import { PointLivraisonUpdateDto } from 'src/common/dto/point-livraison/point-livraison-update-dto';
 
 @Controller('points-livraison')
 @Roles(UserRole.Admin)
@@ -48,7 +49,7 @@ export class PointLivraisonController {
 
     @Put("/:id")
         @UserTypes(TypeUtilisateur.TempoOne)
-    update(@Param("id", ParseIntPipe) id: number, @Body() data: CreatePointLivraisonDto){
+    update(@Param("id", ParseIntPipe) id: number, @Body() data: PointLivraisonUpdateDto){
         return this.plService.update(id, data);
     }
     

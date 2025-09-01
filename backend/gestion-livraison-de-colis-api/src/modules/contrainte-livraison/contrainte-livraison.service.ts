@@ -8,6 +8,7 @@ import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity'
 import { ContrainteLivraisonEntity } from './contrainte-livraison.entity';
 import { ContrainteJourEntity } from '../contrainte-jour/contrainte-jour.entity';
 import { ContrainteJourDto } from 'src/common/dto/contrainte-jour/contrainte-jour-dto';
+import { ContrainteLivraisonUpdateDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-update-dto';
 
 @Injectable()
 export class ContrainteLivraisonService {
@@ -36,17 +37,6 @@ export class ContrainteLivraisonService {
         return this.contrainteLivaisonRep.find({
             relations: ["contrainte_jour_livraisons"]
         });
-    }
-
-    async save(dto: ContrainteLivraisonDto): Promise<ContrainteLivraisonEntity>{
-        if(!dto || !dto.id_point_livraison) throw new BadRequestException("Données Invalides");
-        
-        const pl = await this.getPointLivraison(dto.id_point_livraison);
-        const contrainte: ContrainteLivraisonEntity = plainToInstance(ContrainteLivraisonEntity, dto);
-        contrainte.point_livraison =  pl;
-        
-        const prepare = this.contrainteLivaisonRep.create(contrainte);
-        return this.contrainteLivaisonRep.save(prepare);
     }
 
     async attachDayConstraintsToDeliveryConstraint(idConstraint: number, dayConstraints: ContrainteJourDto[]) {
@@ -95,18 +85,14 @@ export class ContrainteLivraisonService {
         return this.contrainteJourRep.save(preapred);
     }
 
-    async update(id: number, dto: ContrainteLivraisonDto): Promise<ContrainteLivraisonEntity> {
+    async update(id: number, dto: ContrainteLivraisonUpdateDto): Promise<ContrainteLivraisonEntity> {
         if (!dto || !id) throw new BadRequestException("Données Invalides");
 
         const existing = await this.findById(id);
-        const pl = await this.getPointLivraison(id);
-        dto.id = dto.id ?? id;
-
-        const contrainte: ContrainteLivraisonEntity = plainToInstance(ContrainteLivraisonEntity, dto);
-        contrainte.point_livraison = pl;
-
-        // Update the existing entity with new values
-        Object.assign(existing, contrainte);
+        existing.intitule_contrainte = dto.intitule_contrainte ?? existing.intitule_contrainte;
+        existing.date_debut = dto.date_debut ?? existing.date_debut;
+        existing.date_fin = dto.date_debut ?? existing.date_fin;
+        existing.priorite_contrainte = dto.priorite_contrainte ?? existing.priorite_contrainte;
         
         return this.contrainteLivaisonRep.save(existing);
     }

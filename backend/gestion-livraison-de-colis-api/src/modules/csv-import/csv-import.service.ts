@@ -144,17 +144,7 @@ export class CsvImportService {
   private prepareConstraintDeliveryInstance(fromCsv: ContrainteLivraisonCsvDto[], pl:PointLivraisonEntity){
     const matchedConstrainte = fromCsv.filter(ck => ck.numero_magasin === pl.numero_magasin);
     return matchedConstrainte.map(c => {
-      const date_debut = parse(c.date_debut, 'dd/MM/yyyy', new Date());
-      const date_fin = parse(c.date_fin, 'dd/MM/yyyy', new Date());
-
-          // Validation des dates
-      if (!isValid(date_debut)) throw new BadRequestException("Date début invalide");
-      if (!isValid(date_fin)) throw new BadRequestException("Date fin invalide");
-
-      const ck = plainToInstance(ContrainteLivraisonEntity, c);
-      ck.date_debut = date_debut;
-      ck.date_fin = date_fin;
-      return ck;
+      return plainToInstance(ContrainteLivraisonEntity, c);
     });    
   }
   
