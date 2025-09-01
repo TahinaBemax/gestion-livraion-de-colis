@@ -17,6 +17,7 @@ import { LivraisonEntity } from '../livraisons/livraison.entity';
     ])
   ],
   controllers: [ColisController],
-  providers: [ColisService]
+  providers: [ColisService],
+  exports: [ColisService]
 })
 export class ColisModule {}

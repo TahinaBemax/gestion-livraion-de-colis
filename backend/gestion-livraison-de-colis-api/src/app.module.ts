@@ -30,6 +30,7 @@ import { BordereauLivraisonModule } from './modules/bordereau-livraison/borderea
 import { ClientModule } from './modules/client/client.module';
 import { PdfModule } from './core/pdf/pdf.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { SeedModule } from './core/seed/seed.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     ClientModule,
     PdfModule,
     NotificationModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [

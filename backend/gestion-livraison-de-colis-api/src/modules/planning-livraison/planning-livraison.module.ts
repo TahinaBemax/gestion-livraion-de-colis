@@ -15,6 +15,7 @@ import { TourneeLivraisonModule } from '../tournee-livraison/tournee-livraison.m
     ])
   ],
   providers: [PlanningLivraisonService],
-  controllers: [PlanningLivraisonController]
+  controllers: [PlanningLivraisonController],
+  exports: [PlanningLivraisonService]
 })
 export class PlanningLivraisonModule {}

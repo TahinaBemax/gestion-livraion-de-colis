@@ -35,3 +35,9 @@ Le nom de domaine que vous utilisez pour eviter le probleme de CORSS
 ## Documentation
 
 Tapez http://localhost:votre-port/docs pour voir la documentation d'utilisation de l'API
+
+## Default Data test
+run:
+```
+    npm run seed
+```

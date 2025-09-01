@@ -18,6 +18,7 @@ import { PdfService } from 'src/core/pdf/pdf.service';
     ])
   ],
   providers: [BordereauLivraisonService, PdfService],
-  controllers: [BordereauLivraisonController]
+  controllers: [BordereauLivraisonController],
+  exports: [BordereauLivraisonService]
 })
 export class BordereauLivraisonModule {}
