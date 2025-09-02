@@ -8,7 +8,6 @@ import { User } from '../user.entity';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
 import { Prestataire } from 'src/modules/prestataire/prestataire.entity';
 import { PrestataireService } from 'src/modules/prestataire/prestataire.service';
-import { LivreurService } from 'src/modules/livreur/livreur.service';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserSwaggerDto } from 'src/common/swagger-dto/user/user-swagger-dto';
 import { PrestataireSwaggerDto } from 'src/common/swagger-dto/prestataire/prestataire-swagger-dto';

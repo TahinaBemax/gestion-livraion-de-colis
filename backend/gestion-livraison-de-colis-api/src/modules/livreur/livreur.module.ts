@@ -13,12 +13,14 @@ import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporair
 import { LivreurTemporaireEntity } from './livreur-temporaire/livreur-temporaire.entity';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivraisonsModule } from '../livraisons/livraisons.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     CategorieLivreurModule, 
     forwardRef(() => UserModule),
     forwardRef(() => LivraisonsModule),
+    forwardRef(() => NotificationModule),
     TypeOrmModule.forFeature([
       Livreur, 
       User, 

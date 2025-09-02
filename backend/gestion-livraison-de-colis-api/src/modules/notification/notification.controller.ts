@@ -12,11 +12,6 @@ export class NotificationController {
         return this.notifService.findById(id);
     }
 
-    @Get()
-    getByUserType(@Query("typeUtilisateur") typeUtilisateur: string){
-        return this.notifService.findAllByUserType(typeUtilisateur);
-    }
-
     @Delete("/:id")
     delete(@Param("id", ParseIntPipe) id: number){
         return this.notifService.delete(id);

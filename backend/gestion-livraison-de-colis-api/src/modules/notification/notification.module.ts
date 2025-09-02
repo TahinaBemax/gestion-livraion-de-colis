@@ -11,7 +11,7 @@ import { UserModule } from '../user/user.module';
 @Module({
   imports: [
     forwardRef(() => UserModule),
-    LivreurModule,
+    forwardRef(() => LivreurModule),
     TypeOrmModule.forFeature([
       NotificationEntity,
       User

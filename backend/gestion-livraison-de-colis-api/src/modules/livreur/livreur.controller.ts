@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporaire.service';
 import { LivreurTemporaireDto } from 'src/common/dto/livreur/livreur-temporaire-dto';
@@ -13,6 +13,8 @@ import { UserRole } from 'src/common/enum/user-role.enum';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-probleme-livraison-dto';
 import { LivraisonsService } from '../livraisons/livraisons.service';
+import { NotificationService } from '../notification/notification.service';
+import { SameUserGuard } from 'src/common/guards/same-user.guard';
 
 @Controller('livreurs')
 @Roles(UserRole.User, UserRole.ResponsableExploitation)
@@ -22,7 +24,8 @@ export class LivreurController {
     constructor(
         private readonly livreurTempService: LivreurTemporaireService,
         private readonly livreurService: LivreurService,
-        private readonly livraisonService: LivraisonsService
+        private readonly livraisonService: LivraisonsService,
+        private readonly notifService: NotificationService,
     ){}
 
     /* LIVREUR */
@@ -36,7 +39,7 @@ export class LivreurController {
         @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
         @ApiOperation({summary: "Lister tous les livreurs"})
         @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
-    findLivreurs(){
+    async findLivreurs(){
         return this.livreurService.findAllLivreurs();
     }
 
@@ -61,12 +64,13 @@ export class LivreurController {
          * @returns 
          */
     @Put("/:id")
+    @UseGuards(SameUserGuard)
         @Roles(UserRole.Admin, UserRole.User)
         @ApiBody({type: LivreurUpdateDto})
         @ApiOperation({summary: "modification d'un livreur"})
         @ApiCreatedResponse({description: "Livreur modifié avec succés!", type: LivreurSwaggerDto})
         @ApiBadRequestResponse({description: "Données invalides"})
-    updateLivreur(@Param("id") idLivreur: number, @Body() data: LivreurUpdateDto): Promise<Livreur>{
+    async updateLivreur(@Param("id") idLivreur: number, @Body() data: LivreurUpdateDto): Promise<Livreur>{
         return this.livreurService.update(idLivreur, data);
     }
     /* -------------------------------- */
@@ -80,9 +84,10 @@ export class LivreurController {
          * @returns 
          */
     @Get("/:id/temporaire")
+    @UseGuards(SameUserGuard)
         @ApiOkResponse()
         @ApiNotFoundResponse()
-    getAllByDeliveryID(@Param("id", ParseIntPipe) id: number): Promise<LivreurTemporaireEntity[]>{
+    async getAllByDeliveryID(@Param("id", ParseIntPipe) id: number): Promise<LivreurTemporaireEntity[]>{
         return this.livreurTempService.findAllByDeliveryID(id);
     }
         /**
@@ -93,7 +98,7 @@ export class LivreurController {
     @Get("/temporaire/:idTemp")
         @ApiOkResponse()
         @ApiNotFoundResponse()
-    getByIdTemporaryDeliveryID(@Param("id", ParseIntPipe) id: number){
+    async getByIdTemporaryDeliveryID(@Param("id", ParseIntPipe) id: number){
         return this.livreurTempService.findById(id);
     }
 
@@ -104,10 +109,11 @@ export class LivreurController {
      * @returns Livreur temporaire créé
      */
     @Post('/:id/temporaire')
+    @UseGuards(SameUserGuard)
         @ApiBody({type: LivreurTemporaireDto})
         @ApiCreatedResponse()
         @ApiNotFoundResponse()
-    save(@Param("id", ParseIntPipe) id: number, @Body() dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
+    async save(@Param("id", ParseIntPipe) id: number, @Body() dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
         return this.livreurTempService.save(id, dto);
     }
 
@@ -119,10 +125,11 @@ export class LivreurController {
          * @returns Livreur temporaire modifié
          */
     @Put('/:id/temporaire/:idLivreurTemp')
+    @UseGuards(SameUserGuard)
         @ApiBody({type: LivreurTemporaireUpdateDto})
         @ApiCreatedResponse()
         @ApiNotFoundResponse()
-    update(@Param("id", ParseIntPipe) id: number,@Param("idLivreurTemp", ParseIntPipe) idLivreurTemp:number, @Body() dto: LivreurTemporaireUpdateDto){
+    async update(@Param("id", ParseIntPipe) id: number,@Param("idLivreurTemp", ParseIntPipe) idLivreurTemp:number, @Body() dto: LivreurTemporaireUpdateDto){
         return this.livreurTempService.update(id, idLivreurTemp, dto);
     }
 
@@ -135,18 +142,31 @@ export class LivreurController {
         @ApiBody({type: LivreurTemporaireUpdateDto})
         @ApiOkResponse()
         @ApiNotFoundResponse()
-    desactivateAccount(@Param("id", ParseIntPipe) id: number){
+    async desactivateAccount(@Param("id", ParseIntPipe) id: number){
         return this.livreurTempService.delete(id);
     }
 
-    /* LIVRAISON */
+    /* ===== LIVRAISON ====== */
     @Post("/:id/livraisons/:idLivraison/problemes")
-        @HttpCode(HttpStatus.CREATED)
-        @ApiBody({type: ProblemeLivraisonCreateDto})
+    @UseGuards(SameUserGuard)
+    @HttpCode(HttpStatus.CREATED)
+    @ApiBody({type: ProblemeLivraisonCreateDto})
         @ApiCreatedResponse()
         @ApiBadRequestResponse()
         @ApiNotFoundResponse()
-    signalProbleme(@Param("id", ParseIntPipe) idLivraison: number, @Body() dto: ProblemeLivraisonCreateDto){
+    async signalProbleme(@Param("id", ParseIntPipe) idLivraison: number, @Body() dto: ProblemeLivraisonCreateDto){
         return this.livraisonService.signalProbleme(idLivraison, dto);
+    }
+
+    /* ===== NOTIFICATION ====== */
+    @Get("/:id/notifications")
+        /**
+         * @param id ID du livreur
+         * LISTE DES NOTIFICATION D'UN LIVREUR
+         * @returns Liste Notifications
+         */
+    @UseGuards(SameUserGuard)
+    async getNotifications(@Param("id", ParseIntPipe) id: number){
+        return this.notifService.findLivreurNotifications(id);
     }
 }

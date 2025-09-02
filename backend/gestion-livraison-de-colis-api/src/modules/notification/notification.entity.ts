@@ -13,7 +13,7 @@ export class NotificationEntity {
     message: string;
     
     @Column({type: "timestamp"})
-    dateheure_notification: Date;
+    dateheure_notification: string;
 
     @ManyToOne(() => User , (u) => u.notifications_envoye, { eager: true})
     @JoinColumn({name: "id_envoyeur", referencedColumnName: "id_utilisateur"})

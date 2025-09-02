@@ -3,6 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, Unique, JoinColumn, OneToOne, O
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { Role } from '../role/role.entity';
 import { TypeUtilisateur } from './type-utilisateur/type-utilisateur.entity';
+import { Livreur } from '../livreur/livreur.entity';
 
 
 @Entity("utilisateurs")
@@ -49,6 +50,11 @@ export class User {
     @OneToOne(() => Prestataire, { nullable: true})
     @JoinColumn({name: "id_prestataire"})
     prestataire?: Prestataire;
+
+    @OneToOne(() => Livreur, (l) => l.user, {
+        cascade: false
+    })
+    livreur?: Livreur;
 
     @OneToMany(() => NotificationEntity, (notif) => notif.envoyeur)
     notifications_envoye?: NotificationEntity[];

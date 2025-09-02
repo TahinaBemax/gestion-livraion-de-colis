@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
 import { NotificationCreateDto } from 'src/common/dto/notification/notification-create-dto';
 import { User } from '../user/user.entity';
+import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 
 @Injectable()
 export class NotificationService {
@@ -19,18 +20,55 @@ export class NotificationService {
     }
 
     /**
-     * LISTE DES NOTIFICATIONS RECUS PAR TYPE D'UTILISATEUR (Prestataire, Tempo One, livreur)
+     * LISTE DES NOTIFICATIONS pour Tempo One
      * @param userID ID de l'utilisateur
      * @returns Liste des notifications
      */
-    async findAllByUserType(userType: string): Promise<NotificationEntity[]>{
-        if(!userType) throw new BadRequestException("Type Utilisateur est null");
-        
+    async findTempoOneNotifications(): Promise<NotificationEntity[]>{
+        const userType = TypeUtilisateur.TempoOne;
+
         return this.notifRep.createQueryBuilder("notif")
             .innerJoinAndSelect("notif.envoyeur", "envoyeur")
             .innerJoin("notif.receveurs", "user")
             .innerJoin("user.type_utilisateur", "tu")
             .where("tu.id_type_utilisateur = :id", {id: userType})
+            .orderBy("notif.dateheure_notification", 'DESC')
+            .getMany();
+    }
+
+    /**
+     * LISTE DES NOTIFICATIONS pour Tempo One
+     * @param userID ID de l'utilisateur
+     * @returns Liste des notifications
+     */
+    async findLivreurNotifications(idLivreur: number): Promise<NotificationEntity[]>{
+        const userType = TypeUtilisateur.Livreur;
+
+        return this.notifRep.createQueryBuilder("notif")
+            .innerJoinAndSelect("notif.envoyeur", "envoyeur")
+            .innerJoin("notif.receveurs", "user")
+            .innerJoin("user.type_utilisateur", "tu")
+            .innerJoin("user.livreur", "livreur")
+            .where("tu.id_type_utilisateur = :id", {id: userType})
+            .andWhere("livreur.id_livreur = :idLivreur ", {idLivreur: idLivreur})
+            .orderBy("notif.dateheure_notification", 'DESC')
+            .getMany();
+    }
+
+    /**
+     * LISTE DES NOTIFICATIONS D'UN PRESTATAIRE
+     * @param userID ID Prestataire
+     * @returns Liste des notifications
+     */
+    async findPrestataireNotications(idPrestataire: number): Promise<NotificationEntity[]>{
+        if(!idPrestataire) throw new BadRequestException("ID Prestataire est null");
+        
+        return this.notifRep.createQueryBuilder("notif")
+            .innerJoinAndSelect("notif.envoyeur", "envoyeur")
+            .innerJoinAndSelect("notif.receveurs", "user")
+            .innerJoin("user.prestataire", "prestataire")
+            .where("prestataire.id_prestataire = :id", {id: idPrestataire})
+            .orderBy("notif.dateheure_notification", 'DESC')
             .getMany();
     }
 
@@ -44,6 +82,7 @@ export class NotificationService {
             .innerJoinAndSelect("notif.envoyeur", "envoyeur")
             .innerJoin("notif.receveurs", "user")
             .where("user.id_utilisateur = :id", {id: userID})
+            .orderBy("notif.dateheure_notification", 'DESC')
             .getMany();
     }
 
@@ -76,6 +115,7 @@ export class NotificationService {
         notif.message = dto.message;
         notif.receveurs = receveurs;
         notif.envoyeur = envoyeur;
+        notif.dateheure_notification = new Date().toUTCString();
 
         const prepared = this.notifRep.create(notif);
         return this.notifRep.save(prepared);

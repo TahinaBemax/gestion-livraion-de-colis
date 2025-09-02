@@ -27,7 +27,7 @@ export class Livreur {
     @JoinColumn({name: "id_categorie_livreur"})
     categorie_livreur: CategorieLivreur;
 
-    @OneToOne(() => User, {
+    @OneToOne(() => User, (l) => l.livreur, {
         eager: true,
         cascade: ['insert']
     })
