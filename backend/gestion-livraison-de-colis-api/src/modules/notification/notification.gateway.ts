@@ -16,54 +16,56 @@ import { LivreurService } from '../livreur/livreur.service';
 import { NotificationService } from './notification.service';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { ConnectedUserDto } from 'src/common/dto/notification/notification-user-connected-dto';
-import { error } from 'console';
 import { User } from '../user/user.entity';
+import { info } from 'console';
 
 @WebSocketGateway(
     {
-        cors: "*",
-        // {
-        //     origin: (origin, callback) => {
-        //     const allowedOrigin = process.env.CLIENT_ORIGIN;
-        //     console.log(allowedOrigin);
+        cors: 
+        {
+            origin: (origin, callback) => {
+            const allowedOrigin = `${process.env.CLIENT_DOMAINE_NAME}:${process.env.CLIENT_PORT}`;
+
+            console.log("Accepted origin: " + allowedOrigin);
+            console.log("Incoming origin: " + origin);
             
-        //     if (origin === allowedOrigin) {
-        //         callback(null, true);
-        //     } else {
-        //         callback(new Error("Origin not allowed"), false);
-        //     }
-        //     }
-        // },
+            if(! origin){
+              callback(null, true);
+            } else if (origin === allowedOrigin) {
+              callback(null, true);
+            } else {
+              callback(new Error("Origin not allowed"), false);
+            }
+            }
+        },
     }
 )
 @Injectable()
 export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
-    constructor(
-        readonly userService: UserService,
-        readonly livreurService: LivreurService,
-        readonly notifService: NotificationService
-    ){}
+  constructor(
+    readonly userService: UserService,
+    readonly livreurService: LivreurService,
+    readonly notifService: NotificationService
+  ){}
 
   @WebSocketServer()
   server: Server;
 
   // store connected users
   private users: ConnectedUserDto[] = []; 
-  // key: typeUtilisateur, value: <userId, socketId>
 
   async handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
-    // You should authenticate the user here (e.g., via JWT)
-    const userId = client.handshake.query.userId as string;
+    const userId = client.handshake.query.userId as string; // ID de l'utilisateur connecté
 
     if(userId) {
         try {
             const matchedUser: User = await this.userService.findById(parseInt(userId));
             const connectedUser = new ConnectedUserDto();
 
-            connectedUser.userID = matchedUser.id_utilisateur;
-            connectedUser.socketID = client.id;
-            connectedUser.typeUtilisateur = matchedUser.type_utilisateur.id_type_utilisateur;
+            connectedUser.userID = matchedUser.id_utilisateur;  //ID de l'utilisateur
+            connectedUser.socketID = client.id; //ID Socket de l'utilisateur
+            connectedUser.typeUtilisateur = matchedUser.type_utilisateur.id_type_utilisateur; // Type de l'utilisateur (Tempo One, Prestataire, Livreur)
             connectedUser.prestataireID = (matchedUser.prestataire === undefined || matchedUser.prestataire === null) 
                 ? undefined : matchedUser.prestataire.id_prestataire;
 
@@ -78,7 +80,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    this.users = this.users.filter(user => user.socketID === client.id);
+    this.users = this.users.filter(user => user.socketID !== client.id);
   }
 
   @SubscribeMessage('send_alert')
@@ -87,12 +89,16 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     @ConnectedSocket() client: Socket,
   ) 
   {
-    this.saveNotification(data);
-    this.sendMessage(data);
+    try {
+      this.saveNotification(client.id, data);
+      this.sendMessage(data);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   private async sendMessage(data: AlertDto){
-    const receiverSocketId = this.users.filter(user => user.typeUtilisateur === data.receiverUserType);
+    const receiverSocketId = this.users.filter(user =>  data.receiverUserType.includes(user.typeUtilisateur));
 
     if (receiverSocketId) {
         try {    
@@ -112,27 +118,48 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
             console.error(error);
         }
     } else {
-      console.log(`User ${data.receiverUserType} may not online`);
+      console.warn(`User ${data.receiverUserType} may not online`);
     }
   }
 
-  private async saveNotification(data: AlertDto){
+  private async saveNotification(clientSocketID: string, data: AlertDto){
     const notifCreateDto = new NotificationCreateDto();
     notifCreateDto.message = data.message;
     notifCreateDto.titre = data.titre;
-    if (data.receiverUserType === TypeUtilisateur.TempoOne) {
+    notifCreateDto.id_receveurs = [];
+
+    if (data.receiverUserType.includes(TypeUtilisateur.TempoOne)) {
         const tempoOneUsers = await this.userService.findTempoOneUsers();
-        notifCreateDto.id_receveurs = tempoOneUsers.map(user => user.id_utilisateur);
-    } else if (data.receiverUserType === TypeUtilisateur.Prestataire) {
+        notifCreateDto.id_receveurs = notifCreateDto.id_receveurs.concat(tempoOneUsers.map(user => user.id_utilisateur));
+    } 
+
+    if (data.receiverUserType.includes(TypeUtilisateur.Prestataire)) {
         const prestataireUsers = await this.userService.findPrestataireUsers(data.idReceiver);
-        notifCreateDto.id_receveurs = prestataireUsers.map(user => user.id_utilisateur);
-    } else if(data.receiverUserType === TypeUtilisateur.Livreur) {
-        notifCreateDto.id_receveurs = [data.idReceiver];
-    } else {
+        notifCreateDto.id_receveurs = notifCreateDto.id_receveurs.concat(prestataireUsers.map(user => user.id_utilisateur));
+    } 
+
+    if(data.receiverUserType.includes(TypeUtilisateur.Livreur)) {
+        notifCreateDto.id_receveurs = notifCreateDto.id_receveurs.concat([data.idReceiver]);
+    } 
+    
+    if(notifCreateDto.id_receveurs.length === 0) {
         console.error("Type Utiilisateur inconnue");
         throw new BadRequestException("Type Utiilisateur inconnue");
     }
     
-    const saved = true//await this.notifService.save(parseInt(from), notifCreateDto);
+    const senderID = this.getUserIdBySocketID(clientSocketID); 
+    const saved = await this.notifService.save(senderID, notifCreateDto);
+    info("Alert enregistré avec success!");
+
+    return saved;
+  }
+
+
+  private getUserIdBySocketID(socketID: string): number {
+    const matched = this.users.filter(u => u.socketID === socketID);
+
+    if(matched.length > 0) return matched[0].userID;
+
+    throw new Error(`L'utilisateur avec ID Socket:${socketID} est introuvable.`);
   }
 }

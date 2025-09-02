@@ -1,6 +1,5 @@
 export class AlertDto{
-    from: number;
-    receiverUserType: string;
+    receiverUserType: string[];
     idReceiver: number;
     titre: string;
     message: string;

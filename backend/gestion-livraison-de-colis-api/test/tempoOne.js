@@ -6,7 +6,7 @@ const socket = io("http://localhost:3000", {
 socket.on("connect", () => {
   console.log("Connected:", socket.id);
 
-  sendNotification();
+  //sendNotification();
 });
 
 socket.on("receive_notification", (data) => {
@@ -15,9 +15,8 @@ socket.on("receive_notification", (data) => {
 
 function sendNotification() {
   socket.emit("send_alert", {
-    from: 4,
-    receiverUserType: "TYPE-USER-00002",
-    idReceiver: 1,
+    receiverUserType: "TYPE-USER-00002", //Type de l'utilisateur (Prestataire)
+    idReceiver: 1, // ID de l'utilisateur destinateur (ID Prestataire, ID Livreur)
     titre: "Test",
     message: "Hello, you have a new alert!",
   });

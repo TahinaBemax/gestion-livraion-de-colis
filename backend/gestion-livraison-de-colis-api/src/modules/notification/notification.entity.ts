@@ -12,7 +12,7 @@ export class NotificationEntity {
     @Column()
     message: string;
     
-    @Column()
+    @Column({type: "timestamp"})
     dateheure_notification: Date;
 
     @ManyToOne(() => User , (u) => u.notifications_envoye, { eager: true})

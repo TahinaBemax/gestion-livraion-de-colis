@@ -2,9 +2,9 @@
 
 ### Modifie le fichier .env dans backend/gestion-livraison-de-colis/.env
 ``
-* DATABASE_HOST=localhost
-* DATABASE_PORT=5432
-* DATABASE_USER=Votre nom d'utilisateur postgres
+* DATABASE_HOST= Localhost ou IP
+* DATABASE_PORT= port utilisé par votre postgresql
+* DATABASE_USER=Votre nom d'utilisateur postgresql
 * DATABASE_PASSWORD=Votre mot de passe
 * DATABASE_NAME= Le nom de la base de donnée
 
@@ -28,7 +28,9 @@ Modifie le fichier .env dans backend/gestion-livraison-de-colis/.env
 
 Modifie le fichier .env dans backend/gestion-livraison-de-colis/.env
 ```
-CLIENT_ORIGIN=http://localhost:5173 
+CLIENT_DOMAINE_NAME= http://localhost
+CLIENT_PORT= Port que vous utilisez
+
 ```
 Le nom de domaine que vous utilisez pour eviter le probleme de CORSS
 
@@ -37,7 +39,23 @@ Le nom de domaine que vous utilisez pour eviter le probleme de CORSS
 Tapez http://localhost:votre-port/docs pour voir la documentation d'utilisation de l'API
 
 ## Default Data test
+Pour inserer les données de test par default pour les tables suivants:
+- Utilisateur
+- Prestataire
+- Livreur
+- Point de livraison
+- Contrainte de livraison
+- Colis
+- Livraison
+- Planning
+- Tournée
+
 run:
 ```
     npm run seed
 ```
+
+## Pour le notification en temps réel
+Allez dans le dossier test/livreur.js pour voir comment interagir avec le socket de l'API.
+
+N'oublie pas de modifier le fichier .env pour eviter le probléme de <b> CORS </b>.

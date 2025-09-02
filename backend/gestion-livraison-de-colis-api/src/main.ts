@@ -12,12 +12,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
-  const clientOrigin = configService.get<string>('CLIENT_ORIGIN');
+  const clientOrigin = `${configService.get<string>('CLIENT_DOMAINE_NAME')}:${configService.get<string>('CLIENT_PORT')}`;
 
   app.enableCors({
     origin: (origin, cb) => {
       if (!origin) return cb(null, true); // allow non-browser tools
+
       if (clientOrigin && origin === clientOrigin) return cb(null, true);
+
       try {
         const o = new URL(origin);
         const a = new URL(clientOrigin ?? '');
@@ -25,6 +27,7 @@ async function bootstrap() {
           return cb(null, true);
         }
       } catch {}
+      
       return cb(new Error('Not allowed by CORS'), false);
     },
     methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
@@ -48,7 +51,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.CLIENT_PORT ?? 3000);
 }
 
 bootstrap();
