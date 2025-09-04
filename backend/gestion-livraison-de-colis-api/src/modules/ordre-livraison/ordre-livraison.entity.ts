@@ -14,6 +14,9 @@ export class OrdreLivraisonEntity {
     
     @Column()
     estimation_retard: string;
+
+    @Column()
+    statut: string;
     
     @Column()
     nbr_colis_prevu: number;
@@ -33,9 +36,10 @@ export class OrdreLivraisonEntity {
     livraisons: LivraisonEntity[];
 
     @OneToOne(() => BordereauLivraisonEntity, (b) => b.ordre_livraison, {
-        onDelete: "CASCADE"
+        onDelete: "CASCADE",
+        lazy: true
     })
-    bordereau_livraison: BordereauLivraisonEntity;
+    bordereau_livraison: Promise<BordereauLivraisonEntity>|BordereauLivraisonEntity;
 
     @ManyToOne(() => PointLivraisonEntity, (p) => p.ordres_livraison, {
         eager: true

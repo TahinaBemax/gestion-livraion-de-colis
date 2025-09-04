@@ -215,7 +215,6 @@ export class LivraisonsService {
 
     private batchGenerateCodeBarre(colis: ColisEntity[]){
         return Promise.all(colis.map(async c => {
-            c.code_barre_colis = this.generateSequentialBarcode(c.id, "COLIS");
             c.code_barre_client_colis = this.generateSequentialBarcode(c.id, "REF-CLIENT");
             return c;
         }));
@@ -254,11 +253,6 @@ export class LivraisonsService {
             livraison.client = client;
 
             livraison.nom_destinataire = client.nom_client;
-            livraison.adresse_principale = client.numero_rue + ", " + client.nom_rue + ", " + client.ville;
-            livraison.complement_adresse = client.complement_adresse;
-            livraison.ville = client.ville;
-            livraison.pays = client.pays;
-            livraison.code_postal = client.code_postal;
         }
 
         return livraison;
@@ -291,11 +285,6 @@ export class LivraisonsService {
             existing.client = client;
 
             existing.nom_destinataire = client.nom_client;
-            existing.adresse_principale = client.numero_rue + ", " + client.nom_rue + ", " + client.ville;
-            existing.complement_adresse = client.complement_adresse;
-            existing.ville = client.ville;
-            existing.pays = client.pays;
-            existing.code_postal = client.code_postal;
         }
 
         return existing;

@@ -6,13 +6,10 @@ import { TypeUtilisateur } from "../type-utilisateur/type-utilisateur.entity";
 import { User } from "../user.entity";
 import { Role } from "src/modules/role/role.entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import { format, isValid, parse } from "date-fns";
-import * as bcrypt from 'bcrypt';
 import { PrestataireService } from "src/modules/prestataire/prestataire.service";
 import { Utils } from "src/common/utils/utils";
 import { Prestataire } from "src/modules/prestataire/prestataire.entity";
 import { UpdateUserDto } from "src/common/dto/update-user-dto";
-import { Livreur } from "src/modules/livreur/livreur.entity";
 
 @Injectable()
 export class UserMapper {
@@ -75,7 +72,8 @@ export class UserMapper {
 
     user.civilite = dto.civilite?? user.civilite;
     user.date_naissance = dto.date_naissance?? user.date_naissance; 
-    user.numero_telephone = dto.numero_telephone?? user.numero_telephone;
+    user.numero_telephone = dto.numero_telephone !== undefined 
+      ? Utils.reformatToPhoneNumber(dto.numero_telephone) : user.numero_telephone;
     user.adresse_email = dto.adresse_email?? user.adresse_email;
     if(dto.photo_profil) user.photo_profil = dto.photo_profil;
     

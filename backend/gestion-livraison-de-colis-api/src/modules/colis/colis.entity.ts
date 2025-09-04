@@ -4,13 +4,10 @@ import { ProblemeColisEntity } from "./probleme-colis.entity";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
 
 @Entity("colis")
-@Unique(["code_barre_colis", "code_barre_client_colis"])
+@Unique(["code_barre_client_colis"])
 export class ColisEntity{
     @PrimaryGeneratedColumn({name: "id_colis"})
     id: number;
-    
-    @Column()
-    code_barre_colis: string;
     
     @Column()
     code_barre_client_colis: string;

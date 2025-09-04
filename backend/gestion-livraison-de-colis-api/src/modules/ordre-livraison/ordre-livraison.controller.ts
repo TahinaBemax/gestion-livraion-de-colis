@@ -15,6 +15,19 @@ export class OrdreLivraisonController {
         return this.ordreLivraisonService.findAll();
     }
 
+    @Get('/historiques')
+    @ApiOperation({ summary: 'Get all ordre livraisons' })
+    @ApiResponse({ status: 200, description: 'List of ordre livraisons.' })
+    async filterBy(
+        @Query("idPrestataire") idPrestataire: string|undefined, 
+        @Query("idClient") idClient: string|undefined,
+        @Query("dateLivraison") dateLivraison: string|undefined,
+        @Query("zoneGeographique") zoneGeographique: string|undefined,
+    ) 
+    {
+        return this.ordreLivraisonService.filterBy(idPrestataire, idClient, dateLivraison, zoneGeographique);
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get ordre livraison by id' })
     @ApiParam({ name: 'id', type: 'string' })
@@ -22,6 +35,15 @@ export class OrdreLivraisonController {
     @ApiResponse({ status: 404, description: 'Ordre livraison not found.' })
     async findOne(@Param('id', ParseIntPipe) id: number) {
         return this.ordreLivraisonService.findById(id);
+    }
+
+    @Get('/:id/fiche-ordre-livraison')
+    @ApiOperation({ summary: 'Get ordre livraison by id' })
+    @ApiParam({ name: 'id', type: 'string' })
+    @ApiResponse({ status: 200, description: 'Ordre livraison found.' })
+    @ApiResponse({ status: 404, description: 'Ordre livraison not found.' })
+    async getFicheOrdreLivraison(@Param('id', ParseIntPipe) id: number) {
+        return this.ordreLivraisonService.getFicheOrdreLivraison(id);
     }
 
     @Put(':id')

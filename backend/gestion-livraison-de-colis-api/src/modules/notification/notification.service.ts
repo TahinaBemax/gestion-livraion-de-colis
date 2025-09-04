@@ -86,6 +86,37 @@ export class NotificationService {
             .getMany();
     }
 
+    /**
+     * LISTE DES NOTIFICATIONS D'UN LIVREUR RATTACHÉES À UNE TOURNÉE
+     * @param livreurID ID du livreur
+     * @param date Date de la tournée (format YYYY-MM-DD)
+     * @param heure_debut Heure de début (format HH:mm:ss)
+     * @param heure_fin Heure de fin (format HH:mm:ss)
+     * @returns Liste des notifications
+     */
+    async findByLivreurAndTournee(
+        livreurID: number,
+        date: string,
+        heure_debut: string,
+        heure_fin: string
+    ): Promise<NotificationEntity[]> 
+    {
+        const date_debut = `${date} ${heure_debut}`; // e.g. 2025-09-01 08:00:00
+        const date_fin = `${date} ${heure_fin}`;
+
+        return this.notifRep
+            .createQueryBuilder("notif")
+            .innerJoinAndSelect("notif.envoyeur", "envoyeur")
+            .where("envoyeur.id_utilisateur = :livreurId", { livreurId: livreurID }) 
+            .andWhere("notif.dateheure_notification BETWEEN :debut AND :fin", {
+            debut: date_debut,
+            fin: date_fin,
+            })
+            .orderBy("notif.dateheure_notification", "DESC")
+            .getMany();
+    }
+
+
     async findById(id: number): Promise<NotificationEntity>{
         const matched = await this.notifRep.findOne(
             {

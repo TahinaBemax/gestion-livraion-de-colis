@@ -6,7 +6,6 @@ import { User } from '../user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LiveurMapper } from './livreur.mapper';
 import { Prestataire } from '../prestataire/prestataire.entity';
-import { Utils } from 'src/common/utils/utils';
 import { LivreurUpdateDto } from 'src/common/dto/livreur/update-livreur-dto';
 
 @Injectable()
@@ -37,7 +36,6 @@ export class LivreurService {
             const livreur = await this.livreurMapper.prepareData(prestataire, dto);
             var savedLivreur = await queryRunner.manager.save(Livreur, livreur);
             
-            livreur.qr_code = await Utils.generateUserQRCode(savedLivreur.user.adresse_email, savedLivreur.user.mot_de_passe);
             savedLivreur = await queryRunner.manager.save(Livreur, livreur);
             
             await queryRunner.commitTransaction();

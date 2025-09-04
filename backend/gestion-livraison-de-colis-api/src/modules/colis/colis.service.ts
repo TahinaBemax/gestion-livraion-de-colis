@@ -1,6 +1,6 @@
 import { ProblemeColisCreateDto } from './../../common/dto/colis/create-probleme-colis-dto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ColisEntity } from './colis.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ColisCreateDto } from 'src/common/dto/colis/create-colis-dto';
@@ -11,7 +11,6 @@ import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisUpdateDto } from 'src/common/dto/colis/update-colis-dto';
 import { DetailColisEntity } from './detail-colis.entity';
 import { ProblemeColisEntity } from './probleme-colis.entity';
-import { LivraisonEntity } from '../livraisons/livraison.entity';
 
 @Injectable()
 export class ColisService {
@@ -20,8 +19,7 @@ export class ColisService {
         private readonly colisRep: Repository<ColisEntity>,
         @InjectRepository(ProblemeColisEntity)
         private readonly problemeRep: Repository<ProblemeColisEntity>,
-        @InjectRepository(LivraisonEntity)
-        private readonly livraisonRep: Repository<LivraisonEntity>
+        private datasource: DataSource
     ){}
 
     async findAll(): Promise<ColisEntity[]>
@@ -41,22 +39,11 @@ export class ColisService {
         return mathced;
     }
 
-    async findByCode_barre(code: string): Promise<ColisEntity>
-    {
-        const mathced = await this.colisRep.findOne({
-            where: {code_barre_colis: code},
-            relations: ["details_colis"]
-        });
-
-        if(!mathced) throw new NotFoundException(`Colis introuvable!`);
-
-        return mathced;
-    }
 
     async findByCodeBarreClient(code: string): Promise<ColisEntity>
     {
         const mathced = await this.colisRep.findOne({
-            where: {code_barre_colis: code},
+            where: {code_barre_client_colis: code},
             relations: ["details_colis"]
         });
 
@@ -80,12 +67,60 @@ export class ColisService {
             const savedColis = await queryRunner.manager.save(ColisEntity, colis);
 
             savedColis.code_barre_client_colis = await this.generateCodeBarreClient(savedColis);
-            savedColis.code_barre_colis = await this.generateCodeBarre(savedColis);
 
             const updated = await queryRunner.manager.save(ColisEntity, savedColis);
             await queryRunner.commitTransaction()
 
             return updated;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+    async batachSave(dto: ColisCreateDto[]): Promise<ColisEntity[]> {
+        if(!dto) throw new BadRequestException("Données Colis invalides!");
+
+        const colis: ColisEntity[] = plainToInstance(ColisEntity, dto);
+        colis.forEach((c, index) => {
+            c.statut_colis = StatusColis.EN_ATTENTE;
+            c.poids_total = this.getSumWeight(dto[index].details_colis);
+        });
+
+        const queryRunner = this.colisRep.manager.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            const savedColis = await queryRunner.manager.save(ColisEntity, colis);
+
+            savedColis.forEach( async (save) => save.code_barre_client_colis = await this.generateCodeBarreClient(save));
+
+            const updated = await queryRunner.manager.save(ColisEntity, savedColis);
+            await queryRunner.commitTransaction()
+
+            return updated;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async batachUpdateColisEntity(dto: ColisEntity[]): Promise<ColisEntity[]> {
+        if(!dto) throw new BadRequestException("Données Colis invalides!");
+
+        const queryRunner = this.colisRep.manager.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            const savedColis = await queryRunner.manager.save(ColisEntity, dto);
+            await queryRunner.commitTransaction();
+
+            return savedColis;
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
@@ -123,6 +158,28 @@ export class ColisService {
         
         await this.colisRep.delete(id);
         return "Colis supprimé avec succés"!
+    }
+
+    async getDateFirstColisLoadedForTournee(idTournee: number): Promise<string>{
+        const result = await this.datasource.query(`
+            SELECT pcc.date_heure_chargement 
+            FROM premier_colis_au_chargement pcc 
+            WHERE pcc.id_tournee = $1
+            ORDER BY pcc.date_heure_chargement DESC LIMIT 1`, [idTournee]
+        );
+
+        return (result) ? result[0].date_heure_chargement : '';
+    }
+
+    async getDateLastColisDechargmentForTournee(idTournee: number): Promise<string>{
+        const result = await this.datasource.query(`
+            SELECT pcc.date_heure_dechargement 
+            FROM dernier_colis_au_dechargement pcc 
+            WHERE pcc.id_tournee = $1
+            ORDER BY pcc.date_heure_dechargement DESC LIMIT 1`, [idTournee]
+        );
+
+        return (result) ? result[0].date_heure_dechargement : '';
     }
 
     private getSumWeight(detailsColis: DetailColisDto[]) {

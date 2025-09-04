@@ -22,11 +22,6 @@ export class ColisController {
         return this.colisService.findById(id);
     }
 
-    @Get("/par-code-barre/:code")
-    getByCodeBarre(@Param("code") code: string){
-        return this.colisService.findByCode_barre(code);
-    }
-
     @Get("/par-client-code-barre/:code")
     getByCodeBarreClient(@Param("code") code: string){
         return this.colisService.findByCodeBarreClient(code);

@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OrdreLivraisonCreateDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
 import { LivraisonEntity } from '../livraisons/livraison.entity';
 import { LivraisonsService } from '../livraisons/livraisons.service';
-import { Repository, QueryRunner, DataSource } from 'typeorm';
+import { Repository, QueryRunner, DataSource, In } from 'typeorm';
 import { OrdreLivraisonUpdateDto } from 'src/common/dto/ordre-livraison/update-ordre-livraison-dto';
 import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
@@ -13,6 +13,10 @@ import { StatutTourneeLivaison } from 'src/common/enum/status-tournee-livraison'
 import { ColisEntity } from '../colis/colis.entity';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
+import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enum';
+import { FicheOrdreLivraisonDto } from 'src/common/dto/ordre-livraison/fiche-ordre-livraison-dto';
+import { ColisService } from '../colis/colis.service';
+import { NotificationService } from '../notification/notification.service';
 
 
 @Injectable()
@@ -25,12 +29,28 @@ export class OrdreLivraisonService {
         @InjectRepository(PointLivraisonEntity)
         private readonly plRepo: Repository<PointLivraisonEntity>,
         private readonly livraisonService: LivraisonsService,
-        @InjectRepository(ColisEntity)
-        private readonly colisRep: Repository<ColisEntity>,
+        private readonly colisService: ColisService,
+        private readonly notificationService: NotificationService,
     ){}
 
     async findAll(): Promise<OrdreLivraisonEntity[]> {
         return this.ordreRepo.find({relations: ["livraisons", "points_livraison"] });
+    }
+
+    async findByStatut(statut?: string): Promise<OrdreLivraisonEntity[]> {
+        if(statut){
+            return this.ordreRepo.find(
+                {
+                    where: {statut: statut},
+                    relations: ["livraisons", "points_livraison"] 
+                }
+            );
+        }
+
+        return this.ordreRepo.find({
+            where: {statut: In([StatutOrdreLivraison.EN_COURS, StatutOrdreLivraison.EFFECTUE])},
+            relations: ["livraisons", "points_livraison"]
+        });
     }
 
     async findAllByIdPL(id: number): Promise<OrdreLivraisonEntity[]> {
@@ -47,21 +67,93 @@ export class OrdreLivraisonService {
             .getMany();
     }
     
+    /**
+     * LISTE DES ORDRE DE LIVRAISON FILTRE PAR Prestataire, Client, Date, ZoneGeographique(Code Postal) 
+     * @param statuts 
+     * @returns 
+     */
+    async findByPrestataire(idPrestataire: number): Promise<OrdreLivraisonEntity[]>{
+        const query = this.ordreRepo.createQueryBuilder("ol")
+        .leftJoinAndSelect("ol.point_livraison", "pl")
+        .innerJoin("pl.prestataire", "p")
+        .innerJoin("ol.tournee_livraison", "tournee")
+        //.leftJoinAndSelect("ol.client", "c")
+        
+        if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: idPrestataire});
+
+        //if(idClient) query.andWhere("c.id = :idClient", {idClient: parseInt(idClient)});
+
+        return query.getMany();
+    }
+    /**
+     * LISTE DES ORDRE DE LIVRAISON FILTRE PAR Prestataire, Client, Date, ZoneGeographique(Code Postal) 
+     * @param statuts 
+     * @returns 
+     */
+    async filterBy(idPrestataire?: string, idClient?: string, date?: string, zoneGeographique?: string): Promise<OrdreLivraisonEntity[]>{
+        const query = this.ordreRepo.createQueryBuilder("ol")
+        .leftJoinAndSelect("ol.point_livraison", "pl")
+        .innerJoin("pl.prestataire", "p")
+        .innerJoin("ol.tournee_livraison", "tournee")
+        //.leftJoinAndSelect("ol.client", "c")
+        
+        if(date) query.where("tournee.date_tournee = :date", {date: date});
+        
+        if(zoneGeographique) query.andWhere("pl.code_postal = :code OR pl.ville = :ville", {code: zoneGeographique, ville: zoneGeographique});
+
+        if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: parseInt(idPrestataire)});
+
+        //if(idClient) query.andWhere("c.id = :idClient", {idClient: parseInt(idClient)});
+
+        return query.getMany();
+    }
+
     async findById(id: number): Promise<OrdreLivraisonEntity> {
-        const mathced = await this.ordreRepo.findOne({
+        const matched = await this.ordreRepo.findOne({
             where: {id: id},
             relations: ["livraisons"] 
         });
 
-        if(!mathced) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
+        if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
 
-        return mathced;
+        return matched;
+    }
+
+    /**
+     * GENERATION D'UNE FICHE DE LIVRAISON PAR ID ORDRE DE LIVRAISON
+     * @param id ID Ordre de livraison
+     * @returns Fiche ordre de livraison
+     */
+    async getFicheOrdreLivraison(id: number): Promise<FicheOrdreLivraisonDto> {
+        const matched = await this.ordreRepo.findOne({
+            where: {id: id},
+            relations: ["livraisons"] 
+        });
+
+        if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
+        const tournee = await matched.tournee_livraison;
+        const bordereau = await matched.bordereau_livraison;
+        const fiche = new FicheOrdreLivraisonDto();
+
+        fiche.livraisons = matched.livraisons;
+        fiche.point_livraison = matched.point_livraison;
+        fiche.nbr_colis_prevu = matched.nbr_colis_prevu;
+        fiche.nbr_colis_reel = matched.nbr_colis_reel;
+        fiche.statut = matched.statut;
+        fiche.notifications = await this.notificationService.findByLivreurAndTournee(tournee.livreur.id_livreur, tournee.date_tournee, tournee.heure_debut, tournee.heure_fin);
+        fiche.date_scan_bordereau = bordereau.date_scan_bordereau;
+        fiche.date_scan_dernier_colis = await this.colisService.getDateLastColisDechargmentForTournee(tournee.id);
+        fiche.date_scan_premier_colis = await this.colisService.getDateFirstColisLoadedForTournee(tournee.id);
+        fiche.date_scan_PoD = "";
+
+        return fiche;
     }
 
     async save(dto: OrdreLivraisonCreateDto){
         if(!dto) throw new BadRequestException("Données ordre de livraison invalides");
 
         const ordre_livraison = await this.getOrdreLivraison(dto);
+        ordre_livraison.statut = StatutOrdreLivraison.EN_ATTENTE;
 
         const prepared = this.ordreRepo.create(ordre_livraison);
         return this.ordreRepo.save(prepared);
@@ -83,6 +175,7 @@ export class OrdreLivraisonService {
             const ordres_livraison: OrdreLivraisonEntity[] = [];
             for (const data of dto) {
                 const ordre = await this.getOrdreLivraison(data);
+                ordre.statut = StatutOrdreLivraison.EN_ATTENTE;
 
                 //save status of colis and livraison
                 await queryRunner.manager.save(LivraisonEntity, ordre.livraisons);
@@ -107,14 +200,10 @@ export class OrdreLivraisonService {
         const existing = await this.findById(id);
         this.checkStatutTourneeLivraison((await existing.tournee_livraison));
 
-        const livraisons = await this.livraisonService.findManyByIds(dto.id_livraisons);
-        if(!livraisons) throw new BadRequestException(`Livraisons avec ID:{${dto.id_livraisons}} est introuvable!`);
-
-        existing.point_obtenu = dto.point_obtenu;
-        existing.estimation_retard = dto.estimation_retard;
-        existing.nbr_colis_prevu = this.getNbrColisPrevu(livraisons);
-        existing.nbr_colis_reel = dto.nbr_colis_reel;
-        existing.livraisons = livraisons;
+        existing.point_obtenu = dto.point_obtenu?? existing.point_obtenu;
+        existing.estimation_retard = dto.estimation_retard?? existing.estimation_retard;
+        existing.nbr_colis_reel = dto.nbr_colis_reel?? existing.nbr_colis_reel;
+        existing.statut = dto.statut?? existing.statut;
 
         return this.ordreRepo.save(existing);
     }
@@ -189,15 +278,17 @@ export class OrdreLivraisonService {
         if (incompleteLivraisons.length > 0) {
             for (const l of incompleteLivraisons) {
                 const reliquats = l.colis.filter(c => c.statut_colis !== StatusColis.LIVRE);
+                
                 if (reliquats.length > 0) {
                     const updatedColis = reliquats.map((colis) => {
                         colis.statut_colis = StatusColis.RELIQUAT;
                         return colis;
                     });
+
                     if (queryRunner) {
                         await queryRunner.manager.save(ColisEntity, updatedColis);
                     } else {
-                        await this.colisRep.save(updatedColis);
+                        await this.colisService.batachUpdateColisEntity(updatedColis);
                     }
                 }
             }

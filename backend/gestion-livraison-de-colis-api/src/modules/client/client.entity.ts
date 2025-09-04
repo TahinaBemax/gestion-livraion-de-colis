@@ -14,7 +14,7 @@ export class ClientEntity {
     prenom_client: string;
 
     @Column({type: "text", nullable: true})
-    civilite: string;
+    civilite?: string;
 
     @Column({type: "text"})
     numero_telephone: string;
@@ -22,27 +22,8 @@ export class ClientEntity {
     @Column({type: "text"})
     adresse_mail: string;
 
-    @Column({type: "text"})
-    code_postal: string;
-
-    @Column({type: "text", nullable: true})
-    lot_maison?: string;
-
-    @Column({type: "text", nullable: true})
-    numero_rue?: string;
-
-    @Column({type: "text", nullable: true})
-    nom_rue?: string;
-
-    @Column({type: "text"})
-    ville: string;
-
-    @Column({type: "text", nullable: true})
-    pays?: string;
-
-    @Column({type: "text", nullable: true})
-    complement_adresse?: string;
-
-    @OneToMany(() => LivraisonEntity, (l) => l.client)
-    livraisons: LivraisonEntity[];
+    @OneToMany(() => LivraisonEntity, (l) => l.client, {
+        nullable: true
+    })
+    livraisons?: LivraisonEntity[];
 }

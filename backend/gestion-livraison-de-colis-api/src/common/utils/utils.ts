@@ -39,4 +39,8 @@ export class Utils {
         const loginDetails = `${adresse_email}:${mot_de_passe}`;
         return await QRCode.toDataURL(loginDetails);
     }
+
+    static reformatToPhoneNumber(phoneNumber: string){
+        return phoneNumber.replaceAll(/\s+/g, '');
+    }
 }

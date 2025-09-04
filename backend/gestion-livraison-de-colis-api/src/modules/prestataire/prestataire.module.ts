@@ -11,6 +11,8 @@ import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity'
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity';
 import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-livraison.module';
+import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   providers: [
@@ -20,6 +22,8 @@ import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-li
   exports:[PrestataireService],
   imports: [
     forwardRef(() => PointLivraisonModule),
+    forwardRef(() => OrdreLivraisonModule),
+    forwardRef(() => NotificationModule),
     ContrainteLivraisonModule,
     UserModule,
     LivreurModule,

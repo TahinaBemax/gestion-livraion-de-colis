@@ -15,10 +15,11 @@ import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { UpdateUserDto } from 'src/common/dto/update-user-dto';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
+import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
+import { NotificationService } from '../notification/notification.service';
 
 
 @Controller('prestataires')
-@ApiTags('prestataires')
 @Roles(UserRole.Admin)
 @UserTypes(TypeUtilisateur.Prestataire)
 export class PrestataireController {
@@ -27,6 +28,8 @@ export class PrestataireController {
         private readonly livreurService: LivreurService,
         private readonly plService: PointLivraisonService,
         private readonly userService: UserService,
+        private readonly ordreLivraisonService: OrdreLivraisonService,
+        private readonly notificationService: NotificationService,
     ){}
 
     /* UTILISATEUR PRESTATAIRE */
@@ -271,4 +274,38 @@ export class PrestataireController {
     async getProviderDeliveryPoints(@Param("id") id: number){
         return this.plService.findByPrestataire(id);
     }
+
+
+    /* +++++ +++ ORDRE DE LIVRAISON +++ +++++ */
+    @Get("/:idPrestataire/ordres-livraison/historique")
+        @ApiTags("Ordre de Livraison")
+        @ApiOperation({ 
+            description: `Liste des historiques d'ordres de livraison déja effectué ou en cours. 
+            Peut etre filtré par idClient, Date de livraison, code postal ou ville`
+        })
+    async getOrdreLivraison(@Param("id") idPrestataire:string, 
+        @Query("idClient") idClient: string|undefined,
+        @Query("dateLivraison") dateLivraison: string|undefined,   
+        @Query("zoneGeographique") zoneGeographique: string|undefined, 
+    )   
+    {
+        if(!idPrestataire) throw new BadRequestException("ID Prestataire est obligatoir.");
+
+        return this.ordreLivraisonService.filterBy(idPrestataire, idClient, dateLivraison, zoneGeographique);
+    }
+
+    
+    /* +++++ +++ NOTIFICATION +++ +++++ */
+    @Get("/:idPrestataire/notifications")
+        @ApiTags("Notification")
+        @ApiOperation({ 
+            description: `Liste des notifications du prestataire.`
+        })
+    async getNotification(@Param("id", ParseIntPipe) idPrestataire:number)   
+    {
+        if(!idPrestataire) throw new BadRequestException("ID Prestataire est obligatoir.");
+
+        return this.notificationService.findPrestataireNotications(idPrestataire);
+    }
+
 }

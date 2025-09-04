@@ -18,9 +18,6 @@ export class Livreur {
     peut_faire_chargement_colis: boolean;
 
     @Column()
-    qr_code: string;
-
-    @Column()
     total_livraison_effectue: number;
 
     @OneToOne(() => CategorieLivreur, {eager: true})
