@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { EvenementLocalEntity } from './evenement-local.entity';
 import { EvenementLocalDto } from 'src/common/dto/evenement-local/evenement-local-dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -24,6 +24,10 @@ export class EvenementLocalService {
 
     async findAll(): Promise<EvenementLocalEntity[]> {
         return this.evenementLocalRep.find();
+    }
+
+    async findByIds(id: number[]): Promise<EvenementLocalEntity[]> {
+        return this.evenementLocalRep.findBy({id: In(id)});
     }
 
     async save(dto: EvenementLocalDto): Promise<EvenementLocalEntity> {

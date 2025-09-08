@@ -13,7 +13,7 @@ import { ColisModule } from '../colis/colis.module';
 
 @Module({
   imports: [
-    LivraisonsModule,
+    forwardRef(() => LivraisonsModule),
     forwardRef(() => NotificationModule),
     forwardRef(() => ColisModule),
     TypeOrmModule.forFeature([

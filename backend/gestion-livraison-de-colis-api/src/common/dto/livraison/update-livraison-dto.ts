@@ -6,7 +6,7 @@ import { IsTime } from "src/common/validators/is-time.validator";
 export class LivraisonUpdateDto {
     @IsOptional()
     @ApiProperty({example: "", required: false})
-    nom_destinataire: string;
+    nom_destinataire?: string;
 
     @IsOptional()
     @ApiProperty({example: "", required: false})
@@ -47,11 +47,6 @@ export class LivraisonUpdateDto {
     @IsOptional()
     code_postal?: string;
     
-    @IsOptional()
-    @IsNumber()
-    @ApiProperty({example: 1, required: false})
-    id_point_livraison?: number;
-
     @IsOptional()
     @IsNumber()
     @ApiProperty({example: 1, required: false})

@@ -107,7 +107,7 @@ export class PrestataireService {
         prestataire.nif = dto.nif;
         prestataire.stat = dto.stat;
         prestataire.adresse_principale = dto.adresse_principale;
-        prestataire.numero_telephone = dto.numero_telephone?.replaceAll(/\s+/g, '');
+        prestataire.numero_telephone = Utils.reformatToPhoneNumber(dto.numero_telephone);
         prestataire.adresse_email = dto.adresse_email;
         prestataire.nom_image_logo = dto.nom_image_logo;
         prestataire.est_active = true;
@@ -124,7 +124,7 @@ export class PrestataireService {
 
         user.nom = dto.user.nom;
         user.prenom = dto.user.prenom;
-        user.numero_telephone = dto.user.telephone;
+        user.numero_telephone = Utils.reformatToPhoneNumber(dto.user.telephone);
         user.adresse_email = dto.user.email;
         user.mot_de_passe = Utils.hashPassword(dto.user.mot_de_passe);
         user.est_active = true;

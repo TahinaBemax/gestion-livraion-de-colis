@@ -1,5 +1,6 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
+import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 
 @Entity("clients")
 @Unique(["numero_telephone", "adresse_mail"])
@@ -26,4 +27,10 @@ export class ClientEntity {
         nullable: true
     })
     livraisons?: LivraisonEntity[];
+
+    @ManyToOne(() => PointLivraisonEntity, (p) => p.clients, {
+        eager: true,
+    })
+    @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
+    point_livraison: PointLivraisonEntity;
 }

@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ClientCreateDto } from 'src/common/dto/client/client-create-dto';
 import { Utils } from 'src/common/utils/utils';
 import { ClientUpdateDto } from 'src/common/dto/client/client-update-dto';
+import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 
 @Injectable()
 export class ClientService {
@@ -28,15 +29,23 @@ export class ClientService {
     async save(data: ClientCreateDto){
         if(!data) throw new BadRequestException("Données invalides!");
 
-        const client = new ClientEntity();
-        client.nom_client = data.nom_client;
-        client.prenom_client = data.prenom_client;
-        client.numero_telephone = Utils.reformatToPhoneNumber(data.numero_telephone);
-        client.adresse_mail = data.adresse_mail;
-        client.civilite = data.civilite;
-
-        const prepared = this.clientRep.create(client);
-        return this.clientRep.save(prepared);
+        try {
+            const client = new ClientEntity();
+            const pl = new PointLivraisonEntity();
+            pl.id = data.id_point_livraison;
+    
+            client.nom_client = data.nom_client;
+            client.prenom_client = data.prenom_client;
+            client.numero_telephone = Utils.reformatToPhoneNumber(data.numero_telephone);
+            client.adresse_mail = data.adresse_mail;
+            client.civilite = data.civilite;
+            client.point_livraison = pl;
+    
+            const prepared = this.clientRep.create(client);
+            return this.clientRep.save(prepared);
+        } catch (error) {
+            throw new BadRequestException(error);
+        }
     }
 
     async update(id: number, data: ClientUpdateDto){
@@ -48,6 +57,12 @@ export class ClientService {
         client.numero_telephone = Utils.reformatToPhoneNumber(data.numero_telephone?? client.numero_telephone);
         client.adresse_mail = data.adresse_mail?? client.adresse_mail;
         client.civilite = data.civilite;
+
+        if(data.id_point_livraison) {
+            const pl = new PointLivraisonEntity();
+            pl.id = data.id_point_livraison;
+            client.point_livraison = pl;
+        }
 
         return this.clientRep.save(client);
     }

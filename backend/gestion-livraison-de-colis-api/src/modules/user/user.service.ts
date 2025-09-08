@@ -18,11 +18,10 @@ export class UserService {
         const queryBuilder = this.userRepo.createQueryBuilder('user')
             .leftJoinAndSelect('user.prestataire', 'prestataire')
             .innerJoinAndSelect('user.role', 'role')
-            .innerJoinAndSelect("u.type_utilisateur", "tu")
+            .innerJoinAndSelect("user.type_utilisateur", "tu")
             .where('user.est_active = :estActive', { estActive: true })
-            .andWhere("tu.id_type_utilisateur = :tempoOne OR tu.id_type_utilisateur = :prestataire", 
+            .andWhere("tu.id_type_utilisateur = :prestataire", 
             { 
-                tempoOne: "TYPE-USER-00001", 
                 prestataire: "TYPE-USER-00002" 
             });
 
@@ -35,7 +34,7 @@ export class UserService {
         }
 
         if (role) {
-            queryBuilder.andWhere('role.nom_role ILIKE :role', { role: `%${role}%` });
+            queryBuilder.andWhere('role.id_role ILIKE :role', { role: `%${role}%` });
         }
 
         if (nomEntreprise) {
@@ -48,8 +47,8 @@ export class UserService {
     async prestataireUsersfilterBy(idPrestataire?: number, nom?: string, prenom?: string, nomEntreprise?: string): Promise<User[]> {
         const queryBuilder = this.userRepo.createQueryBuilder('user')
             .innerJoinAndSelect('user.prestataire', 'prestataire')
-            .innerJoinAndSelect("u.type_utilisateur", "tu")
-            .innerJoinAndSelect("u.role", "role")
+            .innerJoinAndSelect("user.type_utilisateur", "tu")
+            .innerJoinAndSelect("user.role", "role")
             .where('user.est_active = :estActive', { estActive: true })
             .andWhere("tu.id_type_utilisateur = :prestataire", 
             { 
@@ -80,6 +79,11 @@ export class UserService {
         });
     }
 
+    /**
+     * CREATION D'UN UTILISATEUR INTERNE POUR TEMPO ONE
+     * @param create_user 
+     * @returns Utilisateur crée
+     */
     async saveInterneUser(create_user: CreateUserDto): Promise<User>{
         const user: User = await this.userMapper.fromDtoToUser(create_user);
         const temp_user = this.userRepo.create(user);
@@ -102,7 +106,7 @@ export class UserService {
         if(!idPrestataire) throw new BadRequestException("L'id de prestataire est null");
         if(!user) throw new BadRequestException("Le user est null");
 
-        const user_entity:User = await this.userMapper.fromDtoWithPrestataire(user, idPrestataire);
+        const user_entity:User = this.userMapper.fromDtoWithPrestataire(user, idPrestataire);
         const temp_user = this.userRepo.create(user_entity);
         const saved = this.userRepo.save(temp_user);
 
@@ -139,15 +143,24 @@ export class UserService {
         });
     }
 
-    async findPrestataireUsers(idPrestataire: number):Promise<User[]>{
-        const users = await this.userRepo.createQueryBuilder("u")
-            .innerJoinAndSelect("u.role", "role")
+    /**
+     * LISTE DES UTILISATEURS PRESTATAIRES, peut être filtré par ID prestataire
+     * @param idPrestataire 
+     * @returns Liste utilisateurs
+     */
+    async findPrestataireUsers(idPrestataire?: number):Promise<User[]>{
+        const query = this.userRepo.createQueryBuilder("u");
+        query.innerJoinAndSelect("u.role", "role")
             .innerJoinAndSelect("u.type_utilisateur", "tu")
             .leftJoinAndSelect("u.prestataire", "p")
             .where("u.est_active = :estActive", { estActive: true })
-            .andWhere("tu.id_type_utilisateur = :typeUtilisateur", { typeUtilisateur: "TYPE-USER-00002" })
-            .andWhere("p.id_prestataire = :idPrestataire", { idPrestataire: idPrestataire })
-            .getMany();
+            .andWhere("tu.id_type_utilisateur = :typeUtilisateur", { typeUtilisateur: "TYPE-USER-00002" });
+
+        if(idPrestataire) {
+            query.andWhere("p.id_prestataire = :idPrestataire", { idPrestataire: idPrestataire })
+        }
+
+        const users = await query.getMany();
 
         return users.map(user => {
             return { ...user, mot_de_passe: "" }

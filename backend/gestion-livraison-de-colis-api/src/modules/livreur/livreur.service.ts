@@ -36,8 +36,6 @@ export class LivreurService {
             const livreur = await this.livreurMapper.prepareData(prestataire, dto);
             var savedLivreur = await queryRunner.manager.save(Livreur, livreur);
             
-            savedLivreur = await queryRunner.manager.save(Livreur, livreur);
-            
             await queryRunner.commitTransaction();
             return { ...savedLivreur, user: { ...savedLivreur.user, mot_de_passe: "" } };
         } catch (error) {

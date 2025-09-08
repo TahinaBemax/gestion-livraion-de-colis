@@ -1,17 +1,20 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Prestataire } from "../prestataire/prestataire.entity";
 import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
 import { ContrainteEvenementEntity } from "../contrainte-evenement/contrainte-evenement.entity";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
+import { EvenementLocalEntity } from "../evenement-local/evenement-local.entity";
+import { Client } from "socket.io/dist/client";
+import { ClientEntity } from "../client/client.entity";
 
-@Entity("points_livraisons")
+@Entity("points_livraison")
 @Unique(["numero_magasin"])
 export class PointLivraisonEntity {
     @PrimaryGeneratedColumn({name: "id_point_livraison"})
     id: number;
 
-    @Column()
+    @Column({name: "nom_point_livraison"})
     numero_magasin: string;
 
     @Column()
@@ -53,16 +56,23 @@ export class PointLivraisonEntity {
     })
     contraintes_livraison?: ContrainteLivraisonEntity[];
 
-    @OneToMany(() => ContrainteEvenementEntity, (a) => a.point_livraison, {
+    @ManyToMany(() => EvenementLocalEntity, (event) => event.points_livraison, {
         eager: true, 
-        cascade: true, 
-        onUpdate: "CASCADE",
+        cascade: ["insert", "update"], 
         nullable: true
     })
-    contraintes_evenements?: ContrainteEvenementEntity[];
+    @JoinTable({
+        name: "contraintes_evenement",
+        inverseJoinColumn: { name: "id_point_livraison", referencedColumnName: "id"},
+        joinColumn: {name: "id_evenement", referencedColumnName: "id"}
+    })
+    evenements?: EvenementLocalEntity[];
 
-    @OneToMany(() => LivraisonEntity, (l) => l.point_livraison)
-    livraisons: LivraisonEntity[];
+    @OneToMany(() => ClientEntity, (p) => p.livraisons, {
+        nullable: true,
+        lazy: true
+    })
+    clients: Promise<ClientEntity[]>|ClientEntity[];
 
     @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.point_livraison)
     ordres_livraison: OrdreLivraisonEntity[];

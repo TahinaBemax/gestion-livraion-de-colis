@@ -9,8 +9,6 @@
 * DATABASE_NAME= Le nom de la base de donnée
 
 ``
-### Créer les tables Necessaire dans le dossier database/script-sql
-    Utiliser le fichier tables-used.Sql
 
 ### Inserer les données necessaire dans le dossier database/script-sql
 1. constraintes.sql
@@ -36,7 +34,7 @@ Le nom de domaine que vous utilisez pour eviter le probleme de CORSS
 
 ## Documentation
 
-Tapez http://localhost:votre-port/docs pour voir la documentation d'utilisation de l'API
+Tapez <b>http://localhost:votre-port/docs </b> pour voir la documentation d'utilisation de l'API
 
 ## Default Data test
 Pour inserer les données de test par default pour les tables suivants:
@@ -45,15 +43,42 @@ Pour inserer les données de test par default pour les tables suivants:
 - Livreur
 - Point de livraison
 - Contrainte de livraison
-- Colis
-- Livraison
-- Planning
-- Tournée
 
 run:
 ```
     npm run seed
 ```
+### Login
+Voici quelque extrait de données inserées par default (veuillez aller dans /core/seed/seed.service pour voir les autres utilisateurs):
+
+- Admin Tempo One:
+    - login: <b>admin@gmail.com</b>
+    - password: <b>AdminPassword!123</b>
+
+- Admin Prestataire 1:
+    - login: rakoto.mamy@solutionsit.mg
+    - password: Secur1tyPass!2023
+
+- Admin Prestataire 2:
+    - login: ravo.nadia@webdev-experts.mg
+    - password: WebDev@12345
+
+- Admin Prestataire 3:
+    - login: rija.andry@digitalsolutions.mg
+    - password: D1g!t@lPass2023
+
+- Livreur Novice:
+    - login: livreur.novice@gmail.com
+    - password: livreurNovice123!
+
+- Livreur Ponctual:
+    - login: livreur.ponctuel@gmail.com
+    - password: livreurPoctuel123!
+
+- Livreur Regulier:
+    - login: livreur.regulier@gmail.com
+    - password: livreurRegulier123!
+
 
 ## Pour le notification en temps réel
 Allez dans le dossier test/livreur.js pour voir comment interagir avec le socket de l'API.

@@ -9,6 +9,7 @@ import { PlanningLivraisonModule } from 'src/modules/planning-livraison/planning
 import { PointLivraisonModule } from 'src/modules/point-livraison/point-livraison.module';
 import { PrestataireModule } from 'src/modules/prestataire/prestataire.module';
 import { TourneeLivraisonModule } from 'src/modules/tournee-livraison/tournee-livraison.module';
+import { ClientModule } from 'src/modules/client/client.module';
 
 @Module({
     imports:[
@@ -21,6 +22,7 @@ import { TourneeLivraisonModule } from 'src/modules/tournee-livraison/tournee-li
       PlanningLivraisonModule,
       TourneeLivraisonModule,
       BordereauLivraisonModule,
+      ClientModule
     ],
     providers: [
         SeedService,

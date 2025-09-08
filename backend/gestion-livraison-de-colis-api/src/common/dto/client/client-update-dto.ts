@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsOptional } from "class-validator";
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { IsPhoneNumber } from "src/common/validators/is-phone-number";
 
 export class ClientUpdateDto {
@@ -24,5 +24,10 @@ export class ClientUpdateDto {
     @IsNotEmpty()
     @ApiProperty({ required: false })
     @IsEmail()
-    adresse_mail?: string;    
+    adresse_mail?: string;  
+
+    @IsNotEmpty()
+    @ApiProperty({ required: false })
+    @IsNumber()
+    id_point_livraison?: number;    
 }

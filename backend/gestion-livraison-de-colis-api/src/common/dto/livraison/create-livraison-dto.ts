@@ -42,16 +42,9 @@ export class LivraisonCreateDto {
         ]
     })
     colis: ColisCreateDto[];
-    
-    @IsNotEmpty()
-    @IsOptional()
-    @IsNumber()
-    @ApiProperty({example: 1})
-    id_point_livraison?: number;
 
     @IsNotEmpty()
-    @IsOptional()
     @IsNumber()
     @ApiProperty({example: 1})
-    id_client?: number;
+    id_client: number;
 }

@@ -24,9 +24,9 @@ import { NotificationModule } from '../notification/notification.module';
     forwardRef(() => PointLivraisonModule),
     forwardRef(() => OrdreLivraisonModule),
     forwardRef(() => NotificationModule),
-    ContrainteLivraisonModule,
-    UserModule,
-    LivreurModule,
+    forwardRef(() => ContrainteLivraisonModule),
+    forwardRef(() => UserModule),
+    forwardRef(() => LivreurModule),
     TypeOrmModule.forFeature([
       Prestataire, 
       User, 

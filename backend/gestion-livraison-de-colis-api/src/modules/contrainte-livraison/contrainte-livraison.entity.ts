@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, OneToMany, ManyToOne } from "typeorm";
 import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 import { ContrainteJourEntity } from "../contrainte-jour/contrainte-jour.entity";
 
-@Entity("contraintes_livraisons")
+@Entity("contraintes_livraison")
 export class ContrainteLivraisonEntity {
     @PrimaryGeneratedColumn({name: "id_contrainte_livraison"})
     id: number;

@@ -9,6 +9,7 @@ import { PointLivraisonEntity } from './point-livraison.entity';
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
 import { PointLivraisonUpdateDto } from 'src/common/dto/point-livraison/point-livraison-update-dto';
+import { EvenementLocalService } from '../evenement-local/evenement-local.service';
 
 
 @Injectable()
@@ -18,6 +19,7 @@ export class PointLivraisonService {
         private readonly pointLivraisonRep: Repository<PointLivraisonEntity>,
         @InjectRepository(ContrainteLivraisonEntity)
         private readonly contrainteLivraisonRep: Repository<ContrainteLivraisonEntity>,
+        private readonly eventService: EvenementLocalService,
     ){}
 
 
@@ -52,6 +54,13 @@ export class PointLivraisonService {
             .innerJoinAndSelect("pl.prestataire", "p")
             .where("p.id_prestataire = :id", {id: `${id}`})
             .getMany();
+    }
+
+    async findByClient(id:number): Promise<PointLivraisonEntity|null> {
+        return this.pointLivraisonRep.createQueryBuilder("pl")
+            .innerJoinAndSelect("pl.client", "c")
+            .where("c.id = :id", {id: `${id}`})
+            .getOne();
     }
 
     async update(id: number, dto: PointLivraisonUpdateDto): Promise<PointLivraisonEntity>{
@@ -115,6 +124,7 @@ export class PointLivraisonService {
     async assignDeliveryConstraintsToPL(idPL: number, constraintesDto: ContrainteLivraisonDto[]): Promise<{message: string}> {
         if(!idPL || constraintesDto.length === 0) throw new BadRequestException("Il faut mettre au moins une contrainte de livraison!");
         const existingPL = await this.findById(idPL);
+
         const queryRunner = this.contrainteLivraisonRep.manager.connection.createQueryRunner();
 
         //start a transaction
@@ -127,6 +137,33 @@ export class PointLivraisonService {
             await queryRunner.commitTransaction();
 
             return {message: `Contrainte(s) temporelle de livraison rattachée(s) à ${existingPL.numero_magasin}  avec succes!`};
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async assignEventsConstraintToPL(idPL: number, eventsID: number[]): Promise<string> {
+        if(!idPL || !eventsID || eventsID.length === 0) throw new BadRequestException("Il faut mettre au moins un evenement!");
+        const existingPL: PointLivraisonEntity = await this.findById(idPL);
+        const events = await this.eventService.findByIds(eventsID);
+        const queryRunner = this.pointLivraisonRep.manager.connection.createQueryRunner();
+
+        //start a transaction
+        await queryRunner.startTransaction();
+        try {
+            if(existingPL.evenements){
+                existingPL.evenements.concat(events);
+            } else {
+                existingPL.evenements =events;
+            }
+            
+            await queryRunner.manager.save(PointLivraisonEntity, existingPL);
+            await queryRunner.commitTransaction();
+
+            return `Evenement rattaché sur le point de livraison avec succes!`;
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;

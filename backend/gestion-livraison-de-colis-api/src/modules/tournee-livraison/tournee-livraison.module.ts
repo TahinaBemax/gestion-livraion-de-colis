@@ -8,6 +8,7 @@ import { PlanningLivraisonEntity } from '../planning-livraison/planning-livraiso
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 import { Livreur } from '../livreur/livreur.entity';
 import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module';
+import { Prestataire } from '../prestataire/prestataire.entity';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module'
       TourneeLivraisonEntity,
       PlanningLivraisonEntity,
       OrdreLivraisonEntity,
-      Livreur
+      Livreur,
+      Prestataire
     ])
   ],
   providers: [

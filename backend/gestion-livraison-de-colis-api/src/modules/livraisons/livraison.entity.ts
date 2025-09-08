@@ -51,13 +51,6 @@ export class LivraisonEntity {
     })
     colis: ColisEntity[];
 
-    @ManyToOne(() => PointLivraisonEntity, (p) => p.livraisons, {
-        eager: true,
-        nullable: true
-    })
-    @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
-    point_livraison?: PointLivraisonEntity;
-
     @OneToMany(() => ProblemeLivraisonEntity, (p) => p.livraison, {
         eager: true
     })
@@ -73,8 +66,7 @@ export class LivraisonEntity {
 
     @ManyToOne(() => ClientEntity, (c) => c.livraisons, {
         eager: true,
-        nullable: true
     })
     @JoinColumn({name: "id_client", referencedColumnName: "id"})
-    client?: ClientEntity;
+    client: ClientEntity;
 }

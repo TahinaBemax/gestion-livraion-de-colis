@@ -23,7 +23,7 @@ export class PointLivraisonController {
          */
     @Get()
         @UserTypes(TypeUtilisateur.TempoOne)
-        findAll(){
+    findAll(){
             return this.plService.findAll();
         }
       
@@ -75,7 +75,6 @@ export class PointLivraisonController {
          */
     @Post("/:id/contraintes-livraison")
         @UserTypes(TypeUtilisateur.TempoOne)
-        @UserTypes(TypeUtilisateur.TempoOne)
         @ApiParam({name: "id", description: "ID du point de livraison"})
         @ApiBody({type: [ContrainteLivraisonDto], description: "Les contraintes de livraison"})
         @ApiOperation({summary: "Rattacher des contraintes de livraison à un point de livraison"})
@@ -84,5 +83,24 @@ export class PointLivraisonController {
     async assignDeliveryConstraintsToPL(@Param("id") id: number, @Body() dto: ContrainteLivraisonDto[] ){
         if(!dto || !id) throw new BadRequestException(`Données invalide`);
         return this.plService.assignDeliveryConstraintsToPL(id, dto);
+    }
+
+
+    /* ++++ ++++ CONTRAINTE EVENEMENTS SUR LA VILLE ++++ ++++ */
+        /**
+         * RATTACHER DES CONTRAINTES DE LIVRAISON SUR UN POINT DE LIVRAISON
+         * @param id ID du point de livraison
+         * @param constraintsLivraison Contraintes de livraison
+         * @returns Liste des contraintes de livraison
+         */
+    @Post("/:id/events")
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiParam({name: "id", description: "ID du point de livraison"})
+        @ApiBody({type: [ContrainteLivraisonDto], description: "Les contraintes de livraison"})
+        @ApiOperation({summary: "Rattacher des contraintes évenementielle sur un point de livraison"})
+        @ApiBadRequestResponse({description: "Données invalides"})
+    async assignEventsConstraintsToPL(@Param("id") id: number, @Body() evenementsID: number[] ){
+        if(!evenementsID || !id) throw new BadRequestException(`Données invalide`);
+        return this.plService.assignEventsConstraintToPL(id, evenementsID);
     }
 }

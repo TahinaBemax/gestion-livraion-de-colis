@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 
 @Entity("evenements_locaux")
 export class EvenementLocalEntity {
@@ -21,5 +22,8 @@ export class EvenementLocalEntity {
     type_evenement: string;
 
     @Column()
-    frequence_evenement: string;   
+    frequence_evenement: string; 
+    
+    @ManyToMany(() => PointLivraisonEntity, (pl) => pl.evenements)
+    points_livraison: PointLivraisonEntity[];
 }

@@ -48,7 +48,7 @@ export class UserMapper {
     const prestataire = new Prestataire();
 
     prestataire.id_prestataire = idPrestataire;
-    type_utilisateur.id_type_utilisateur = "TYPE-02"; // Type utilisateur Prestataire
+    type_utilisateur.id_type_utilisateur = "TYPE-USER-00002"; // Type utilisateur Prestataire
     role.id = dto.role;
 
     const user = plainToInstance(User, dto);

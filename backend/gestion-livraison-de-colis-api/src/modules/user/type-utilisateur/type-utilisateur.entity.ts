@@ -2,7 +2,7 @@ import { Column, Entity, JoinColumn, OneToMany, PrimaryColumn, Unique } from "ty
 import { User } from "../user.entity";
 
 
-@Entity("types_utilisateurs")
+@Entity("types_utilisateur")
 @Unique(["type"])
 export class TypeUtilisateur {
     @PrimaryColumn()

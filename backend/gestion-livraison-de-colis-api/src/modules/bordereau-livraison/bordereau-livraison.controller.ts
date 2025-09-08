@@ -62,16 +62,16 @@ export class BordereauLivraisonController {
         res.end(pdfBuffer);
     }
 
-    @Get('/:id/code-bar')
-    async getCodeBarBonLivraison(@Param('id') id: string, @Res({ passthrough: false }) res: Response) {
-        const bl = await this.bordereauService.findById(id);
-        const fileName = id + "_" + new Date().toISOString();
+    // @Get('/:id/code-bar')
+    // async getCodeBarBonLivraison(@Param('id') id: string, @Res({ passthrough: false }) res: Response) {
+    //     const bl = await this.bordereauService.findById(id);
+    //     const fileName = id + "_" + new Date().toISOString();
 
-        const pdfBuffer = BarcodeService.generateBarcodeImage(bl.id);
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Content-Disposition', `inline; filename="${fileName}.png"`);
-        res.setHeader('Content-Length', pdfBuffer.length);
+    //     const pdfBuffer = BarcodeService.generateBarcodeImage(bl.id);
+    //     res.setHeader('Content-Type', 'image/png');
+    //     res.setHeader('Content-Disposition', `inline; filename="${fileName}.png"`);
+    //     res.setHeader('Content-Length', pdfBuffer.length);
         
-        res.end(pdfBuffer);
-    }
+    //     res.end(pdfBuffer);
+    // }
 }

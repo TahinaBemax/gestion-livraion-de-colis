@@ -1,11 +1,11 @@
-import { BadRequestException, Body, Controller, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query} from '@nestjs/common';
 import { PrestataireService } from './prestataire.service';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { LivreurService } from '../livreur/livreur.service';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PrestataireSwaggerDto } from 'src/common/swagger-dto/prestataire/prestataire-swagger-dto';
 import { LivreurSwaggerDto } from 'src/common/swagger-dto/livreur/livreur-swagger-dto';
 import { UserSwaggerDto } from 'src/common/swagger-dto/user/user-swagger-dto';
@@ -17,6 +17,9 @@ import { UpdateUserDto } from 'src/common/dto/update-user-dto';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
 import { NotificationService } from '../notification/notification.service';
+import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
+import { PrestataireUpdateDto } from 'src/common/dto/prestataire/update-prestataire-dto';
+import { Prestataire } from './prestataire.entity';
 
 
 @Controller('prestataires')
@@ -48,54 +51,46 @@ export class PrestataireController {
     createUser(@Param("id", ParseIntPipe) id: number, @Body() dto: CreateUserDto): Promise<User> {
         return this.userService.savePrestataireUser(id, dto);
     }    
+  
 
-    /**
-     * Modification d'un utilisateur prestataire
-     * @param idUser ID de l'utilisateur
-     * @param dto Inforamtion de l'utilisateur à modifier
-     * @returns User
-     */
-    @Put("/:id/users/:idUser")
-    @ApiBody({type: UpdateUserDto})
-    @ApiCreatedResponse({type: UserSwaggerDto})
-    @ApiBadRequestResponse({description: "Données invalides"})
-    updateUser(@Param("id", ParseIntPipe) idUser: number, @Body() dto: UpdateUserDto): Promise<User> {
-        return this.userService.updateUser(idUser, dto);
-    } 
+        /**
+         * LISTE DES UTILISATEURS ACTIVES DES PRESTATAIRES
+         * @returns Liste des utilisateurs actives
+         */
+    @Get("/users")
+        @ApiOperation({summary: "Liste des utilisateurs actives des prestataires"})
+        @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
+    findPrestataireUsers(): Promise<User[]> {
+        return this.userService.findPrestataireUsers();
+    }
 
-    /**
-     * Activation du compte d'un utilisateur prestataire
-     * @param id ID de l'utilisateur
-     * @returns Compte Utilisateur activé.
-     */
-    @Put("/users/:id/activate")
-    @ApiParam({name: "id", description: "L'ID de l'utilisateur qu'on veut activé son compte."})
-    @ApiOperation({summary: "Activé le compte d'un utilisateur donné."})
-    @ApiCreatedResponse({description: "Compte activé avec succés!", type: "Compte Utilisateur activé"})
-    @ApiNotFoundResponse({description: "Utilisateur Introuvable"})
-    async activateUser( @Param("id") id: number): Promise<{ message: string }>{
-        this.userService.activateUser(id);
-        return Promise.resolve({ message: "Compte Utilisateur activé." });
+        /**
+         * LISTE DES UTILISATEURS PRESTATAIRE ACTIVES FILTRE PAR PRENOM, NOM, ROLE ET ENTREPRISE
+         * @param nom 
+         * @param prenom 
+         * @param role 
+         * @param nomEntreprise 
+         * @returns Liste des utilisateurs filtrés
+         */
+    @Get('/users/filterBy')
+        @ApiQuery({name: "nom", required: false})
+        @ApiQuery({name: "prenom", required: false})
+        @ApiQuery({name: "role", required: false})
+        @ApiQuery({name: "nomEntreprise", required: false})
+        @ApiOperation({summary: "Liste des utilisateurs Prestataire, ils peuvent être filtré par prénom, nom, rôle et le nom de l'entreprise"})
+        @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
+    filterBy
+    (
+        @Query('nom') nom?:string, 
+        @Query('prenom') prenom?:string, 
+        @Query('role') role?:string, 
+        @Query('nomEntreprise') nomEntreprise?:string
+    ): Promise<User[]> {
+        return this.userService.filterBy(nom, prenom, role, nomEntreprise);
     }
 
     /**
-     * Desactivation du compte d'un utilisateur prestataire
-     * @param id ID de l'utilisateur
-     * @returns Compte Utilisateur désactivé. 
-     */
-    @Put("/users/:id/desactivate")
-    @ApiParam({name: "id", description: "L'ID de l'utilisateur qu'on veut désactivé son compte."})
-    @ApiOperation({summary: "Désactivé le compte d'un utilisateur donné."})
-    @ApiCreatedResponse({description: "Compte desactivé avec succés!", type: "Compte Utilisateur désactivé"})
-    @ApiNotFoundResponse({description: "Utilisateur Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
-    async desactivateUser(@Param("id") id:number): Promise<{ message: string }>{
-        this.userService.delete(id);
-        return Promise.resolve({ message: "Compte Utilisateur désactivé." });
-    }  
-
-    /**
-     * LISTER LES UTILISATEURS PRESTATAIRES
+     * LISTER LES UTILISATEURS D'UN PRESTATAIRE, et peut être filtré par ID Prestataire, nom, prenom, role
      * @param id ID du prestataire
      * @param nom Filtrer par nom
      * @param prenom Filtrer par prénom
@@ -103,27 +98,122 @@ export class PrestataireController {
      * @returns Liste des utilisateurs prestataires
      */   
     @Get("/:id/users")
-    @ApiOperation({summary: "Lister les utilisateurs actives"})
+    @ApiOperation({summary: "Lister les utilisateurs actives d'un specifique prestataire et peut être filtré par nom, prenom, role"})
     @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
     @ApiInternalServerErrorResponse({description: "Internal server error"})
     findAllUsers(@Param("id", ParseIntPipe) id: number, @Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('role') role?:string): Promise<User[]> {
+        if(!id) throw new BadRequestException("ID Prestataire est obligatoire");
         return this.userService.prestataireUsersfilterBy(id, nom, prenom, role);
     }
     /* ---- ---- ---- --- --- -- */
 
+
     /* PRESTATAIRE */
+        /**
+         * CREATION D'UN COMPTE PRESTATAIRE
+         * @param data Data de création d'un prestataire
+         * @returns Prestataire créé
+         */
+    @Post()
+    @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiBody({type: PrestataireCreateDto})
+        @ApiOperation({summary: "Créer un prestataire"})
+        @ApiOkResponse({description: "Ok", type: PrestataireSwaggerDto})
+        @ApiBadRequestResponse({description: "Données invalides, Réessayé"})
+    createPrestataire(@Body() data: PrestataireCreateDto): Promise<Prestataire> {
+        return this.prestataireService.create(data);
+    }
+        
+        /**
+         * LISTE DES PRESTATAIRES
+         * @returns Liste des prestataires
+        */
+    @Get("")
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Lister les prestataires"})
+        @ApiOkResponse({description: "Ok", type: [PrestataireSwaggerDto]})
+    findAllPrestataires() {
+        return this.prestataireService.findAll();
+    }
+
+        /**
+         * LISTE DES PRESTATAIRES FILTRE PAR Nom, Prenom et Nom d'Entreprise
+         * @param nom 
+         * @param prenom 
+         * @param nomEntreprise 
+         * @returns Liste des prestataires filtrés
+        */
+    @Get('/filterBy')
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Filtré les prestataires par nom de l'entreprise"})
+        @ApiOkResponse({description: "Ok", type: [PrestataireSwaggerDto]})
+        filterPrestataireUsersBy(
+            //@Query('nom') nom?:string, 
+            //@Query('prenom') prenom?:string,
+            @Query('nomEntreprise') nomEntreprise?:string
+        ): Promise<Prestataire[]> {
+            return this.prestataireService.filterBy(undefined, undefined, nomEntreprise);
+        }
+        
+        /**
+         * MODIFICATION D'UN PRESTATAIRE
+         * @param id ID du prestataire
+         * @param data Prestataire avec les nouvelles données
+         * @returns Prestataire modifié
+        */
+    @Put("/:id")
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiBody({type: PrestataireUpdateDto})
+        @ApiOperation({summary: "Modifié un prestataire"})
+        @ApiCreatedResponse({description: "Prestataire modifié avec succés", type: PrestataireSwaggerDto})
+        @ApiBadRequestResponse({description: "Données invalides, Réessayé"})
+    updatePrestataire(@Param("id", ParseIntPipe) id: number, @Body() data: PrestataireUpdateDto){
+        return this.prestataireService.update(id, data)
+    }
+
+
+        /**
+         * DESACTIVER UN COMPTE PRESTATAIRE
+         * @param id ID du prestataire
+         * @returns MESSAGE de confirmation
+         */
+    @Delete("/:id")
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiParam({name: "id", description: "L'ID du prestataire qu'on veut désactivé le compte."})
+        @ApiOperation({summary: "Désactivé le compte d'un prestataire donné."})
+        @ApiCreatedResponse({description: "Compte desactivé avec succés!", type: "Compte prestataire désactivé"})
+        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
+    desactivatePrestataireAccount(@Param('id') id:number) {
+        return this.prestataireService.desactivate(id);
+    }
+
+        /**
+         * ACTIVATION COMPTE PRESTATAIRE
+         * @param id ID du prestataire
+         * @returns MESSAGE de confirmation
+        */
+    @Put("/:id/activate")
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiParam({name: "id", description: "L'ID du prestataire qu'on veut activé le compte."})
+        @ApiOperation({summary: "Activé le compte d'un prestataire donné."})
+        @ApiCreatedResponse({description: "Compte desactivé avec succés!", type: "Compte prestataire activé"})
+        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
+    activatePrestataireAccount(@Param('id') id:number){
+        return this.prestataireService.activate(id);
+    }
+
     /**
      * DETAILS D'UN PRESTATAIRE
      * @param id ID du prestataire
      * @returns  Prestataire
-     */
-    @Get("/:id/profile")
-    @Roles(UserRole.ResponsableExploitation, UserRole.Admin)
-    @ApiParam({name: "id", description: "L'ID prestataire"})
-    @ApiOperation({summary: "Voir les informations concernant le prestataire"})
-    @ApiOkResponse({description: "Ok", type: [PrestataireSwaggerDto]})
-    @ApiNotFoundResponse({description: "Prestataire Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+    */
+   @Get("/:id")
+        @UserTypes(TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
+        @Roles(UserRole.ResponsableExploitation, UserRole.Admin)
+        @ApiParam({name: "id", description: "L'ID prestataire"})
+        @ApiOperation({summary: "Voir les informations concernant le prestataire"})
+        @ApiOkResponse({description: "Ok", type: [PrestataireSwaggerDto]})
+        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     findById(@Param("id") id:number) {
         return this.prestataireService.findById(id);
     }   
@@ -138,11 +228,10 @@ export class PrestataireController {
      */
     @Get("/:id/livreurs")
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
-    @ApiParam({name: "id", description: "L'ID du prestataire"})
-    @ApiOperation({summary: "Voir les Livreurs du prestataire"})
-    @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
-    @ApiNotFoundResponse({description: "Prestataire Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+        @ApiParam({name: "id", description: "L'ID du prestataire"})
+        @ApiOperation({summary: "Voir les Livreurs du prestataire"})
+        @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
+        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     findLivreurByIdPrestataire(@Param("id", ParseIntPipe) id_prestataire: number){
         return this.livreurService.findAllLivreursByPrestataire(id_prestataire);
     }
@@ -155,45 +244,44 @@ export class PrestataireController {
      * @returns Livreur
      */
     @Post("/:id/livreurs")
-    @ApiBody({type: CreateLivreurDto})
-    @ApiOperation({summary: "Crée un utilisateur de type livreur"})
-    @ApiCreatedResponse({description: "Livreur crée avec succés!", type: LivreurSwaggerDto})
-    @ApiBadRequestResponse({description: "Données invalides"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+        @ApiBody({type: CreateLivreurDto})
+        @ApiOperation({summary: "Créer un utilisateur de type livreur"})
+        @ApiCreatedResponse({description: "Livreur crée avec succés!", type: LivreurSwaggerDto})
+        @ApiBadRequestResponse({description: "Données invalides"})
     createLivreur(@Param("id", ParseIntPipe) id: number, @Body() data: CreateLivreurDto){
         return this.livreurService.create(id, data);
     }
-    /**
-     * DESACTIVER UN LIVREUR
-     * @param id_prestataire ID du prestataire
-     * @param idLivreur ID du livreur à désactiver 
-     * @returns Message de succès
-     */
-    @Put("/:idPrestataire/livreurs/:idLivreur/desactivate")
-    @ApiOperation({summary: "Désactiver le compte d'un livreur!"})
-    @ApiCreatedResponse({description: "Compte désactivé!", type: "string"})
-    @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
-    desactivateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number): Promise<{message: string}>{
-        return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, false);
-    }
 
-    /**
-     * ACTIVER UN LIVREUR
-     * @param id_prestataire ID du prestataire
-     * @param idLivreur ID du livreur à activer 
-     * @returns Message de succès
-     */
-    @Put("/:idPrestataire/livreurs/:idLivreur/activate")
-    @ApiParam({name: "idPrestataire", description: "ID du prestataire"})
-    @ApiParam({name: "idLivreur", description: "ID du livreur"})
-    @ApiOperation({summary: "Activer le compte d'un livreur!"})
-    @ApiCreatedResponse({description: "Compte activé!", type: "string"})
-    @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
-    activateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number){
-        return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, true);
-    }
+    // /**
+    //  * DESACTIVER UN LIVREUR
+    //  * @param id_prestataire ID du prestataire
+    //  * @param idLivreur ID du livreur à désactiver 
+    //  * @returns Message de succès
+    //  */
+    // @Delete("/:idPrestataire/livreurs/:idLivreur/desactivate")
+    // @ApiOperation({summary: "Désactiver le compte d'un livreur!"})
+    // @ApiCreatedResponse({description: "Compte désactivé!", type: "string"})
+    // @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
+    // @ApiInternalServerErrorResponse({description: "Internal server error"})
+    // desactivateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number): Promise<{message: string}>{
+    //     return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, false);
+    // }
+
+    // /**
+    //  * ACTIVER UN LIVREUR
+    //  * @param id_prestataire ID du prestataire
+    //  * @param idLivreur ID du livreur à activer 
+    //  * @returns Message de succès
+    //  */
+    // @Put("/:idPrestataire/livreurs/:idLivreur/activate")
+    //     @ApiParam({name: "idPrestataire", description: "ID du prestataire"})
+    //     @ApiParam({name: "idLivreur", description: "ID du livreur"})
+    //     @ApiOperation({summary: "Activer le compte d'un livreur!"})
+    //     @ApiCreatedResponse({description: "Compte activé!", type: "string"})
+    //     @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
+    // activateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number){
+    //     return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, true);
+    // }
 
     /**
      * ACTIVER OU DESACTIVER LA FONCTIONNALITE DE SCAN AU MOMENT DU CHARGEMENT DU CAMION
@@ -203,10 +291,10 @@ export class PrestataireController {
      * @returns Message de succès
      */
     @Put("/:idPrestataire/livreurs/:idLivreur")
-    @ApiParam({name: "idPrestataire", description: "ID du prestataire"})
-    @ApiParam({name: "idLivreur", description: "ID du livreur"})
-    @ApiOperation({summary: "Activer ou désactiver la fonctionnalité de scan au moment du chargement du camion"})
-    @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
+        @ApiParam({name: "idPrestataire", description: "ID du prestataire"})
+        @ApiParam({name: "idLivreur", description: "ID du livreur"})
+        @ApiOperation({summary: "Activer ou désactiver la fonctionnalité de scan au moment du chargement du camion"})
+        @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
     changeScanLoadingTruckStatus(
         @Param("idPrestataire") id_prestataire: number,
         @Param("idLivreur") idLivreur: number, 
@@ -225,7 +313,7 @@ export class PrestataireController {
      */
     @Get("/:id/responsable-exploitation")
     @ApiParam({name: "id", description: "L'ID du prestataire"})
-    @ApiOperation({summary: "Voir les utilisateurs de type Responsable Exploitation du prestataire"})
+    @ApiOperation({summary: "Lister les utilisateurs de type Responsable Exploitation d'un prestataire"})
     @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
     @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     @ApiInternalServerErrorResponse({description: "Internal server error"})
@@ -245,12 +333,11 @@ export class PrestataireController {
      */
     @Post("/:id/points-livraison")
     @Roles(UserRole.Admin)
-    @ApiParam({name: "id", description: "ID du prestataire"})
-    @ApiBody({type: [Number], description: "Les id des points de livraison"})
-    @ApiOperation({summary: "Rattacher des points de livraison à un prestataire"})
-    @ApiCreatedResponse({description: "Attaché avec succés!", type: String})
-    @ApiBadRequestResponse({description: "Données invalides"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+        @ApiParam({name: "id", description: "ID du prestataire"})
+        @ApiBody({type: [Number], description: "Les id des points de livraison"})
+        @ApiOperation({summary: "Rattacher des points de livraison à un prestataire"})
+        @ApiCreatedResponse({description: "Attaché avec succés!", type: String})
+        @ApiBadRequestResponse({description: "Données invalides"})
     async assignDeliveryPointsToProvider(@Param("id") id: number, @Body() pointsLivraison: number[] ){
         const prestataire = await this.prestataireService.findById(id);
 
@@ -266,11 +353,10 @@ export class PrestataireController {
      */
     @Get("/:id/points-livraison")
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
-    @ApiParam({name: "id", description: "ID du prestataire"})
-    @ApiOperation({summary: "Voir les points de livraison rattaché à un prestataire"})
-    @ApiOkResponse({description: "Ok", type: [PointLivraisonSwaggerDto]})
-    @ApiNotFoundResponse({description: "Prestataire Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+        @ApiParam({name: "id", description: "ID du prestataire"})
+        @ApiOperation({summary: "Lister les points de livraison rattachés à un prestataire"})
+        @ApiOkResponse({description: "Ok", type: [PointLivraisonSwaggerDto]})
+        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     async getProviderDeliveryPoints(@Param("id") id: number){
         return this.plService.findByPrestataire(id);
     }

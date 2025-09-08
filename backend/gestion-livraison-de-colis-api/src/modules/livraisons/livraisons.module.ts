@@ -10,10 +10,12 @@ import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity'
 import { BarcodeService } from 'src/core/code_barre/code_barre.service';
 import { ClientEntity } from '../client/client.entity';
 import { LivreurModule } from '../livreur/livreur.module';
+import { PointLivraisonModule } from '../point-livraison/point-livraison.module';
 
 @Module({
   imports: [
     forwardRef(() => LivreurModule),
+    forwardRef(() => PointLivraisonModule),
     TypeOrmModule.forFeature([
       LivraisonEntity,
       ColisEntity,
@@ -24,7 +26,10 @@ import { LivreurModule } from '../livreur/livreur.module';
     ]),
   ],
   controllers: [LivraisonsController],
-  providers: [LivraisonsService, BarcodeService],
+  providers: [
+    LivraisonsService, 
+    BarcodeService
+  ],
   exports: [LivraisonsService]
 })
 export class LivraisonsModule {}

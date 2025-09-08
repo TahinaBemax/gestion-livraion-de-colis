@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
 
@@ -20,7 +20,12 @@ export class TourneeLivraisonCreateDto {
     heure_fin: string;
         
     @IsNumber()
+    @IsOptional()
+    @ApiProperty({ required: false})
+    id_livreur?: number;
+
+    @IsNumber()
     @IsNotEmpty()
     @ApiProperty()
-    id_livreur: number;
+    id_prestatiare: number;
 }

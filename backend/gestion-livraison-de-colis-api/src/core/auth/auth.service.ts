@@ -1,5 +1,5 @@
 import { UserService } from './../../modules/user/user.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginResponse } from 'src/common/dto/auth/login-response-dto';
@@ -13,6 +13,7 @@ export class AuthService {
 
     async validateUser(login: string, password: string): Promise<any> {
         const user = await this.userService.findByLogin(login);
+        if(!user.est_active) throw new ForbiddenException("Vous n'êtes pas autorisé à s'authentifier car votre compte est désactivé. Veuillez conctacter l'admin.");
 
         if(user && await bcrypt.compare(password, user.mot_de_passe)){
             const { mot_de_passe, prestataire, est_active, photo_profil, ...result} = user;
@@ -27,6 +28,8 @@ export class AuthService {
 
         const [login, password] = qrCodeData.split(':');
         const user = await this.userService.findByLogin(login);
+
+        if(!user.est_active) throw new ForbiddenException("Vous n'êtes pas autorisé à s'authentifier car votre compte est désactivé. Veuillez conctacter l'admin.");
 
         if (user && user.mot_de_passe === password) {
             const { mot_de_passe, prestataire, est_active, photo_profil, ...result} = user;
