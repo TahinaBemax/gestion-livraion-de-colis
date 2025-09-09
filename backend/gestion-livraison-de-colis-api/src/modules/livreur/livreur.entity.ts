@@ -31,8 +31,10 @@ export class Livreur {
     @JoinColumn({name:"id_utilisateur"})
     user: User;
 
-    @OneToMany(() => LivreurTemporaireEntity, (l) => l.livreur_parent)
-    livreurs_temporaire: LivreurTemporaireEntity[];
+    @OneToMany(() => LivreurTemporaireEntity, (l) => l.livreur_parent, {
+        lazy: true
+    })
+    livreurs_temporaire: Promise<LivreurTemporaireEntity[]>|LivreurTemporaireEntity[];
 
     @OneToMany(() => TourneeLivraisonEntity, (t) => t.livreur)
     tournees_livraison: TourneeLivraisonEntity[];

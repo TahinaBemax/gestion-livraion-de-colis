@@ -9,25 +9,19 @@ import { plainToInstance } from 'class-transformer';
 import { parse } from 'date-fns';
 import * as bcrypt from 'bcrypt';
 import { LivreurTemporaireUpdateDto } from 'src/common/dto/livreur/update-livreur-temporaire-dto';
+import { LivreurService } from '../livreur.service';
+import { Utils } from 'src/common/utils/utils';
 
 @Injectable()
 export class LivreurTemporaireService {
     constructor(
         @InjectRepository(LivreurTemporaireEntity)
         private readonly livreurTempRep: Repository<LivreurTemporaireEntity>,
-        @InjectRepository(Livreur)
-        private readonly livreurRep: Repository<Livreur>
+        private readonly livreurService: LivreurService
     ){}
 
     async findAll(): Promise<LivreurTemporaireEntity[]>{
         return this.livreurTempRep.find();
-    }
-
-    async findAllByDeliveryID(id: number): Promise<LivreurTemporaireEntity[]>{
-        return this.livreurTempRep.createQueryBuilder("lt")
-        .leftJoinAndSelect("lt.liveur_parent", "lp")
-        .where("lp.id_livreur = :id", {id})
-        .getMany();
     }
 
     async findById(id: number): Promise<LivreurTemporaireEntity>{
@@ -37,29 +31,44 @@ export class LivreurTemporaireService {
         return matched;
     }
 
-    async save(idLivreur: number, dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
+    /**
+     * LISTE DES LIVREURS TEMPORAIRE D'UN LIVREUR PONCTUEL
+     * @param idUtilisateur 
+     * @returns Liste des livreurs temporaire
+     */
+    async findByLivreurID(idUtilisateur: number): Promise<LivreurTemporaireEntity[]>{
+        const user = await this.livreurService.findByUserID(idUtilisateur);
+
+        const matched = await this.livreurTempRep.createQueryBuilder("lt")
+        .innerJoinAndSelect("lt.livreur_parent", "l")
+        .innerJoinAndSelect("l.user", "user")
+        .where("l.id_livreur = :id", {id: user.id_livreur})
+        .getMany();
+
+        return matched;
+    }
+
+    async save(idUtilisateur: number, dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
         if(!dto) throw new BadRequestException("Données livreur tempraire Invalides");
 
-        const existingLiveur = await this.livreurRep.findOneBy({id_livreur: idLivreur});
-        if(!existingLiveur) throw new NotFoundException(`Livreur avec ID:{${idLivreur}} introuvable`);
+        const existingLiveur = await this.livreurService.findByUserID(idUtilisateur);
 
         //Verification du Categorie du livreur
         this.estLivreurPonctuel(existingLiveur);
         
         const livreur_temp = plainToInstance(LivreurTemporaireEntity, dto);
-        const date_naissance = parse(dto.date_naissance, "dd/MM/yyyy", new Date());
-
-        if(!date_naissance) throw new BadRequestException("Date de naissance invalide!");
 
         livreur_temp.livreur_parent = existingLiveur;
-        livreur_temp.date_naissance = date_naissance;
-        livreur_temp.date_creation = new Date();
+        livreur_temp.date_naissance = dto.date_naissance;
+        livreur_temp.date_creation = new Date().toISOString();
         livreur_temp.est_active = true;
-        livreur_temp.mot_de_passe = bcrypt.hashSync(dto.mot_de_passe, 10);
-        livreur_temp.telephone = dto.telephone.replaceAll(/\s+/g, "");
+        livreur_temp.mot_de_passe = Utils.hashPassword(dto.mot_de_passe);
+        livreur_temp.telephone = Utils.reformatToPhoneNumber(dto.telephone);
 
         const prepredDate = this.livreurTempRep.create(livreur_temp);
-        return this.livreurTempRep.save(prepredDate);
+        const saved = await this.livreurTempRep.save(prepredDate);
+
+        return {...saved, mot_de_passe: ""};
     }
 
     private estLivreurPonctuel(livreur: Livreur){
@@ -69,27 +78,21 @@ export class LivreurTemporaireService {
     }
 
 
-    async update(idLivreur: number, idLiveurTemp: number, dto: LivreurTemporaireUpdateDto): Promise<LivreurTemporaireEntity>{
+    async update(idLiveurTemp: number, dto: LivreurTemporaireUpdateDto): Promise<LivreurTemporaireEntity>{
         if(!dto) throw new BadRequestException("Données livreur tempraire Invalides");
 
         const existingLiveurTempo = await this.findById(idLiveurTemp);
         if(!existingLiveurTempo) throw new NotFoundException(`Livreur Temporaire avec ID:{${idLiveurTemp}} introuvable`);
 
-        const existingLiveur = await this.livreurRep.findOneBy({id_livreur: idLivreur});
-        if(!existingLiveur) throw new NotFoundException(`Livreur avec ID:{${idLivreur}} introuvable`);
+        existingLiveurTempo.nom = dto.nom?? existingLiveurTempo.nom;
+        existingLiveurTempo.prenom = dto.prenom?? existingLiveurTempo.prenom;
+        existingLiveurTempo.date_naissance = dto.date_naissance?? existingLiveurTempo.date_naissance;
+        existingLiveurTempo.date_creation = new Date().toISOString();
+        existingLiveurTempo.mot_de_passe = (dto.mot_de_passe) ? Utils.hashPassword(dto.mot_de_passe) : existingLiveurTempo.mot_de_passe;
+        existingLiveurTempo.telephone = (dto.telephone) ? Utils.reformatToPhoneNumber(dto.telephone) : existingLiveurTempo.telephone;
 
-        const date_naissance = (dto.date_naissance) ? parse(dto.date_naissance, "dd/MM/yyyy", new Date()): existingLiveurTempo.date_naissance;
-
-        if(!isValid(date_naissance)) throw new BadRequestException("Date de naissance invalide!");
-
-        existingLiveurTempo.livreur_parent = existingLiveur;
-        existingLiveurTempo.date_naissance = date_naissance;
-        existingLiveurTempo.date_creation = new Date();
-        existingLiveurTempo.mot_de_passe = (dto.mot_de_passe) ? bcrypt.hashSync(dto.mot_de_passe, 10) : existingLiveurTempo.mot_de_passe;
-        existingLiveurTempo.telephone = (dto.telephone) ? dto.telephone.replaceAll(/\s+/g, ""): existingLiveurTempo.telephone;
-
-        const prepredDate = this.livreurTempRep.create(existingLiveurTempo);
-        return this.livreurTempRep.save(prepredDate);
+        const saved = await this.livreurTempRep.save(existingLiveurTempo);
+        return {...saved, mot_de_passe: ""};
     }
 
     async delete(id: number): Promise<String>{

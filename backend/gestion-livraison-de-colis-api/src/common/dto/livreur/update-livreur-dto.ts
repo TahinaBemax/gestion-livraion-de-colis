@@ -8,55 +8,63 @@ export class LivreurUpdateDto {
     @IsNotEmpty()
     @IsOptional()
     @ApiProperty({
-        example: "John"
+        example: "John",
+        required: false
     })
     nom?: string;
     
     @IsNotEmpty()
     @IsOptional()
     @ApiProperty({
-        example: "Doe"
+        example: "Doe",
+        required: false
     })
     prenom?: string;
     
     @IsNotEmpty({message: "La civilite est obligatoire. (Madame, Monsieur, etc.)"})
+    @IsOptional()
     @ApiProperty({
-        example: "Monsieur" 
+        example: "Monsieur" ,
+        required: false
     })
-    civilite: string;
+    civilite?: string;
     
     @IsFRDate()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({
-        example: "25/12/1990"
+        example: "25/12/1990",
+        required: false
     })
-    date_naissance: string;
+    date_naissance?: string;
     
     @IsPhoneNumber()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({
-        example: "+261340000000"
+        example: "+261340000000",
+        required: false
     })
-    numero_telephone: string;
+    numero_telephone?: string;
     
-    @IsNotEmpty()
     @IsEmail()
     @IsOptional()
     @ApiProperty({
-        example: "exemple@itu.com"
+        example: "exemple@itu.com",
+        required: false
     })
     adresse_email?: string;
 
     @IsImageFormat()
     @IsOptional()
     @ApiProperty({
-        example: "data:image/png;base64,iVBORw0KGgoAAAANSU.jpg"
+        example: "data:image/png;base64,iVBORw0KGgoAAAANSU.jpg",
+        required: false
     })
     photo_profil?: string;
     
     @IsEnum(CategorieLivreurEnum)
     @ApiProperty({
-        example: "CAT-LIVREUR-00001"
+        example: "CAT-LIVREUR-00001",
+        required: false
     })
     @IsOptional()
     id_categorie_livreur?: string;

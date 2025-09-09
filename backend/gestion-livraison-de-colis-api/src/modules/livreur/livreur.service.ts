@@ -20,6 +20,19 @@ export class LivreurService {
         private readonly livreurMapper: LiveurMapper,
     ){}
 
+    async findByUserID(id: number): Promise<Livreur>{
+        const matched = await this.livreurRepo.createQueryBuilder("l")
+        .innerJoinAndSelect("l.user", "u")
+        .innerJoinAndSelect("l.categorie_livreur", "cl")
+        .innerJoinAndSelect("l.livreurs_temporaire", "lt")
+        .where("u.id_utilisateur = :id", {id})
+        .getOne();
+
+        if(!matched) throw new NotFoundException();
+
+        return { ...matched, user: { ...matched.user, mot_de_passe: "" } };
+    }
+
     async create(idPrestataire: number, dto: CreateLivreurDto): Promise<Livreur> {
         if (!dto) throw new BadRequestException("Données Livreur invalides");
         if (!idPrestataire) throw new BadRequestException("L'IdPrestataire est null");
@@ -46,20 +59,26 @@ export class LivreurService {
         }
     }
 
-
-
     async findAllLivreurs(): Promise<Livreur[]>{
-        return this.livreurRepo.find({relations: ["user"]});
+        const livreurs = await this.livreurRepo.find({relations: ["user"]});
+
+        return livreurs.map( (l) => {
+            return { ...l, user: { ...l.user, mot_de_passe: "" }}
+        });
     }
 
     async findAllLivreursByPrestataire(id:number): Promise<Livreur[]>{
-        return this.livreurRepo
+        const livreurs = await this.livreurRepo
             .createQueryBuilder('livreur')
             .innerJoinAndSelect('livreur.user', 'user')
             .innerJoin(Prestataire, 'p', 'p.id_prestataire = user.id_prestataire')
             .addSelect('p')
             .where('p.id_prestataire = :id', { id })
             .getMany();
+
+        return livreurs.map( (l) => {
+            return { ...l, user: { ...l.user, mot_de_passe: "" }}
+        });
     }
 
     async findById(id:number): Promise<Livreur>{

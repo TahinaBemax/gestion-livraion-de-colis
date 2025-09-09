@@ -6,26 +6,41 @@ import { IsPhoneNumber } from "src/common/validators/is-phone-number";
 export class LivreurTemporaireUpdateDto{
     @IsOptional()
     @IsNotEmpty()
-    @ApiProperty({example: "Rakoto"})
+    @ApiProperty({
+        example: "Rakoto",
+        required: false
+    })
     nom?:string;
     
     @IsOptional()
     @IsNotEmpty()
-    @ApiProperty({example: "Jean"})
+    @ApiProperty({
+        example: "Jean",
+        required: false
+    })
     prenom?:string;
     
     @IsOptional()
     @IsFRDate()
-    @ApiProperty({example: "01/01/1990"})
+    @ApiProperty({
+        example: "01/01/1990",
+        required: false
+    })
     date_naissance?: string;
     
     @IsOptional()
     @IsPhoneNumber()
-    @ApiProperty({example: "0330011122"})
+    @ApiProperty({
+        example: "0330011122",
+        required: false
+    })
     telephone?: string;
     
     @IsOptional()
     @IsStrongPassword()
-    @ApiProperty({example: "Mot2Passe!"})
+    @ApiProperty({
+        example: "Mot2Passe!",
+        required: false
+    })
     mot_de_passe?: string;
 }

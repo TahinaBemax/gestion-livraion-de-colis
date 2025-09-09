@@ -14,7 +14,7 @@ export class LivreurTemporaireEntity {
     prenom:string;
     
     @Column({type: "date"})
-    date_naissance:Date;
+    date_naissance: string;
     
     @Column()
     telephone: string;
@@ -25,10 +25,10 @@ export class LivreurTemporaireEntity {
     @Column()
     est_active:boolean;
 
-    @Column({type: "date"})
-    date_creation:Date;
+    @Column({type: "date", default: new Date()})
+    date_creation: string;
     
-    @ManyToOne(() => Livreur, (l) => l.livreurs_temporaire )
+    @ManyToOne(() => Livreur, (l) => l.livreurs_temporaire, { eager: true })
     @JoinColumn({name:"id_livreur"})
     livreur_parent: Livreur;
 }
