@@ -1,11 +1,8 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Prestataire } from "../prestataire/prestataire.entity";
 import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
-import { ContrainteEvenementEntity } from "../contrainte-evenement/contrainte-evenement.entity";
-import { LivraisonEntity } from "../livraisons/livraison.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
 import { EvenementLocalEntity } from "../evenement-local/evenement-local.entity";
-import { Client } from "socket.io/dist/client";
 import { ClientEntity } from "../client/client.entity";
 
 @Entity("points_livraison")
@@ -68,7 +65,7 @@ export class PointLivraisonEntity {
     })
     evenements?: EvenementLocalEntity[];
 
-    @OneToMany(() => ClientEntity, (p) => p.livraisons, {
+    @OneToMany(() => ClientEntity, (p) => p.point_livraison, {
         nullable: true,
         lazy: true
     })

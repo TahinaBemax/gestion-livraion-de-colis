@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
-import { ColisCreateDto } from "../colis/create-colis-dto";
+import { DetailColisDto } from "../colis/detail-colis-dto";
 
 export class LivraisonCreateDto {
     @ApiProperty({description: "Une petite note"})
@@ -13,12 +13,18 @@ export class LivraisonCreateDto {
     @ApiProperty({example: "12/05/2025"})
     date_livraison: string;
     
-    @ApiProperty({example: "10:20:00"})
+    @ApiProperty({
+        example: "10:20:00",
+        required: false
+    })
     @IsTime()
     @IsOptional()
     heure_debut?: string;
     
-    @ApiProperty({example: "14:00:00"})
+    @ApiProperty({
+        example: "14:00:00",
+        required: false
+    })
     @IsTime()
     @IsNotEmpty()
     heure_fin?: string;
@@ -26,7 +32,7 @@ export class LivraisonCreateDto {
     @IsNotEmpty()
     @IsArray()
     @ApiProperty({
-        type: ColisCreateDto,
+        type: [DetailColisDto],
         example: [
             {
                 nom_destinataire: "",
@@ -41,7 +47,7 @@ export class LivraisonCreateDto {
             }
         ]
     })
-    colis: ColisCreateDto[];
+    colis: DetailColisDto[];
 
     @IsNotEmpty()
     @IsNumber()

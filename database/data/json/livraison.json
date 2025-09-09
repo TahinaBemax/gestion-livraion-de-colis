@@ -1,17 +1,10 @@
 { 
-    "notes": "Livraison urgente, merci de vérifier les informations",
+  "notes": "Livraison urgente, merci de vérifier les informations",
   "date_livraison": "26/08/2025",
   "heure_debut": "09:00",
   "heure_fin": "12:00",
-  "rue": "7 Rue de la paix",
-  "ville": "Paris",
-  "pays": "France",
-  "code_postal": "75001",
-  "id_point_livraison": 1,
+  "id_client": 1,
   "colis": [
-      {
-        "nom_destinataire": "MAG123",
-        "details_colis": [
           {
             "description_produit": "T-shirt en coton",
             "poids_produit": 0.25,
@@ -22,7 +15,5 @@
             "poids_produit": 0.5,
             "valeur_produit": 15.0
           }
-        ]
-      }
   ]
 }

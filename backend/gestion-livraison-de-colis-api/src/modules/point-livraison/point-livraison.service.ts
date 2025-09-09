@@ -58,7 +58,7 @@ export class PointLivraisonService {
 
     async findByClient(id:number): Promise<PointLivraisonEntity|null> {
         return this.pointLivraisonRep.createQueryBuilder("pl")
-            .innerJoinAndSelect("pl.client", "c")
+            .leftJoinAndSelect("pl.clients", "c")
             .where("c.id = :id", {id: `${id}`})
             .getOne();
     }

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { LivraisonsService } from './livraisons.service';
 import { LivraisonCreateDto } from 'src/common/dto/livraison/create-livraison-dto';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
@@ -10,6 +10,7 @@ import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 
 @Controller('livraisons')
+@ApiTags("Livraison")
 @Roles(UserRole.Admin)
 @UserTypes(TypeUtilisateur.TempoOne)
 export class LivraisonsController {
@@ -22,7 +23,7 @@ export class LivraisonsController {
      * @returns Liste des livraisons
      */
     @Get("/historique")
-    async getLivraisonsAvecEncoursEtLivre(): Promise<LivraisonEntity[]>{
+    async getLivraisonsEncoursEtLivre(): Promise<LivraisonEntity[]>{
         const statuts: StatusLivraison[] = [
             StatusLivraison.LIVRE, 
             StatusLivraison.DISTRIBUEUR_ASSIGNÉ, 
@@ -39,16 +40,26 @@ export class LivraisonsController {
      * @returns Liste des livraisons
      */
     @Get("/filtre")
+        @ApiOperation({description: "Filtré les livraisons par Prestataire, Client, Date de livraison et Zone Geographique(Code postal ou Ville)"})
+        @ApiQuery({name: "idPrestataire", required: false})
+        @ApiQuery({name: "idClient", required: false})
+        @ApiQuery({name: "dateLivraison", required: false})
+        @ApiQuery({name: "zoneGeographique", required: false})
     async filterby(
-        @Query("idPrestataire") idPrestataire: string|undefined, 
-        @Query("idClient") idClient: string|undefined,
-        @Query("dateLivraison") dateLivraison: string|undefined,
+        @Query("idPrestataire") idPrestataire?: string|undefined, 
+        @Query("idClient") idClient?: string|undefined,
+        @Query("dateLivraison") dateLivraison?: string|undefined,
+        @Query("zoneGeographique") zoneGeographique?: string|undefined,
     ): Promise<LivraisonEntity[]>
     {
 
-        return this.livraisonService.filterBy(idPrestataire, idClient, dateLivraison);
+        return this.livraisonService.filterBy(idPrestataire, idClient, dateLivraison, zoneGeographique);
     }
 
+    /**
+     * LISTE DES LIVRAISONS
+     * @returns Liste des livraisons
+     */
     @Get()
     async getAll(){
         return this.livraisonService.findAll();
@@ -56,19 +67,32 @@ export class LivraisonsController {
     
     @Get("/:id")
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)
+    @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
     async getById(@Param("id", ParseIntPipe) id: number){
         return this.livraisonService.findById(id);
     }
 
+    /**
+     * CREER UN LIVRAISON
+     * @param dto 
+     * @returns Liste des livraisons
+     */
     @Post()
     @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: LivraisonCreateDto})
-    @ApiBadRequestResponse()
-    @ApiCreatedResponse()
+        @ApiBody({type: LivraisonCreateDto})
+        @ApiOperation({description: "Créer un livraison avec colis"})
+        @ApiBadRequestResponse()
+        @ApiCreatedResponse()
     save(@Body() dto: LivraisonCreateDto){
         return this.livraisonService.save(dto);
     }
 
+    /**
+     * MODIFIER UN LIVRAISON
+     * @param id ID du livraison
+     * @param dto 
+     * @returns Liste des livraisons
+     */
     @Put("/:id")
     @HttpCode(HttpStatus.CREATED)
     @ApiBody({type: LivraisonCreateDto})
@@ -79,7 +103,13 @@ export class LivraisonsController {
         return this.livraisonService.update(id, dto);
     }
 
-    @Put("/:id/change-statut")
+    /**
+     * CHANGER LE STATUT D'UN LIVRAISON
+     * @param statut
+     * @param id 
+     * @returns Un message
+     */
+    @Put("/:id/statut")
     @HttpCode(HttpStatus.CREATED)
     @ApiCreatedResponse()
     @ApiBadRequestResponse()

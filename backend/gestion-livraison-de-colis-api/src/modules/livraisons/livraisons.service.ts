@@ -7,13 +7,13 @@ import { LivraisonCreateDto } from 'src/common/dto/livraison/create-livraison-dt
 import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
 import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-probleme-livraison-dto';
 import { ProblemeLivraisonEntity } from './probleme-livraison.entity';
-import { ColisCreateDto } from 'src/common/dto/colis/create-colis-dto';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
 import { plainToInstance } from 'class-transformer';
 import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { ClientEntity } from '../client/client.entity';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
+import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 
 @Injectable()
 export class LivraisonsService {
@@ -33,7 +33,11 @@ export class LivraisonsService {
      * @returns 
      */
     async findByStatuts(statuts: StatusLivraison[]): Promise<LivraisonEntity[]>{
-        return await this.livraisonRep.findBy({statut_livraison: In(statuts)});
+        return await this.livraisonRep.find({
+            where: {statut_livraison: In(statuts)},
+            relations: ["client", "colis"]
+        }
+        );
     }
 
     /**
@@ -43,9 +47,9 @@ export class LivraisonsService {
      */
     async filterBy(idPrestataire?: string, idClient?: string, date?: string, zoneGeographique?: string): Promise<LivraisonEntity[]>{
         const query = this.livraisonRep.createQueryBuilder("l")
-        .leftJoinAndSelect("l.point_livraison", "pl")
-        .innerJoin("pl.prestataire", "p")
-        .leftJoinAndSelect("l.client", "c")
+            .innerJoinAndSelect("l.client", "c")
+            .leftJoinAndSelect("c.point_livraison", "pl")
+            .leftJoinAndSelect("pl.prestataire", "p")
         
         if(date) query.where("l.date_livraison = :date", {date: date});
         
@@ -98,7 +102,7 @@ export class LivraisonsService {
 
     async findAll(): Promise<LivraisonEntity[]>{
         return this.livraisonRep.find({
-            relations: ["point_livraison", "colis"]
+            relations: ["client", "colis"]
         });
     }
 
@@ -107,7 +111,7 @@ export class LivraisonsService {
         
         const matched = await this.livraisonRep.findOne({
             where: {id: id},
-            relations: ["point_livraison", "colis"]
+            relations: ["client", "colis"]
         });
 
         if(!matched) throw new NotFoundException(`Livraison avec ID:{${id}} est introuvable!`);
@@ -120,7 +124,7 @@ export class LivraisonsService {
         
         const matched = await this.livraisonRep.find({
             where: {id: In(ids)},
-            relations: ["point_livraison", "colis"]
+            relations: ["client", "colis"]
         });
 
         if(!matched) throw new NotFoundException(`Livraison avec ID:{${Object.values(ids)}} sont introuvable!`);
@@ -187,7 +191,7 @@ export class LivraisonsService {
     }
 
 
-    private getColis(dto: ColisCreateDto[]){
+    private getColis(dto: DetailColisDto[]){
         if(! Array.isArray(dto)) throw new BadRequestException("Colis doit être un tableau");
 
         const colis: ColisEntity[] = plainToInstance(ColisEntity, dto);
@@ -249,24 +253,24 @@ export class LivraisonsService {
 
     private async mapUpdateDtoToLivraisonEntity(id: number, dto: LivraisonUpdateDto){
         const existing = await this.findById(id);
-        const client = await this.clientRep.findOneBy({id: dto.id_client});
-        if(!client) throw new BadRequestException("Client inexistant.");
-        const point_livraison = await this.pointLivraisonService.findByClient(client.id);
 
-        if(!point_livraison) throw new BadRequestException("Ce client n'est pas encore rattaché à un point de livraison");
         existing.notes = dto.notes;
         existing.date_livraison = dto.date_livraison?? existing.date_livraison;
         existing.heure_debut = dto.heure_debut;
         existing.heure_fin = dto.heure_fin;
         
-        existing.nom_destinataire = point_livraison.numero_magasin;
-        existing.adresse_principale = `${point_livraison.numero_rue}, ${point_livraison.nom_rue}, ${point_livraison.ville}`;
-        existing.complement_adresse = point_livraison.complement_adresse;
-        existing.ville = point_livraison.ville;
-        existing.pays = point_livraison.pays;
-        existing.code_postal = point_livraison.code_postal;
-        existing.client = client;
-        existing.nom_destinataire = client.nom_client;
+        existing.nom_destinataire = dto.nom_destinataire?? existing.nom_destinataire;
+        existing.adresse_principale = dto.adresse_principale?? existing.adresse_principale;
+        existing.complement_adresse = dto.complement_adresse;
+        existing.ville = dto.ville?? existing.ville;
+        existing.pays = dto.pays;
+        existing.code_postal = dto.code_postal?? existing.code_postal;
+
+        if(dto.id_client){
+            const client = await this.clientRep.findOneBy({id: dto.id_client});
+            if(!client) throw new BadRequestException("Client inexistant.");
+            existing.client = client;
+        }
 
         return existing;
     }
