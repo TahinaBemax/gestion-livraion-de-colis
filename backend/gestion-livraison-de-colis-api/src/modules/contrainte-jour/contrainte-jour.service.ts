@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 import { ContrainteJourEntity } from './contrainte-jour.entity';
 import { ContrainteJourDto } from 'src/common/dto/contrainte-jour/contrainte-jour-dto';
+import { ContrainteJourUpdateDto } from 'src/common/dto/contrainte-jour/contrainte-jour-update-dto';
 
 @Injectable()
 export class ContrainteJourService {
@@ -26,29 +27,14 @@ export class ContrainteJourService {
         return this.contrainteJourRepo.find({relations: ["contrainte_livraison"]});
     }
 
-    async save(dto: ContrainteJourDto): Promise<ContrainteJourEntity> {
-        if(!dto) throw new BadRequestException("Données Invalides");
-
-        const contrainteLivrasion = await this.getContrainteLivraison(dto.id_contrainte_livraison);
-
-        const temp = plainToInstance(ContrainteJourEntity, dto);
-        temp.contrainte_livraison = contrainteLivrasion;
-
-        const prepared = this.contrainteJourRepo.create(temp);
-        return this.contrainteJourRepo.save(prepared);
-    }
-
-    async update(id: number, dto: ContrainteJourDto): Promise<ContrainteJourEntity> {
+    async update(id: number, dto: ContrainteJourUpdateDto): Promise<ContrainteJourEntity> {
         if(!dto || !id) throw new BadRequestException("Données Invalides");
         const existing = await this.findById(id);
-        (!dto.id) ? id : dto.id;
 
-        const contrainteLivrasion = await this.getContrainteLivraison(dto.id_contrainte_livraison);
-        existing.est_livrable = dto.est_livrable;
-        existing.heure_debut_livraison = dto.heure_debut_livraison;
-        existing.heure_fin_livraison = dto.heure_fin_livraison;
-        existing.jour_semaine = dto.jour_semaine;   
-        existing.contrainte_livraison = contrainteLivrasion;
+        existing.est_livrable = dto.est_livrable?? existing.est_livrable;
+        existing.heure_debut_livraison = dto.heure_debut_livraison?? existing.heure_debut_livraison;
+        existing.heure_fin_livraison = dto.heure_fin_livraison?? existing.heure_fin_livraison;
+        existing.jour_semaine = dto.jour_semaine?? existing.jour_semaine;   
 
         return this.contrainteJourRepo.save(existing);
     }

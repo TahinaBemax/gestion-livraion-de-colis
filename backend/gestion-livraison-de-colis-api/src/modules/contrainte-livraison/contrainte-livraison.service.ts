@@ -1,3 +1,4 @@
+import { Utils } from 'src/common/utils/utils';
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
@@ -90,7 +91,12 @@ export class ContrainteLivraisonService {
 
         const existing = await this.findById(id);
         existing.intitule_contrainte = dto.intitule_contrainte ?? existing.intitule_contrainte;
-        existing.date_debut = dto.date_debut ?? existing.date_debut;
+        
+        if(dto.date_debut){
+            Utils.isPresentOrFuture(dto.date_debut) && Utils.isBefore(dto.date_debut, dto.date_fin?? existing.date_fin);
+            existing.date_debut = dto.date_debut ?? existing.date_debut;
+        }
+
         existing.date_fin = dto.date_debut ?? existing.date_fin;
         existing.priorite_contrainte = dto.priorite_contrainte ?? existing.priorite_contrainte;
         

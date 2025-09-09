@@ -46,14 +46,4 @@ export class ContrainteLivraisonController {
     addDayConstraintToDeliveryConstraint(@Param("id", ParseIntPipe) id: number, @Body() dto: ContrainteJourDto[]){
         return this.contrainteService.attachDayConstraintsToDeliveryConstraint(id, dto);
     }
-
-    @Put("/:id/contraintes-jours/:idContrainteJour")
-    @Roles(UserRole.Admin)
-    @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: ContrainteJourDto})
-    @ApiCreatedResponse({type: ContrainteJourDto})
-    @ApiBadRequestResponse({description: "Données Invalides"})
-    updateDayConstraintToDeliveryConstraint(@Param("id", ParseIntPipe) id: number, @Param("idContrainteJour", ParseIntPipe) idContrainteJour: number, @Body() dto: ContrainteJourDto){
-        return this.contrainteService.updateDayConstraints(id, idContrainteJour,dto);
-    }
 }

@@ -2,32 +2,35 @@ import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
 
 export class PointLivraisonCsvDto {
     @IsNotEmpty()
-    numero_magasin: string;
+    nom_point_livraison: string;
 
     @IsNotEmpty()
-    nom_rue?: string;
+    nom_rue: string;
 
     @IsNotEmpty()
-    departement: string;
+    numero_rue: string;
+
+    @IsOptional()
+    departement?: string;
 
     @IsNotEmpty()
     ville: string;
 
-    @IsNotEmpty()
-    pays: string;
+    @IsOptional()
+    pays?: string;
 
     @IsNumberString()
-    @IsNotEmpty()
-    latitude: number;
+    @IsOptional()
+    latitude?: number;
     
     @IsNumberString()
-    @IsNotEmpty()
-    longitude: number;
+    @IsOptional()
+    longitude?: number;
 
     @IsNumberString()
     code_postal: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     complement_adresse?: string;
 
     @IsOptional()

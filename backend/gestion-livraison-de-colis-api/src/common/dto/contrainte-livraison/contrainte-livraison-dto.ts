@@ -3,14 +3,6 @@ import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 
 export class ContrainteLivraisonDto {
-    @IsOptional()
-    @IsNumber()
-    @ApiProperty({
-        example: 1, 
-        required: false
-    })
-    id?: number;
-
     @IsNotEmpty()
     @ApiProperty({
         example: "Livraison Weekend impossible",
@@ -40,12 +32,4 @@ export class ContrainteLivraisonDto {
         example: "Urgent",
     })
     priorite_contrainte?: string;
-    
-    @IsNotEmpty()
-    @IsNumber()
-    @ApiProperty({
-        example: 1,
-        required: false
-    })
-    id_point_livraison?: number;
 }

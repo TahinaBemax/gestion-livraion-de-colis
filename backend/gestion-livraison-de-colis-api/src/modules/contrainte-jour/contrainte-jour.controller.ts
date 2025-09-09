@@ -1,9 +1,10 @@
-import {  Controller, Get, Param,  } from '@nestjs/common';
+import {  Body, Controller, Get, HttpCode, HttpStatus, Param, Put,  } from '@nestjs/common';
 import { ContrainteJourEntity } from './contrainte-jour.entity';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ContrainteJourService } from './contrainte-jour.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
+import { ContrainteJourUpdateDto } from 'src/common/dto/contrainte-jour/contrainte-jour-update-dto';
 
 @Controller('contraintes-jours')
 @ApiTags("Contraintes Jours")
@@ -25,21 +26,12 @@ export class ContrainteJourController {
         return this.cotrainteJourService.findAll();
     }
 
-    // @Post()
-    // @HttpCode(HttpStatus.CREATED)
-    // @ApiBody({type: ContrainteJourEntity})
-    // @ApiCreatedResponse({type: ContrainteJourEntity})
-    // @ApiBadRequestResponse({description: "Données Invalides"})
-    // save(@Body() dto: ContrainteJourDto){
-    //     return this.cotrainteJourService.save(dto);
-    // }
-
-    // @Put("/:id")
-    // @HttpCode(HttpStatus.CREATED)
-    // @ApiBody({type: ContrainteJourEntity})
-    // @ApiCreatedResponse({type: ContrainteJourEntity})
-    // @ApiBadRequestResponse({description: "Données Invalides"})
-    // update(@Param("id") id: number, @Body() dto: ContrainteJourDto) {
-    //     return this.cotrainteJourService.update(id, dto);
-    // }    
+    @Put("/:id")
+    @HttpCode(HttpStatus.CREATED)
+    @ApiBody({type: ContrainteJourUpdateDto})
+    @ApiCreatedResponse({type: ContrainteJourEntity})
+    @ApiBadRequestResponse({description: "Données Invalides"})
+    update(@Param("id") id: number, @Body() dto: ContrainteJourUpdateDto) {
+        return this.cotrainteJourService.update(id, dto);
+    }    
 }

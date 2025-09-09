@@ -1,16 +1,51 @@
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { isValid, parse } from "date-fns";
 import * as bcrypt from "bcrypt";
 import * as QRCode from 'qrcode';
 
 export class Utils {
+    static isPresentOrFuture(startDate: string): boolean{
+        try {
+            const isValidDate = Utils.parseToFRDate(startDate);
+            const now = new Date();
+            if (!isValidDate) {
+                throw new BadRequestException('Format de date invalide');
+            }
+
+            if(now > isValidDate) 
+                throw new BadRequestException("La date de début doit être la date actuelle ou la date de future");
+
+            return true;
+        } catch (error) {
+            throw new InternalServerErrorException('Erreur lors du traitement des dates');
+        }
+    }
+    static isBefore(startDate: string, endDate: string): boolean{
+        try {
+            const start = Utils.parseToFRDate(startDate);
+            const end  = Utils.parseToFRDate(endDate);
+
+            if(end < start) 
+                throw new BadRequestException("La date de début doit être la date actuelle ou la date de future");
+
+            return true;
+        } catch (error) {
+            throw new InternalServerErrorException('Erreur lors du traitement des dates');
+        }
+    }
+    
     static parseToFRDate(date: string): Date{
-        const parsed = parse(date, "dd/MM/yyyy", new Date());
-
-        if(!isValid(parsed)) throw new BadRequestException(`Date:${date} invalide`);
-        parsed.setUTCHours(0, 0, 0, 0);
-
-        return parsed;
+        try {
+            if(!date) throw new Error("La date est null");
+            const parsed = parse(date, "dd/MM/yyyy", new Date());
+    
+            if(!isValid(parsed)) throw new BadRequestException(`Date:${date} invalide`);
+            parsed.setUTCHours(0, 0, 0, 0);
+    
+            return parsed;
+        } catch (error) {
+            throw new Error(error);
+        }
     }
 
     static isValidDateInterval(date_debut: string, date_fin: string){

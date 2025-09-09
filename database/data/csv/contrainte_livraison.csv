@@ -1,2 +1,2 @@
-intitule_contrainte,date_debut,date_fin,priorite_contrainte,numero_magasin
-No Deliveries on Sundays,01/09/2025,30/09/2025,2,M125
+intitule_contrainte,date_debut,date_fin,priorite_contrainte,nom_point_livraison
+No Deliveries on Sundays,19/09/2025,30/09/2025,2,M125

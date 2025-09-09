@@ -1,15 +1,16 @@
 
 import { In, Repository } from 'typeorm';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePointLivraisonDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
-import { plainToInstance } from 'class-transformer';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
 import { PointLivraisonUpdateDto } from 'src/common/dto/point-livraison/point-livraison-update-dto';
 import { EvenementLocalService } from '../evenement-local/evenement-local.service';
+import { Utils } from 'src/common/utils/utils';
+import { parse } from 'date-fns';
 
 
 @Injectable()
@@ -23,6 +24,7 @@ export class PointLivraisonService {
     ){}
 
 
+
     async create(dto: CreatePointLivraisonDto): Promise<PointLivraisonEntity>{
         const pointLivraison: PointLivraisonEntity = this.mapDtoToPointLivraison(dto);
 
@@ -31,14 +33,16 @@ export class PointLivraisonService {
     }
 
     async findAll(): Promise<PointLivraisonEntity[]> {
-        return this.pointLivraisonRep.find({relations: ["contraintes_livraison", "contraintes_evenements"]});
+        return this.pointLivraisonRep.find({
+            relations: ["contraintes_livraison", "evenements"]
+        });
     }
 
     async findById(id:number): Promise<PointLivraisonEntity> {
         const matched = await this.pointLivraisonRep.findOne(
             {
                 where: {id: id},
-                relations: ["contraintes_livraison", "contraintes_evenements"]
+                relations: ["contraintes_livraison", "evenements"]
             }
         );
 
@@ -52,6 +56,8 @@ export class PointLivraisonService {
     async findByPrestataire(id:number): Promise<PointLivraisonEntity[]> {
         return this.pointLivraisonRep.createQueryBuilder("pl")
             .innerJoinAndSelect("pl.prestataire", "p")
+            .leftJoinAndSelect("pl.evenements", "event")
+            .leftJoinAndSelect("pl.contraintes_livraison", "event")
             .where("p.id_prestataire = :id", {id: `${id}`})
             .getMany();
     }
@@ -59,6 +65,8 @@ export class PointLivraisonService {
     async findByClient(id:number): Promise<PointLivraisonEntity|null> {
         return this.pointLivraisonRep.createQueryBuilder("pl")
             .leftJoinAndSelect("pl.clients", "c")
+            .leftJoinAndSelect("pl.evenements", "event")
+            .leftJoinAndSelect("pl.contraintes_livraison", "event")
             .where("c.id = :id", {id: `${id}`})
             .getOne();
     }
@@ -86,10 +94,13 @@ export class PointLivraisonService {
     async findByCityNumeroMagasin(city: string, numMagasin: string): Promise<PointLivraisonEntity[]> {
         if(!city && !numMagasin) throw new BadRequestException("La ville et le numero de magasin sont obligatoire!");
 
-        return this.pointLivraisonRep.find({
-            where: {ville: city, numero_magasin: numMagasin},
-            relations: ["contraintes_livraison", "contraintes_evenements"]
-        });
+        return this.pointLivraisonRep.createQueryBuilder("pl")
+            .leftJoinAndSelect("pl.evenements", "event")
+            .leftJoinAndSelect("pl.prestataire", "p")
+            .leftJoinAndSelect("pl.contraintes_livraison", "cl")
+            .where("pl.ville ILIKE :ville", {ville: `%${city}%`})
+            .andWhere("pl.nom_point_livraison ILIKE :magasin", {magasin: `%${numMagasin}%`})
+            .getMany();
     }
 
 
@@ -121,7 +132,7 @@ export class PointLivraisonService {
         }
     }
 
-    async assignDeliveryConstraintsToPL(idPL: number, constraintesDto: ContrainteLivraisonDto[]): Promise<{message: string}> {
+    async assignDeliveryConstraintsToPL(idPL: number, constraintesDto: ContrainteLivraisonDto[]): Promise<string> {
         if(!idPL || constraintesDto.length === 0) throw new BadRequestException("Il faut mettre au moins une contrainte de livraison!");
         const existingPL = await this.findById(idPL);
 
@@ -136,7 +147,7 @@ export class PointLivraisonService {
             await queryRunner.manager.save(ContrainteLivraisonEntity, constraints);
             await queryRunner.commitTransaction();
 
-            return {message: `Contrainte(s) temporelle de livraison rattachée(s) à ${existingPL.numero_magasin}  avec succes!`};
+            return `Contrainte(s) temporelle de livraison rattachée(s) avec succes!`;
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
@@ -197,6 +208,7 @@ export class PointLivraisonService {
         if(dto && dto.length > 0){
             return dto.map(c => {
                 const contrainte = new ContrainteLivraisonEntity();
+                Utils.isPresentOrFuture(c.date_debut) && Utils.isBefore(c.date_debut, c.date_fin);
 
                 contrainte.intitule_contrainte = c.intitule_contrainte;
                 contrainte.date_debut = c.date_debut;
@@ -209,4 +221,6 @@ export class PointLivraisonService {
 
         return [];
     }
+
+
 }

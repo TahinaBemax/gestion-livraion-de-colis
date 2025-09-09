@@ -41,7 +41,11 @@ export class UserService {
             queryBuilder.andWhere('prestataire.nom_entreprise ILIKE :nomEntreprise', { nomEntreprise: `%${nomEntreprise}%` });
         }
 
-        return await queryBuilder.getMany();
+        const users = await queryBuilder.getMany();
+        return users.map(user => {
+            const {mot_de_passe, ...userWithoutPassword} = user;
+            return user;
+        });
     }
 
     async prestataireUsersfilterBy(idPrestataire?: number, nom?: string, prenom?: string, nomEntreprise?: string): Promise<User[]> {
@@ -75,7 +79,9 @@ export class UserService {
 
         const matched = await queryBuilder.getMany();
         return matched.map(user => {
-            return { ...user, mot_de_passe: "" }
+            const {mot_de_passe, ...withoutPassword} = user;
+
+            return user;            
         });
     }
 
@@ -96,6 +102,7 @@ export class UserService {
     async updateUser(id: number, dto: UpdateUserDto): Promise<User>{
         const user: User = await this.findById(id);
         this.userMapper.mapUpdateUserDtoToUser(user, dto);
+
         const updated = await this.userRepo.save(user);
         const {mot_de_passe, ...userWithoutPassword} = updated;
         
@@ -108,9 +115,10 @@ export class UserService {
 
         const user_entity:User = this.userMapper.fromDtoWithPrestataire(user, idPrestataire);
         const temp_user = this.userRepo.create(user_entity);
-        const saved = this.userRepo.save(temp_user);
+        const saved = await this.userRepo.save(temp_user);
 
-        return {...saved , mot_de_passe: ""};
+        const {mot_de_passe, ...userWithoutPassword} = saved;
+        return saved;
     }
 
     async findAll():Promise<User[]>{
@@ -126,7 +134,8 @@ export class UserService {
             .getMany();
 
         return users.map(user => {
-            return { ...user, mot_de_passe: "" }
+            const {mot_de_passe, ...userWithoutPassword} = user;
+            return user;
         });
     }
         
@@ -139,7 +148,8 @@ export class UserService {
             .getMany();
 
         return users.map(user => {
-            return { ...user, mot_de_passe: "" }
+            const {mot_de_passe, ...userWithoutPassword} = user;
+            return user;
         });
     }
 
@@ -163,7 +173,8 @@ export class UserService {
         const users = await query.getMany();
 
         return users.map(user => {
-            return { ...user, mot_de_passe: "" }
+            const {mot_de_passe, ...userWithoutPassword} = user;
+            return user;
         });
     }
 
@@ -176,8 +187,9 @@ export class UserService {
         if (!user) {
             throw new NotFoundException(`Utilisateur {${id}} introuvable!`)
         }
+        const {mot_de_passe, ...userWithoutPassword} = user;
 
-        return { ...user, mot_de_passe: "" };
+        return user;
     }
 
     async findByLogin(adresse_mail: string): Promise<User> {

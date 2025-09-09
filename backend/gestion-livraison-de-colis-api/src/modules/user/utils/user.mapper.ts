@@ -74,6 +74,7 @@ export class UserMapper {
     user.date_naissance = dto.date_naissance?? user.date_naissance; 
     user.numero_telephone = dto.numero_telephone !== undefined 
       ? Utils.reformatToPhoneNumber(dto.numero_telephone) : user.numero_telephone;
+    
     user.adresse_email = dto.adresse_email?? user.adresse_email;
     if(dto.photo_profil) user.photo_profil = dto.photo_profil;
     

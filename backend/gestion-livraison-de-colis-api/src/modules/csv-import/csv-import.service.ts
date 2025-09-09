@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { ContrainteJourLivraisonCsvDto } from "src/common/dto/csv-import/contrainte-jour-livraison-csv-dto";
 import { ContrainteLivraisonCsvDto } from "src/common/dto/csv-import/contrainte-livraison-csv-dto";
@@ -6,7 +6,6 @@ import { PointLivraisonCsvDto } from "src/common/dto/csv-import/point-livraison-
 import { CsvParser, ParsedCsv } from "./parser/csv.parser";
 import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
-import { isValid, parse } from "date-fns";
 import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
 import { ContrainteJourEntity } from "../contrainte-jour/contrainte-jour.entity";
@@ -55,7 +54,7 @@ export class CsvImportService {
       
       //points de livraison
       var existings_points_livraison: PointLivraisonEntity[] = await this.plRepo.find();
-      const points_livraison_from_csv = plainToInstance(PointLivraisonEntity, parsedPLs.success);
+      const points_livraison_from_csv = this.mapToPointLivraisonEntity(parsedPLs.success);
       const existingMagasins = new Set(existings_points_livraison.map(pl => pl.numero_magasin));
       const newPoints = points_livraison_from_csv.filter(pl => !existingMagasins.has(pl.numero_magasin));
 
@@ -84,6 +83,13 @@ export class CsvImportService {
 
   }
 
+  private mapToPointLivraisonEntity(liste: PointLivraisonCsvDto[]){
+      return liste.map(pl => {
+          const pointL = plainToInstance(PointLivraisonEntity, pl);
+          pointL.numero_magasin = pl.nom_point_livraison;
+          return pointL;
+      });
+  }
   private hasErrors
   (
     parsedPLs: ParsedCsv<PointLivraisonCsvDto>, 
@@ -142,7 +148,7 @@ export class CsvImportService {
   }
 
   private prepareConstraintDeliveryInstance(fromCsv: ContrainteLivraisonCsvDto[], pl:PointLivraisonEntity){
-    const matchedConstrainte = fromCsv.filter(ck => ck.numero_magasin === pl.numero_magasin);
+    const matchedConstrainte = fromCsv.filter(ck => ck.nom_point_livraison === pl.numero_magasin);
     return matchedConstrainte.map(c => {
       return plainToInstance(ContrainteLivraisonEntity, c);
     });    

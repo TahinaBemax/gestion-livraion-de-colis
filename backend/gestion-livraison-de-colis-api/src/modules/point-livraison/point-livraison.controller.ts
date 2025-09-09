@@ -31,11 +31,12 @@ export class PointLivraisonController {
          * LISTE DES POINTS DE LIVRAISON FILTRE PAR VILLE ET NOM MAGASIN
          * @returns Liste point de livraison
         */    
-    @Get("/filtrer-par")
-        @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
-        @UserTypes(TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
+    @Get("/filtre")
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+    @UserTypes(TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
+        @ApiOperation({description: "Filtré les points de livraison par ville et nom du magasin"})
         @ApiBadRequestResponse()
-    getAllByCityAndNumeroMagasin(@Query("city") city:string, @Query("num_magasin") numMagasin: string): Promise<PointLivraisonEntity[]>{
+    getAllByCityAndNumeroMagasin(@Query("city") city:string, @Query("nomMagasin") numMagasin: string): Promise<PointLivraisonEntity[]>{
         return this.plService.findByCityNumeroMagasin(city, numMagasin);
     }
         
@@ -74,7 +75,7 @@ export class PointLivraisonController {
          * @returns Liste des contraintes de livraison
          */
     @Post("/:id/contraintes-livraison")
-        @UserTypes(TypeUtilisateur.TempoOne)
+    @UserTypes(TypeUtilisateur.TempoOne)
         @ApiParam({name: "id", description: "ID du point de livraison"})
         @ApiBody({type: [ContrainteLivraisonDto], description: "Les contraintes de livraison"})
         @ApiOperation({summary: "Rattacher des contraintes de livraison à un point de livraison"})
@@ -96,7 +97,7 @@ export class PointLivraisonController {
     @Post("/:id/events")
         @UserTypes(TypeUtilisateur.TempoOne)
         @ApiParam({name: "id", description: "ID du point de livraison"})
-        @ApiBody({type: [ContrainteLivraisonDto], description: "Les contraintes de livraison"})
+        @ApiBody({type: [Number], description: "Les ID des contraintes de livraison"})
         @ApiOperation({summary: "Rattacher des contraintes évenementielle sur un point de livraison"})
         @ApiBadRequestResponse({description: "Données invalides"})
     async assignEventsConstraintsToPL(@Param("id") id: number, @Body() evenementsID: number[] ){

@@ -17,5 +17,5 @@ export class ContrainteLivraisonCsvDto {
     priorite_contrainte?: number;
 
     @IsNotEmpty()
-    numero_magasin:string
+    nom_point_livraison:string
 }

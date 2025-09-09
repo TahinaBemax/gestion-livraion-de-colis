@@ -1,6 +1,6 @@
 import { BadRequestException, Controller, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CsvImportService } from './csv-import.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
@@ -22,9 +22,9 @@ export class CsvImportController {
         ]),
     )
     @ApiBody({type: ImportRequestBodyDto})
+    @ApiOperation({description: "Import point de livraison, contrainte livraison, contrainte jour livraison."})
     @ApiBadRequestResponse({description: "Données Invalides"})
     @ApiCreatedResponse({type: ImportCsvResponseDto})
-    @ApiInternalServerErrorResponse({description: "Internal Server Error"})
     @ApiUnauthorizedResponse({description: "Seul Utilisateur Admin a l'accés"})
     async uploadCsv(@UploadedFiles() files: ImportRequestBodyDto)
     {
