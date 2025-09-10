@@ -26,6 +26,35 @@ export class ClientService {
         return matched;
     }
 
+    async batchSave(idPointLivraison: number, clientsDto: ClientCreateDto[]) {
+        if (!clientsDto) {
+            throw new BadRequestException("Données invalides!");
+        }
+
+        if(!idPointLivraison) throw new BadRequestException("ID Point de livraison invalide");
+
+        return this.clientRep.manager.connection.transaction(async (manager) => {
+            const clients: ClientEntity[] = clientsDto.map((data) => {
+                const client = new ClientEntity();
+                const pl = new PointLivraisonEntity();
+                pl.id = idPointLivraison;
+
+                client.nom_client = data.nom_client;
+                client.prenom_client = data.prenom_client;
+                client.numero_telephone = Utils.reformatToPhoneNumber(data.numero_telephone);
+                client.adresse_mail = data.adresse_mail;
+                client.civilite = data.civilite;
+                client.point_livraison = pl;
+
+                return client;
+            });
+
+            const prepared = manager.create(ClientEntity, clients);
+            return await manager.save(ClientEntity, prepared);
+        });
+    }
+
+
     async save(data: ClientCreateDto){
         if(!data) throw new BadRequestException("Données invalides!");
 

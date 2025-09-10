@@ -14,6 +14,7 @@ import { ContrainteJourModule } from '../contrainte-jour/contrainte-jour.module'
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity';
 import { EvenementLocalService } from '../evenement-local/evenement-local.service';
+import { ClientModule } from '../client/client.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EvenementLocalService } from '../evenement-local/evenement-local.servic
     ContrainteJourModule,
     forwardRef(() => PrestataireModule),
     forwardRef(() => EvenementLocalModule),
+    forwardRef(() => ClientModule),
     TypeOrmModule.forFeature([
       PointLivraisonEntity,
       Prestataire, 

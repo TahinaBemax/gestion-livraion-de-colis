@@ -8,12 +8,15 @@ import { PointLivraisonEntity } from './point-livraison.entity';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { ContrainteLivraisonDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-dto';
 import { PointLivraisonUpdateDto } from 'src/common/dto/point-livraison/point-livraison-update-dto';
+import { ClientService } from '../client/client.service';
+import { ClientCreateDto } from 'src/common/dto/client/client-create-dto';
 
 @Controller('points-livraison')
 @Roles(UserRole.Admin)
 export class PointLivraisonController {
     constructor(
-        private readonly plService: PointLivraisonService
+        private readonly plService: PointLivraisonService,
+        private readonly clientService: ClientService
     ){}
 
     /* ++++ ++++ POINT DE LIVRAISON ++++ ++++ */
@@ -103,5 +106,14 @@ export class PointLivraisonController {
     async assignEventsConstraintsToPL(@Param("id") id: number, @Body() evenementsID: number[] ){
         if(!evenementsID || !id) throw new BadRequestException(`Données invalide`);
         return this.plService.assignEventsConstraintToPL(id, evenementsID);
+    }
+    
+    /* +++++ +++++++ CLIENTS ++++++ ++++++*/
+    @Post("/:id/clients")
+    @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Ajouter des clients à un point de livraison"})
+        @ApiBody({type: [ClientCreateDto]})
+    async saveClients(@Param("id", ParseIntPipe) id: number,@Body() data: ClientCreateDto[]){
+        return this.clientService.batchSave(id, data);
     }
 }

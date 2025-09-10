@@ -15,14 +15,6 @@ export class ClientController {
         private readonly clientService: ClientService
     ){}
 
-    @Post()
-    @Roles(UserRole.Admin)
-    @UserTypes(TypeUtilisateur.TempoOne)
-    @ApiBody({type: ClientCreateDto})
-    async save(@Body() data: ClientCreateDto): Promise<ClientEntity>{
-        return this.clientService.save(data);
-    }
-
     @Put("/:id")
     @Roles(UserRole.Admin)
     @UserTypes(TypeUtilisateur.TempoOne)

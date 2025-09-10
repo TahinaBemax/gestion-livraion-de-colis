@@ -27,6 +27,7 @@ export class ClientCreateDto {
     adresse_mail: string; 
 
     @IsNumber()
-    @ApiProperty()
+    @ApiProperty({required: false})
+    @IsOptional()
     id_point_livraison: number;    
 }
