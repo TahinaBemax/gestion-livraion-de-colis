@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, UseGuards} from '@nestjs/common';
 import { PrestataireService } from './prestataire.service';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
 import { LivreurService } from '../livreur/livreur.service';
@@ -13,13 +13,14 @@ import { PointLivraisonSwaggerDto } from 'src/common/swagger-dto/point-livraison
 import { CreateUserDto } from 'src/common/dto/create-user-dto';
 import { User } from '../user/user.entity';
 import { UserService } from '../user/user.service';
-import { UpdateUserDto } from 'src/common/dto/update-user-dto';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
 import { NotificationService } from '../notification/notification.service';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
 import { PrestataireUpdateDto } from 'src/common/dto/prestataire/update-prestataire-dto';
 import { Prestataire } from './prestataire.entity';
+import { Livreur } from '../livreur/livreur.entity';
+import { SamePrestataireGuard } from 'src/common/guards/same-prestataire.guard';
 
 
 @Controller('prestataires')
@@ -43,11 +44,12 @@ export class PrestataireController {
      * @param dto 
      * @returns User
      */
-    @Post("/:id/users")
-    @ApiBody({type: CreateUserDto})
-    @ApiOperation({summary: "Creation d'un utilisateur prestataire"})
-    @ApiCreatedResponse({type: UserSwaggerDto, description: "Utilisateur a été crée avec succés!"})
-    @ApiBadRequestResponse({description: "Données invalides"})
+    @Post("/:idPrestataire/users")
+    @UseGuards(SamePrestataireGuard)
+        @ApiBody({type: CreateUserDto})
+        @ApiOperation({summary: "Creation d'un utilisateur prestataire"})
+        @ApiCreatedResponse({type: UserSwaggerDto, description: "Utilisateur a été crée avec succés!"})
+        @ApiBadRequestResponse({description: "Données invalides"})
     createUser(@Param("id", ParseIntPipe) id: number, @Body() dto: CreateUserDto): Promise<User> {
         return this.userService.savePrestataireUser(id, dto);
     }    
@@ -58,6 +60,7 @@ export class PrestataireController {
          * @returns Liste des utilisateurs actives
          */
     @Get("/users")
+        @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
         @ApiOperation({summary: "Liste des utilisateurs actives des prestataires"})
         @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
     findPrestataireUsers(): Promise<User[]> {
@@ -73,6 +76,8 @@ export class PrestataireController {
          * @returns Liste des utilisateurs filtrés
          */
     @Get('/users/filterBy')
+        @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+        @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
         @ApiQuery({name: "nom", required: false})
         @ApiQuery({name: "prenom", required: false})
         @ApiQuery({name: "role", required: false})
@@ -97,10 +102,12 @@ export class PrestataireController {
      * @param role Filtrer par rôle
      * @returns Liste des utilisateurs prestataires
      */   
-    @Get("/:id/users")
-    @ApiOperation({summary: "Lister les utilisateurs actives d'un specifique prestataire et peut être filtré par nom, prenom, role"})
-    @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+    @Get("/:idPrestataire/users")
+    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+    @UseGuards(SamePrestataireGuard)
+        @ApiOperation({summary: "Lister les utilisateurs actives d'un specifique prestataire et peut être filtré par nom, prenom, role"})
+        @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
+        @ApiInternalServerErrorResponse({description: "Internal server error"})
     findAllUsers(@Param("id", ParseIntPipe) id: number, @Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('role') role?:string): Promise<User[]> {
         if(!id) throw new BadRequestException("ID Prestataire est obligatoire");
         return this.userService.prestataireUsersfilterBy(id, nom, prenom, role);
@@ -235,6 +242,19 @@ export class PrestataireController {
     findLivreurByIdPrestataire(@Param("id", ParseIntPipe) id_prestataire: number){
         return this.livreurService.findAllLivreursByPrestataire(id_prestataire);
     }
+        /**
+         * Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui
+         * @param id ID du livreur
+         * @returns Livreur
+        */
+    @Get("/:idPrestataire/livreurs/en-trajet")
+    @Roles(UserRole.ResponsableExploitation, UserRole.User, UserRole.Admin)
+    @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
+    @UseGuards(SamePrestataireGuard)
+        @ApiOperation({summary: "Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui"})
+    async getLivreurEncoursLivraison(@Param("idPrestataire", ParseIntPipe) id_prestataire: number): Promise<Livreur[]>{
+        return this.livreurService.findLivreurEncoursLivraison(id_prestataire);
+    }
 
     /**
      * CREATION D'UN LIVREUR
@@ -243,7 +263,8 @@ export class PrestataireController {
      * @description Crée un utilisateur de type livreur
      * @returns Livreur
      */
-    @Post("/:id/livreurs")
+    @Post("/:idPrestataire/livreurs")
+    @UseGuards(SamePrestataireGuard)
         @ApiBody({type: CreateLivreurDto})
         @ApiOperation({summary: "Créer un utilisateur de type livreur"})
         @ApiCreatedResponse({description: "Livreur crée avec succés!", type: LivreurSwaggerDto})
@@ -312,11 +333,11 @@ export class PrestataireController {
      * @returns Liste des utilisateurs responsables exploitation d'un prestataire
      */
     @Get("/:id/responsable-exploitation")
-    @ApiParam({name: "id", description: "L'ID du prestataire"})
-    @ApiOperation({summary: "Lister les utilisateurs de type Responsable Exploitation d'un prestataire"})
-    @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
-    @ApiNotFoundResponse({description: "Prestataire Introuvable"})
-    @ApiInternalServerErrorResponse({description: "Internal server error"})
+    @UseGuards(SamePrestataireGuard)
+        @ApiParam({name: "id", description: "L'ID du prestataire"})
+        @ApiOperation({summary: "Lister les utilisateurs de type Responsable Exploitation d'un prestataire"})
+        @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
+        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     findResponsableExploitationByIdPrestataire(@Param("id") id_prestataire: number){
         return this.prestataireService.findReponsableExploitation(id_prestataire);
     }
@@ -332,10 +353,10 @@ export class PrestataireController {
      * @returns Message de succès
      */
     @Post("/:id/points-livraison")
-    @Roles(UserRole.Admin)
-        @ApiParam({name: "id", description: "ID du prestataire"})
-        @ApiBody({type: [Number], description: "Les id des points de livraison"})
-        @ApiOperation({summary: "Rattacher des points de livraison à un prestataire"})
+    @UserTypes(TypeUtilisateur.TempoOne)
+    @ApiParam({name: "id", description: "ID du prestataire"})
+    @ApiBody({type: [Number], description: "Les id des points de livraison"})
+    @ApiOperation({summary: "Rattacher des points de livraison à un prestataire"})
         @ApiCreatedResponse({description: "Attaché avec succés!", type: String})
         @ApiBadRequestResponse({description: "Données invalides"})
     async assignDeliveryPointsToProvider(@Param("id") id: number, @Body() pointsLivraison: number[] ){
@@ -350,8 +371,9 @@ export class PrestataireController {
      * LISTE DES POINTS DE LIVRAISON RATTACHE A UN PRESTATAIRE
      * @param id ID du prestataire
      * @returns Liste des points de livraison rattaché à un prestataire
-     */
-    @Get("/:id/points-livraison")
+    */
+   @Get("/:id/points-livraison")
+    @UserTypes(TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
         @ApiParam({name: "id", description: "ID du prestataire"})
         @ApiOperation({summary: "Lister les points de livraison rattachés à un prestataire"})
@@ -364,8 +386,9 @@ export class PrestataireController {
 
     /* +++++ +++ ORDRE DE LIVRAISON +++ +++++ */
     @Get("/:idPrestataire/ordres-livraison/historique")
-        @ApiTags("Ordre de Livraison")
-        @ApiOperation({ 
+    @UseGuards(SamePrestataireGuard)
+    @ApiTags("Ordre de Livraison")
+    @ApiOperation({ 
             description: `Liste des historiques d'ordres de livraison déja effectué ou en cours. 
             Peut etre filtré par idClient, Date de livraison, code postal ou ville`
         })
@@ -383,6 +406,7 @@ export class PrestataireController {
     
     /* +++++ +++ NOTIFICATION +++ +++++ */
     @Get("/:idPrestataire/notifications")
+    @UseGuards(SamePrestataireGuard)
         @ApiTags("Notification")
         @ApiOperation({ 
             description: `Liste des notifications du prestataire.`

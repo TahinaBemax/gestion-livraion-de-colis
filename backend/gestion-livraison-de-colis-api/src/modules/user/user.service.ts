@@ -194,7 +194,8 @@ export class UserService {
 
     async findByLogin(adresse_mail: string): Promise<User> {
         const user = await this.userRepo.findOne({
-            where: {adresse_email: adresse_mail}
+            where: {adresse_email: adresse_mail},
+            relations: ["prestataire", "livreur", "type_utilisateur"]
         });
 
         if (!user) {

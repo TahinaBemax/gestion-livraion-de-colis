@@ -29,8 +29,8 @@ export class LivreurService {
         .getOne();
 
         if(!matched) throw new NotFoundException();
-
-        return { ...matched, user: { ...matched.user, mot_de_passe: "" } };
+        const {mot_de_passe, ...withoutPassword } = matched.user
+        return matched
     }
 
     async create(idPrestataire: number, dto: CreateLivreurDto): Promise<Livreur> {
@@ -63,7 +63,8 @@ export class LivreurService {
         const livreurs = await this.livreurRepo.find({relations: ["user"]});
 
         return livreurs.map( (l) => {
-            return { ...l, user: { ...l.user, mot_de_passe: "" }}
+            const {mot_de_passe, ...withoutPassword } = l.user
+            return l;
         });
     }
 
@@ -77,7 +78,8 @@ export class LivreurService {
             .getMany();
 
         return livreurs.map( (l) => {
-            return { ...l, user: { ...l.user, mot_de_passe: "" }}
+            const {mot_de_passe, ...withoutPassword } = l.user
+            return l;
         });
     }
 
@@ -88,10 +90,11 @@ export class LivreurService {
         });
 
         if(!livreur) throw new NotFoundException(`Livreur id:${id} Introuvable`);
+        const {mot_de_passe, ...withoutPassword } = livreur.user
         return livreur;
     }
 
-    async changeAccountStatus(id_prestataire:number, id: number, isActivate:boolean): Promise<{message: string}>{
+    async changeAccountStatus(id_prestataire:number, id: number, isActivate:boolean): Promise<string>{
         const matched = await this.findById(id);
         const prestataire = await matched.user.prestataire;
         if(id_prestataire != prestataire?.id_prestataire) 
@@ -102,21 +105,20 @@ export class LivreurService {
             this.userRepo.save(matched.user);
         }
 
-        return {message: `Compte Livreur ${(isActivate) ? 'activé': 'desactivé'} avec succés!`};
+        return `Compte Livreur ${(isActivate) ? 'activé': 'desactivé'} avec succés!`;
     }
 
-    async canScan(id_prestataire:number, id: number, canScan: boolean): Promise<{message: string}>{
+    async canScan(id_prestataire:number, id: number, canScan: boolean): Promise<string>{
         const matched = await this.findById(id);
-        const prestataire = matched.user.prestataire;
+        const prestataire = await matched.user.prestataire;
         if(id_prestataire != prestataire?.id_prestataire) 
             throw new UnauthorizedException("Vous n'avez pas le droit de modifier ce livreur!");
 
         matched.peut_faire_chargement_colis = canScan;
         this.livreurRepo.save(matched);
 
-        return {message: `Scan au moment du chargement du camion ${(canScan) ? 'activé' : 'desactivé'} avec succés!`};
+        return `Scan au moment du chargement du camion ${(canScan) ? 'activé' : 'desactivé'} avec succés!`;
     }
-
 
     async update(idLivreur: number, data: LivreurUpdateDto):Promise<Livreur> {
         if(!data) throw new BadRequestException("Données Livreur invalides");
@@ -127,6 +129,36 @@ export class LivreurService {
         matched.categorie_livreur = data.id_categorie_livreur ? await this.livreurMapper['getCategorieLivreurByIdIfExist'](data.id_categorie_livreur) : matched.categorie_livreur;
 
         const updated = await this.livreurRepo.save(matched);
-        return { ...updated, user: { ...updated.user, mot_de_passe: "" } };
+        const {mot_de_passe, ...withoutPassword } = updated.user
+        return updated;
     }
+
+    /**
+     * Liste des livreurs qui ont déjà scanné un bordereau
+     * et qui ont une tournée aujourd'hui
+     * @param idPrestataire ID du prestataire
+     */
+    async findLivreurEncoursLivraison(idPrestataire?: number): Promise<Livreur[]> {
+        const query = this.livreurRepo.createQueryBuilder("l")
+            .innerJoinAndSelect("l.tournees_livraison", "tl") 
+            .innerJoinAndSelect("l.user", "user") 
+            .innerJoinAndSelect("l.bordereaux_livraison", "bl") 
+
+        if(idPrestataire){
+            query.innerJoinAndSelect("user.prestataire", "prestataire") 
+                .andWhere("prestataire.id_prestataire = :id", {idPrestataire})
+        }
+
+        const livreurs = await query.where("DATE(tl.date_tournee) = CURRENT_DATE")
+            .andWhere("DATE(bl.date_scan_bordereau) = DATE(tl.date_tournee)")
+            .getMany();
+
+        // retirer le mot de passe
+        return livreurs.map((l) => {
+            const { mot_de_passe, ...safeUser } = l.user;
+            l.user = safeUser as any;
+            return l;
+        });
+    }
+
 }

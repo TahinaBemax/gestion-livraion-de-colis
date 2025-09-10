@@ -12,33 +12,13 @@ export class AuthController {
 
     @Public()
     @Post('login')
-    @ApiOperation({summary: "Authentication"})
-    @ApiCreatedResponse(
-        {type: LoginResponse, 
-        description: "L'authentication est validé et l'utilisateur va recevoir un Bearer Json Web Token" 
-    })
-    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: "Le login ou mot de passe incorrect!"})
-    @ApiBody({ type: LoginDto, description: 'Login credentials'})
+        @ApiOperation({summary: "Authentication"})
+        @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: "Le login ou mot de passe incorrect!"})
+        @ApiBody({ type: LoginDto, description: 'Login credentials'})
     async login(@Body() loginDto: LoginDto){
         const user = await this.authService.validateUser(loginDto.login, loginDto.mot_de_passe);
         
         if(!user) throw new UnauthorizedException("Login ou mot de passe incorrect!");
         return await this.authService.login(user);
-    }
-
-    @Public()
-    @Post('login-qrcode')
-    @ApiOperation({summary: "Authentication par QRCode"})
-    @ApiCreatedResponse(
-        {type: LoginResponse, 
-        description: "L'authentication est validé et l'utilisateur va recevoir un Bearer Json Web Token" 
-    })
-    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: "QRCode incorrect!"})
-    @ApiBody({ type: LoginDto, description: 'Login credentials'})
-    async loginQRCode(@Body('qrCodeData') qrCodeData: string){
-        const user = await this.authService.validateQRCodeLogin(qrCodeData);
-        
-        if(!user) throw new UnauthorizedException("QRCode incorrect!");
-        return this.authService.login(user);
     }
 }

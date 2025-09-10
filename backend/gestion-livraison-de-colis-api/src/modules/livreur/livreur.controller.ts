@@ -58,6 +58,19 @@ export class LivreurController {
     }
 
         /**
+         * Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui
+         * @param id ID du livreur
+         * @returns Livreur
+        */
+    @Get("/en-trajet")
+        @ApiOperation({summary: "Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui"})
+        @Roles(UserRole.ResponsableExploitation, UserRole.User, UserRole.Admin)
+        @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
+    async getLivreurEncoursLivraison(): Promise<Livreur[]>{
+        return this.livreurService.findLivreurEncoursLivraison();
+    }
+
+        /**
          * MODIFICATION D'UN LIVREUR
          * @param idLivreur ID du livreur à modifier
          * @param data 

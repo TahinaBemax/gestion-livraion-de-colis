@@ -56,15 +56,15 @@ Voici quelque extrait de données inserées par default (veuillez aller dans /co
     - password: <b>AdminPassword!123</b>
 
 - Admin Prestataire 1:
-    - login: rakoto.mamy@solutionsit.mg
+    - login: ramaro.lahy@solutionsit.mg
     - password: Secur1tyPass!2023
 
 - Admin Prestataire 2:
-    - login: ravo.nadia@webdev-experts.mg
+    - login: rova.nadine@webdev-experts.mg
     - password: WebDev@12345
 
 - Admin Prestataire 3:
-    - login: rija.andry@digitalsolutions.mg
+    - login: rajao.marie@digitalsolutions.mg
     - password: D1g!t@lPass2023
 
 - Livreur Novice:

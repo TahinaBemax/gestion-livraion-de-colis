@@ -67,7 +67,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
             connectedUser.socketID = client.id; //ID Socket de l'utilisateur
             connectedUser.typeUtilisateur = matchedUser.type_utilisateur.id_type_utilisateur; // Type de l'utilisateur (Tempo One, Prestataire, Livreur)
             connectedUser.prestataireID = (matchedUser.prestataire === undefined || matchedUser.prestataire === null) 
-                ? undefined : matchedUser.prestataire.id_prestataire;
+                ? undefined : (await matchedUser.prestataire).id_prestataire;
 
             this.users.push(connectedUser);
         } catch (error) {
