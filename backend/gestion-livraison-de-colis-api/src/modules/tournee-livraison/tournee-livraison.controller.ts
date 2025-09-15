@@ -71,9 +71,9 @@ export class TourneeLivraisonController {
          */
     @Post("/:id/points-livraison")
         @ApiOperation({ summary: 'Create ordre livraison' })
-        @ApiBody({type: TourneePointLivraisonDto})
+        @ApiBody({type: [Number]})
         @ApiResponse({ status: 201, description: 'Ordre livraison created.' })
-    async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: TourneePointLivraisonDto){
+    async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: number[]){
         const mapped: OrdreLivraisonCreateDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
         return this.ordreLivraisonService.batchSave(mapped);
     }

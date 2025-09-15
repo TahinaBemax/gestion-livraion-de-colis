@@ -12,13 +12,13 @@ export class BordereauLivraisonCreateDto {
     })
     date_bordereau?: string;
     
-    @IsNotEmpty()
-    @IsFRDate()
-    @ApiProperty({ 
-        example: '25/12/2023', 
-        description: 'Date du bordereau de livraison au format JJ/MM/AAAA' 
-    })
-    date_livraison: string;
+    // @IsNotEmpty()
+    // @IsFRDate()
+    // @ApiProperty({ 
+    //     example: '25/12/2023', 
+    //     description: 'Date du bordereau de livraison au format JJ/MM/AAAA' 
+    // })
+    // date_livraison: string;
     
     @IsNotEmpty()
     @IsArray()

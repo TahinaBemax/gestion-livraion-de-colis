@@ -150,7 +150,6 @@ export class TourneeLivraisonService {
         const planning_livraison: PlanningLivraisonEntity= await this.getPlanning(idPlanning);
         
         if(planning_livraison.statut_planning === StatutPlanningLivaison.ANNULE 
-            || planning_livraison.statut_planning === StatutPlanningLivaison.BROUILLON
             || planning_livraison.statut_planning === StatutPlanningLivaison.TERMINE
         ) throw new BadRequestException(`Impossible de créer un tournée de livraison pour un planning de livraison avec statut: ${planning_livraison.statut_planning}`);
 
@@ -165,6 +164,7 @@ export class TourneeLivraisonService {
         if(!matchedPrestataire) throw new BadRequestException("Prestataire inexistant!");
 
         tournee.date_tournee = dto.date_tournee;
+        tournee.prestataire = matchedPrestataire;
         tournee.planning_livraison = planning_livraison;
         tournee.statut = StatutTourneeLivaison.BROUILLON;
 

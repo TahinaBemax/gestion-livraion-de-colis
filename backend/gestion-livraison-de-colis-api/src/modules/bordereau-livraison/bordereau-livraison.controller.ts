@@ -1,9 +1,8 @@
-import { BarcodeService } from './../../core/code_barre/code_barre.service';
 import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/create-bordereau-livraison-dto';
-import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { BordereauLivraisonService } from './bordereau-livraison.service';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
@@ -25,6 +24,7 @@ export class BordereauLivraisonController {
      * @returns Bordereau de livraison enregistré
      */
     @Post()
+        @ApiOperation({summary: "Créer un bordereau de livraison"})
         @ApiBody({type: BordereauLivraisonCreateDto})
     save(@Body() dto: BordereauLivraisonCreateDto){
         return this.bordereauService.create(dto);
@@ -50,6 +50,7 @@ export class BordereauLivraisonController {
 
 
     @Get('/:id/pdf')
+        @ApiOperation({summary: "Exporter le bordereau de livraison en pdf"})
     async getBonLivraison(@Param('id') id: string, @Res({ passthrough: false }) res: Response) {
         const bl = await this.bordereauService.findById(id);
         const fileName = id + "_" + new Date().toISOString();
@@ -62,16 +63,8 @@ export class BordereauLivraisonController {
         res.end(pdfBuffer);
     }
 
-    // @Get('/:id/code-bar')
-    // async getCodeBarBonLivraison(@Param('id') id: string, @Res({ passthrough: false }) res: Response) {
-    //     const bl = await this.bordereauService.findById(id);
-    //     const fileName = id + "_" + new Date().toISOString();
-
-    //     const pdfBuffer = BarcodeService.generateBarcodeImage(bl.id);
-    //     res.setHeader('Content-Type', 'image/png');
-    //     res.setHeader('Content-Disposition', `inline; filename="${fileName}.png"`);
-    //     res.setHeader('Content-Length', pdfBuffer.length);
-        
-    //     res.end(pdfBuffer);
-    // }
+    @Delete("/:id")
+    async delete(@Param("id") id: string){
+        return this.bordereauService.delete(id);
+    }
 }

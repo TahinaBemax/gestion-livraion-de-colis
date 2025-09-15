@@ -17,6 +17,7 @@ import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enu
 import { FicheOrdreLivraisonDto } from 'src/common/dto/ordre-livraison/fiche-ordre-livraison-dto';
 import { ColisService } from '../colis/colis.service';
 import { NotificationService } from '../notification/notification.service';
+import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
 
 
 @Injectable()
@@ -34,7 +35,7 @@ export class OrdreLivraisonService {
     ){}
 
     async findAll(): Promise<OrdreLivraisonEntity[]> {
-        return this.ordreRepo.find({relations: ["livraisons", "points_livraison"] });
+        return this.ordreRepo.find({relations: ["livraisons", "tournee_livraison", "point_livraison"] });
     }
 
     async findByStatut(statut?: string): Promise<OrdreLivraisonEntity[]> {
@@ -42,19 +43,21 @@ export class OrdreLivraisonService {
             return this.ordreRepo.find(
                 {
                     where: {statut: statut},
-                    relations: ["livraisons", "points_livraison"] 
+                    relations: ["livraisons", "point_livraison", "tournee_livraison"] 
                 }
             );
         }
 
         return this.ordreRepo.find({
             where: {statut: In([StatutOrdreLivraison.EN_COURS, StatutOrdreLivraison.EFFECTUE])},
-            relations: ["livraisons", "points_livraison"]
+            relations: ["livraisons", "point_livraison", "tournee_livraison"]
         });
     }
 
     async findAllByIdPL(id: number): Promise<OrdreLivraisonEntity[]> {
         return this.ordreRepo.createQueryBuilder("o")
+            .innerJoinAndSelect("o.tournee_livraison", "tournee")
+            .innerJoinAndSelect("o.livraisons", "l")
             .innerJoinAndSelect("o.point_livraison", "pl")
             .where("pl.id = :id", {id: id})
             .getMany();
@@ -63,6 +66,8 @@ export class OrdreLivraisonService {
     async findAllByTournee(id: number): Promise<OrdreLivraisonEntity[]> {
         return this.ordreRepo.createQueryBuilder("o")
             .innerJoinAndSelect("o.tournee_livraison", "tournee")
+            .innerJoinAndSelect("o.livraisons", "l")
+            .innerJoinAndSelect("o.point_livraison", "pl")
             .where("tournee.id = :id", {id: id})
             .getMany();
     }
@@ -77,6 +82,7 @@ export class OrdreLivraisonService {
         .leftJoinAndSelect("ol.point_livraison", "pl")
         .innerJoin("pl.prestataire", "p")
         .innerJoin("ol.tournee_livraison", "tournee")
+        .innerJoinAndSelect("o.livraisons", "l")
         //.leftJoinAndSelect("ol.client", "c")
         
         if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: idPrestataire});
@@ -92,10 +98,11 @@ export class OrdreLivraisonService {
      */
     async filterBy(idPrestataire?: string, idClient?: string, date?: string, zoneGeographique?: string): Promise<OrdreLivraisonEntity[]>{
         const query = this.ordreRepo.createQueryBuilder("ol")
-        .leftJoinAndSelect("ol.point_livraison", "pl")
-        .innerJoin("pl.prestataire", "p")
-        .innerJoin("ol.tournee_livraison", "tournee")
-        //.leftJoinAndSelect("ol.client", "c")
+            .innerJoinAndSelect("ol.point_livraison", "pl")
+            .innerJoinAndSelect("ol.tournee_livraison", "tournee")
+            .innerJoinAndSelect("tournee.prestataire", "p")
+            .innerJoinAndSelect("ol.livraisons", "livraison")
+            .innerJoinAndSelect("livraison.client", "client")
         
         if(date) query.where("tournee.date_tournee = :date", {date: date});
         
@@ -103,7 +110,7 @@ export class OrdreLivraisonService {
 
         if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: parseInt(idPrestataire)});
 
-        //if(idClient) query.andWhere("c.id = :idClient", {idClient: parseInt(idClient)});
+        if(idClient) query.andWhere("client.id = :idClient", {idClient: parseInt(idClient)});
 
         return query.getMany();
     }
@@ -111,7 +118,7 @@ export class OrdreLivraisonService {
     async findById(id: number): Promise<OrdreLivraisonEntity> {
         const matched = await this.ordreRepo.findOne({
             where: {id: id},
-            relations: ["livraisons"] 
+            relations: ["livraisons", "tournee_livraison", "point_livraison"] 
         });
 
         if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
@@ -127,12 +134,14 @@ export class OrdreLivraisonService {
     async getFicheOrdreLivraison(id: number): Promise<FicheOrdreLivraisonDto> {
         const matched = await this.ordreRepo.findOne({
             where: {id: id},
-            relations: ["livraisons"] 
+            relations: ["livraisons", "tournee_livraison"] 
         });
 
         if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
         const tournee = await matched.tournee_livraison;
-        const bordereau = await matched.bordereau_livraison;
+        const bordereau: BordereauLivraisonEntity = await matched.bordereau_livraison;
+
+        if(!bordereau) throw new BadRequestException("Aucun bordereau de livraison n'a été trouvé pour cet ordre de livraison");
         const fiche = new FicheOrdreLivraisonDto();
 
         fiche.livraisons = matched.livraisons;
@@ -246,7 +255,7 @@ export class OrdreLivraisonService {
         return total_prevu;
     }
 
-    async mapToOrdreLivraisonCreateDTo(idTournee: number, dto: TourneePointLivraisonDto): Promise<OrdreLivraisonCreateDto[]>{
+    async mapToOrdreLivraisonCreateDTo(idTournee: number, dto: number[]): Promise<OrdreLivraisonCreateDto[]>{
         if(!idTournee || !dto) throw new BadRequestException("Données invalides");
 
         const existingTournee:TourneeLivraisonEntity|null = await this.tourneeRepo.findOneBy({id: idTournee});
@@ -254,7 +263,7 @@ export class OrdreLivraisonService {
         this.checkStatutTourneeLivraison(existingTournee);
 
         
-        return Promise.all(dto.id_points_livraison.map(async (idPL) => {
+        return Promise.all(dto.map(async (idPL) => {
             const ordre_livraison = new OrdreLivraisonCreateDto();
             const pl = await this.plRepo.findOneBy({id: idPL});
             if(!pl) throw new NotFoundException(`Point de livraison avec ID:{${idPL}} introuvable!`);

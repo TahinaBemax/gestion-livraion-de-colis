@@ -57,7 +57,8 @@ export class PointLivraisonService {
         return this.pointLivraisonRep.createQueryBuilder("pl")
             .innerJoinAndSelect("pl.prestataire", "p")
             .leftJoinAndSelect("pl.evenements", "event")
-            .leftJoinAndSelect("pl.contraintes_livraison", "event")
+            .leftJoinAndSelect("pl.contraintes_livraison", "cl")
+            .leftJoinAndSelect("cl.contrainte_jour_livraisons", "cjl")
             .where("p.id_prestataire = :id", {id: `${id}`})
             .getMany();
     }
@@ -66,7 +67,8 @@ export class PointLivraisonService {
         return this.pointLivraisonRep.createQueryBuilder("pl")
             .leftJoinAndSelect("pl.clients", "c")
             .leftJoinAndSelect("pl.evenements", "event")
-            .leftJoinAndSelect("pl.contraintes_livraison", "event")
+            .leftJoinAndSelect("pl.contraintes_livraison", "cl")
+            .leftJoinAndSelect("cl.contrainte_jour_livraisons", "cjl")
             .where("c.id = :id", {id: `${id}`})
             .getOne();
     }

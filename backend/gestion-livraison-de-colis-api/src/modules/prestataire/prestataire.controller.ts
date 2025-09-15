@@ -388,13 +388,17 @@ export class PrestataireController {
     @Get("/:idPrestataire/ordres-livraison/historique")
     @UseGuards(SamePrestataireGuard)
     @ApiTags("Ordre de Livraison")
-    @ApiOperation({ 
-            description: `Liste des historiques d'ordres de livraison déja effectué ou en cours. 
-            Peut etre filtré par idClient, Date de livraison, code postal ou ville`
-        })
+    @Get('/historiques')
+        @ApiOperation({ summary: 'Historique des livraisons',
+             description: ` Lister les ordres de livraison déjà effectués et en cours de traitement et puet être filtré, par prestataire, par zone géographique, par client, par date` 
+            })
+        @ApiParam({name: "idPrestataire", description: "", required: true})
+        @ApiQuery({name: "idClient", description: "", required: false})
+        @ApiQuery({name: "dateTournee", description: "La date du tournéé", required: false})
+        @ApiQuery({name: "zoneGeographique", description: "code postal ou ville", required: false})
     async getOrdreLivraison(@Param("id") idPrestataire:string, 
         @Query("idClient") idClient: string|undefined,
-        @Query("dateLivraison") dateLivraison: string|undefined,   
+        @Query("dateTournee") dateLivraison: string|undefined,   
         @Query("zoneGeographique") zoneGeographique: string|undefined, 
     )   
     {

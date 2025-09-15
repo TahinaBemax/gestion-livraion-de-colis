@@ -44,6 +44,6 @@ export class OrdreLivraisonEntity {
     @ManyToOne(() => PointLivraisonEntity, (p) => p.ordres_livraison, {
         eager: true
     })
-    @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
+    @JoinColumn({ name: "id_point_livraison", referencedColumnName: "id" })
     point_livraison: PointLivraisonEntity;    
 }

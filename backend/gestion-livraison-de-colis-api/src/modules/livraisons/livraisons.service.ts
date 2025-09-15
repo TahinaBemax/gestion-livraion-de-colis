@@ -72,7 +72,8 @@ export class LivraisonsService {
 
         return this.livraisonRep
             .createQueryBuilder("l")
-            .innerJoinAndSelect("l.point_livraison", "pl")
+            .innerJoinAndSelect("l.client", "client")
+            .innerJoinAndSelect("client.point_livraison", "pl")
             .innerJoinAndSelect("l.colis", "c")
             .where("pl.id =:id", { id: idPL })
             .andWhere("(l.statut_livraison =:echec OR l.statut_livraison =:retourne_expediteur OR l.statut_livraison =:partielle)", {
@@ -86,7 +87,8 @@ export class LivraisonsService {
     async findByDateTourneeAndPointLivraison(idPL: number, dateTournee: string, heure_debut: string, heure_fin: string): Promise<LivraisonEntity[]> {
         return this.livraisonRep
             .createQueryBuilder("l")
-            .innerJoinAndSelect("l.point_livraison", "pl")
+            .innerJoinAndSelect("l.client", "client")
+            .innerJoinAndSelect("client.point_livraison", "pl")
             .innerJoinAndSelect("l.colis", "c")
             .where("pl.id = :id", { id: idPL })
             .andWhere("l.date_livraison = :date AND l.heure_fin BETWEEN CAST(:debut as time) AND CAST(:fin as time)", {

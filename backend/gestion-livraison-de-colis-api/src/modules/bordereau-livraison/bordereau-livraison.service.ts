@@ -1,10 +1,11 @@
 import { BordereauLivraisonEntity } from './bordereau-livraison.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/create-bordereau-livraison-dto';
-import { Repository, In, DataSource } from 'typeorm';
+import { Repository, In, DataSource, DeleteResult } from 'typeorm';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 import { DetailColisEntity } from '../colis/detail-colis.entity';
+import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enum';
 
 
 @Injectable()
@@ -42,11 +43,17 @@ export class BordereauLivraisonService {
     private async mapToBordereauLivraisonEntity(dto: BordereauLivraisonCreateDto): Promise<BordereauLivraisonEntity[]> {
         if(!dto) throw new Error('Données du bordereau de livraison manquantes');
         const bordereaux = new Array<BordereauLivraisonEntity>();
-        const ordres_livraison = await this.ordreRep.findBy({ id: In(dto.id_ordre_livraison) });
+        const ordres_livraison: OrdreLivraisonEntity[] = await this.ordreRep.find({
+            where: { id: In(dto.id_ordre_livraison) },
+            relations: ["tournee_livraison", "livraisons"]
+        });
 
         if(ordres_livraison.length === 0 ) throw new Error("Ordres de livraison vide!");
 
         for (const ordre of ordres_livraison) {
+            if(ordre.statut === StatutOrdreLivraison.EN_ATTENTE || ordre.statut === StatutOrdreLivraison.ANNULE)
+                throw new BadRequestException(`Impossible de génèrer un bordereau de livraison pour un ordre de livraison avec statut: ${ordre.statut}`);
+            
             const sequence = await this.dataSource.query("SELECT nextval('ref_bordereau')");
             const ref = 'BL-' + sequence[0].nextval.toString().padStart(8, '0');
             
@@ -55,7 +62,7 @@ export class BordereauLivraisonService {
             const produits: DetailColisEntity[] = [];
 
             bordereau.date_bordereau = dto.date_bordereau ?? new Date().toISOString().split('T')[0];
-            bordereau.date_livraison = dto.date_livraison;
+            bordereau.date_livraison = (await ordre.tournee_livraison).date_tournee;
             bordereau.ordre_livraison = ordre;
 
             bordereau.nom_expediteur = "AdriColis";
@@ -78,6 +85,11 @@ export class BordereauLivraisonService {
         }
 
         return bordereaux;
+    }
+
+    async delete(id: string): Promise<DeleteResult>{
+        this.findById(id);
+        return await this.bordereauRep.delete(id);
     }
 
     // async generateBonLivraison(bl: BordereauLivraisonEntity): Promise<Buffer> {

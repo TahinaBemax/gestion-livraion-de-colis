@@ -2,7 +2,7 @@ import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/crea
 import { PlanningLivraisonCreateDto } from 'src/common/dto/planning-livraison/create-planning-dto';
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { PlanningLivraisonService } from './planning-livraison.service';
-import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
 
 @Controller('plannings')
@@ -87,6 +87,8 @@ export class PlanningLivraisonController {
          * @returns Tournées de livraison enregistrées
          */
     @Post("/:id/tournees")
+        @ApiTags("Tournée de livraison")
+        @ApiOperation({summary: "Créer une tournée de livraison pour un planning"})
         @ApiBody({type: [TourneeLivraisonCreateDto]})
     saveTournee(@Param("id", ParseIntPipe) id: number, @Body() dtos: TourneeLivraisonCreateDto[]){
         return this.tourneeService.batchSave(id, dtos);
