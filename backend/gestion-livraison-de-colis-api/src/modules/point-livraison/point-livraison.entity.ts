@@ -4,6 +4,8 @@ import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-li
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
 import { EvenementLocalEntity } from "../evenement-local/evenement-local.entity";
 import { ClientEntity } from "../client/client.entity";
+import { parse } from "date-fns";
+import { CreneauLivraisonEntity } from "../creneau-livraison/creneau-livraison.entity";
 
 @Entity("points_livraison")
 @Unique(["numero_magasin"])
@@ -73,4 +75,37 @@ export class PointLivraisonEntity {
 
     @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.point_livraison)
     ordres_livraison: OrdreLivraisonEntity[];
+
+    @OneToMany(() => CreneauLivraisonEntity, (creneau) => creneau.point_livraison)
+    creneaux_livraison: CreneauLivraisonEntity[];
+
+    getCreneauxLivraison(dateLivraison: Date){
+        const contraintes = this.contraintes_livraison;
+        const local: string = 'fr-FR';
+        const jourSemaine = dateLivraison.toLocaleDateString(local, {weekday: 'long'});
+
+        if(contraintes){
+            contraintes.forEach(c => {
+                const dateDebut = parse(c.date_contrainte, "dd/MM/yyyy", new Date());
+                if(dateDebut == dateLivraison ){
+                    return {
+                         heure_debut: c.heure_debut_livrable, 
+                         heure_fin: c.heure_fin_livrable
+                    };
+                }
+            });
+        } 
+
+        this.creneaux_livraison.forEach(c => {
+            if(c.jour_semaine.toLowerCase() === jourSemaine.toLowerCase()){
+                return {
+                    heure_debut: c.heure_debut, 
+                    heure_fin: c.heure_fin
+                };
+            }
+        });
+
+        return null;
+        
+    }
 }

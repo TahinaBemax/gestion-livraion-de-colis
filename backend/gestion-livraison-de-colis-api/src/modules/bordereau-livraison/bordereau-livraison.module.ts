@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BordereauLivraisonService } from './bordereau-livraison.service';
 import { BordereauLivraisonEntity } from './bordereau-livraison.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,9 +7,11 @@ import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 import { BordereauLivraisonController } from './bordereau-livraison.controller';
 import { PdfService } from 'src/core/pdf/pdf.service';
+import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module';
 
 @Module({
   imports: [
+    forwardRef(() => OrdreLivraisonModule),
     TypeOrmModule.forFeature([
       BordereauLivraisonEntity,
       OrdreLivraisonEntity,

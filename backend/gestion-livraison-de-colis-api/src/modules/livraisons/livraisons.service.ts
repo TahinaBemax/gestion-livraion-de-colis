@@ -14,6 +14,7 @@ import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { ClientEntity } from '../client/client.entity';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
 import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
+import { ScanColisResponse } from 'src/common/dto/scan-colis/scan-colis-response';
 
 @Injectable()
 export class LivraisonsService {
@@ -38,6 +39,25 @@ export class LivraisonsService {
             relations: ["client", "colis"]
         }
         );
+    }
+
+    /**
+     * Nombre de colis charge et nombre de colis à charger 
+     * @param statuts 
+     * @returns 
+     */
+    async getLivraisonAndCountColis(idLivraison: number): Promise<ScanColisResponse | null>{
+        const livraison = await this.livraisonRep.createQueryBuilder("l")
+            .leftJoinAndSelect("l.colis", "c")
+            .loadRelationCountAndMap("l.colis_a_charger", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NULL"),)
+            .loadRelationCountAndMap("l.colis_charges", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NOT NULL"),)
+            .where("l.id = :id", {id: idLivraison})
+            .getOne();
+
+        if(livraison){
+            const dto = new ScanColisResponse();
+            dto.heure_debut = livraison.heure_debut?? livraison.client.point_livraison;
+        }
     }
 
     /**

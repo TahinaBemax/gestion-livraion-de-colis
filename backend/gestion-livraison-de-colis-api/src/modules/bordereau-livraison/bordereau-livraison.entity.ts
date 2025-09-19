@@ -1,7 +1,6 @@
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne, PrimaryColumn } from "typeorm";
 import { Livreur } from "../livreur/livreur.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
-import { DetailColisEntity } from "../colis/detail-colis.entity";
 
 @Entity("bordereaux_livraison")
 export class BordereauLivraisonEntity {
@@ -34,15 +33,6 @@ export class BordereauLivraisonEntity {
 
     @Column({type: "date"})
     date_livraison: string;
-
-    @ManyToMany(() => DetailColisEntity, (dc) => dc.bordereaux_livraison, {
-        eager: true
-    })
-    @JoinTable({
-        name: "contenu_livraison", joinColumn: { name: "ref_bordereau_livraison", referencedColumnName: "id" },
-        inverseJoinColumn: { name: "ref_produit", referencedColumnName: "id" }
-    })
-    contenu: DetailColisEntity[];
     
     @OneToOne(() => OrdreLivraisonEntity, (ordre) => ordre.bordereau_livraison, {
         eager: true

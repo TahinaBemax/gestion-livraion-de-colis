@@ -5,6 +5,7 @@ import { BarcodeService } from '../code_barre/code_barre.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
+import { DetailColisEntity } from 'src/modules/colis/detail-colis.entity';
 
 @Injectable()
 export class PdfService {
@@ -222,38 +223,38 @@ export class PdfService {
         startY += rowHeight;
 
         // Rows
-        bl.contenu.forEach((product, rowIndex) => {
-            // ✅ Check page space
-            if (startY + rowHeight > doc.page.height - doc.page.margins.bottom - 100) {
-                doc.addPage();
-                startY = doc.y;
-            }
-
-            // Alternating background
-            if (rowIndex % 2 === 0) {
-                doc.rect(startX, startY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
-                .fill('#f9f9f9');
-            }
-
-            // Row cells
-            x = startX;
-            const row = [
-                product.id,
-                product.description_produit,
-                product.poids_produit + 'kg',
-                product.valeur_produit + 'Ar'
-            ];
-
-            row.forEach((cell, i) => {
-                doc.fillColor('#000000')
-                .font('Helvetica')
-                .fontSize(12)
-                .text(cell.toString(), x + 5, startY + 5, { width: colWidths[i] - 10, align: i >= 2 ? 'right' : 'left' });
-                x += colWidths[i];
+        this.getProduits(bl).forEach((product, rowIndex) => {
+                // ✅ Check page space
+                if (startY + rowHeight > doc.page.height - doc.page.margins.bottom - 100) {
+                    doc.addPage();
+                    startY = doc.y;
+                }
+    
+                // Alternating background
+                if (rowIndex % 2 === 0) {
+                    doc.rect(startX, startY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+                    .fill('#f9f9f9');
+                }
+    
+                // Row cells
+                x = startX;
+                const row = [
+                    product.id,
+                    product.description_produit,
+                    product.poids_produit + 'kg',
+                    product.valeur_produit + 'Ar'
+                ];
+    
+                row.forEach((cell, i) => {
+                    doc.fillColor('#000000')
+                    .font('Helvetica')
+                    .fontSize(12)
+                    .text(cell.toString(), x + 5, startY + 5, { width: colWidths[i] - 10, align: i >= 2 ? 'right' : 'left' });
+                    x += colWidths[i];
+                });
+    
+                startY += rowHeight;
             });
-
-            startY += rowHeight;
-        });
 
         return startY;
     }
@@ -265,5 +266,19 @@ export class PdfService {
         .moveTo(50, 100)             // Starting point of line (x=50, y=100)
         .lineTo(550, 100)            // Ending point of line (x=550, y=100)
         .stroke();                   // Draw the line
+    }
+
+    private getProduits(bl: BordereauLivraisonEntity){
+        const produits: DetailColisEntity[] = [];
+
+        bl.ordre_livraison.livraisons.forEach(livraison => {
+            livraison.colis.forEach(colis => {
+                colis.details_colis.forEach(produit => {
+                    produits.push(produit);
+                });
+            });
+        });
+
+        return produits;
     }
 }

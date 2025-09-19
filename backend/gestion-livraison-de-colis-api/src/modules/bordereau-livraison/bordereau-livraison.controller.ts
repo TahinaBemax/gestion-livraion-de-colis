@@ -1,5 +1,5 @@
 import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/create-bordereau-livraison-dto';
-import { Body, Controller, Delete, Get, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { BordereauLivraisonService } from './bordereau-livraison.service';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -28,6 +28,18 @@ export class BordereauLivraisonController {
         @ApiBody({type: BordereauLivraisonCreateDto})
     save(@Body() dto: BordereauLivraisonCreateDto){
         return this.bordereauService.create(dto);
+    }
+
+    /**
+     * CREATION D'UN BORDEREAU DE LIVRAISON
+     * @param dto Données bordereau de livraison
+     * @returns Bordereau de livraison enregistré
+     */
+    @Post("/scan")
+        @ApiOperation({summary: "Scanner le bordereau de livraison"})
+        @ApiBody({type: BordereauLivraisonCreateDto})
+    scanBordereauLivraison(@Query("idOrdreLivraison", ParseIntPipe) idOrdreLivraison: number){
+        return this.bordereauService.scanBordereauLivraison(idOrdreLivraison);
     }
 
         /**

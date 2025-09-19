@@ -1,6 +1,5 @@
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ColisEntity } from './colis.entity';
-import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
 
 @Entity("produits")
 export class DetailColisEntity {
@@ -19,7 +18,4 @@ export class DetailColisEntity {
     @ManyToOne(() => ColisEntity, (c) => c.details_colis)
     @JoinColumn({name: "id_colis", referencedColumnName: "id"})
     colis: ColisEntity;
-
-    @ManyToMany(() => BordereauLivraisonEntity, (bl) => bl.contenu)
-    bordereaux_livraison: BordereauLivraisonEntity[];
 }

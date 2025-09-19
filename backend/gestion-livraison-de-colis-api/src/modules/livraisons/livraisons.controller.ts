@@ -36,6 +36,15 @@ export class LivraisonsController {
     }
 
     /**
+     * LISTE DES LIVRAISON EFFECTUES ET EN COURS DE TRAITEMENT
+     * @returns Liste des livraisons
+     */
+    @Get("/:id/scan-colis")
+    async scanColis(@Param("id", ParseIntPipe) id: number): Promise<LivraisonEntity | null>{
+        return this.livraisonService.getLivraisonAndCountColis(id);
+    }
+
+    /**
      * FILTRE LES LIVRAISON PAR Prestataire, Client, Date de livraison 
      * @returns Liste des livraisons
      */

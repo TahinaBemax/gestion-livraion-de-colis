@@ -38,6 +38,13 @@ export class OrdreLivraisonService {
         return this.ordreRepo.find({relations: ["livraisons", "tournee_livraison", "point_livraison"] });
     }
 
+    async findByIDS(ids: number[]){
+        return this.ordreRepo.find({
+            where: { id: In(ids) },
+            relations: ["tournee_livraison", "livraisons"]
+        });
+    }
+
     async findByStatut(statut?: string): Promise<OrdreLivraisonEntity[]> {
         if(statut){
             return this.ordreRepo.find(

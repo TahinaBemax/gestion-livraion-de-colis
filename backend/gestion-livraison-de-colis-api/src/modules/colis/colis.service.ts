@@ -22,6 +22,22 @@ export class ColisService {
         private datasource: DataSource
     ){}
 
+    /**
+     * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
+     * @param statuts 
+     * @returns 
+     */
+    async countColisByLivraison(idLivraison: number): Promise<{ a_charger: number, charges: number }|undefined >{
+        return await this.colisRep.createQueryBuilder("c")
+            .innerJoinAndSelect("c.livraison", "livraison")
+            .select([
+                "SUM(CASE WHEN c.date_heure_chargement IS NULL THEN 1 ELSE 0 END) AS a_charger",
+                "SUM(CASE WHEN c.date_heure_chargement IS NOT NULL THEN 1 ELSE 0 END) AS charges"
+            ])
+            .where("livraison.id = :idLivraison", {idLivraison})
+            .getRawOne<{ a_charger: number, charges: number }>();
+    }
+
     async findAll(): Promise<ColisEntity[]>
     {
         return this.colisRep.find({relations: ["details_colis"]});
