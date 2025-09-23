@@ -1,10 +1,10 @@
-import { OrdreLivraisonCreateDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TourneeLivraisonService } from './tournee-livraison.service';
 import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
-import { TourneePointLivraisonDto } from 'src/common/dto/tournee-livraison/create-tournee-point-livraison-dto';
+import { OrdreLivraisonCreateDto } from '../../common/dto/ordre-livraison/ordre-livraison-create-dto';
+import { OrdreLivraisonDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
 
 @Controller('tournees')
 @ApiTags("Tournée de livraison")
@@ -69,12 +69,12 @@ export class TourneeLivraisonController {
          * @param dto Données des points de livraison
          * @returns Ordres de livraison enregistrés
          */
-    @Post("/:id/points-livraison")
+    @Post("/:id/ordres-livraison")
         @ApiOperation({ summary: 'Create ordre livraison' })
-        @ApiBody({type: [Number]})
+        @ApiBody({type: [OrdreLivraisonCreateDto]})
         @ApiResponse({ status: 201, description: 'Ordre livraison created.' })
-    async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: number[]){
-        const mapped: OrdreLivraisonCreateDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
+    async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: OrdreLivraisonCreateDto){
+        const mapped: OrdreLivraisonDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
         return this.ordreLivraisonService.batchSave(mapped);
     }
 
@@ -85,6 +85,16 @@ export class TourneeLivraisonController {
          */
     @Get("/:id/ordres-livraison")
     async getOrdresLivraison(@Param("id", ParseIntPipe) id: number){
+        return this.ordreLivraisonService.findAllByTournee(id);
+    }
+
+            /**
+         * LISTE DES LIVRAISONs D'UNE TOURNEE DE LIVRAISON
+         * @param id Identifiant de la tournée de livraison
+         * @return Liste des ordres de livraison 
+         */
+    @Get("/:id/livraisons")
+    async getLivraisons(@Param("id", ParseIntPipe) id: number){
         return this.ordreLivraisonService.findAllByTournee(id);
     }
 }

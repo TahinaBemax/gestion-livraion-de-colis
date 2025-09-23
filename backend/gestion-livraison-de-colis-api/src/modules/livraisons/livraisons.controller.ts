@@ -35,14 +35,14 @@ export class LivraisonsController {
         return this.livraisonService.findByStatuts(statuts);
     }
 
-    /**
-     * LISTE DES LIVRAISON EFFECTUES ET EN COURS DE TRAITEMENT
-     * @returns Liste des livraisons
-     */
-    @Get("/:id/scan-colis")
-    async scanColis(@Param("id", ParseIntPipe) id: number): Promise<LivraisonEntity | null>{
-        return this.livraisonService.getLivraisonAndCountColis(id);
-    }
+    // /**
+    //  * LISTE DES LIVRAISON EFFECTUES ET EN COURS DE TRAITEMENT
+    //  * @returns Liste des livraisons
+    //  */
+    // @Get("/:id/scan-colis")
+    // async scanColis(@Param("id", ParseIntPipe) id: number): Promise<LivraisonEntity | null>{
+    //     return this.livraisonService.getLivraisonAndCountColis(id);
+    // }
 
     /**
      * FILTRE LES LIVRAISON PAR Prestataire, Client, Date de livraison 

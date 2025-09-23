@@ -1,8 +1,6 @@
-import { TourneePointLivraisonDto } from './../../common/dto/tournee-livraison/create-tournee-point-livraison-dto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrdreLivraisonEntity } from './ordre-livraison.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OrdreLivraisonCreateDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
 import { LivraisonEntity } from '../livraisons/livraison.entity';
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { Repository, QueryRunner, DataSource, In } from 'typeorm';
@@ -18,6 +16,8 @@ import { FicheOrdreLivraisonDto } from 'src/common/dto/ordre-livraison/fiche-ord
 import { ColisService } from '../colis/colis.service';
 import { NotificationService } from '../notification/notification.service';
 import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
+import { OrdreLivraisonDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
+import { OrdreLivraisonCreateDto } from 'src/common/dto/ordre-livraison/ordre-livraison-create-dto';
 
 
 @Injectable()
@@ -139,23 +139,22 @@ export class OrdreLivraisonService {
      * @returns Fiche ordre de livraison
      */
     async getFicheOrdreLivraison(id: number): Promise<FicheOrdreLivraisonDto> {
-        const matched = await this.ordreRepo.findOne({
-            where: {id: id},
-            relations: ["livraisons", "tournee_livraison"] 
-        });
-
-        if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
-        const tournee = await matched.tournee_livraison;
-        const bordereau: BordereauLivraisonEntity = await matched.bordereau_livraison;
+        const matchedOrderLivraison = await this.findById(id);
+        const tournee = await matchedOrderLivraison.tournee_livraison;
+        const bordereau: BordereauLivraisonEntity = await matchedOrderLivraison.bordereau_livraison;
+        const client = matchedOrderLivraison.livraison.client;
+        const incompleteLivraison: LivraisonEntity[] = await this.livraisonService.findLivraisonIncompleteByIdClient(client.id)
 
         if(!bordereau) throw new BadRequestException("Aucun bordereau de livraison n'a été trouvé pour cet ordre de livraison");
         const fiche = new FicheOrdreLivraisonDto();
 
-        fiche.livraisons = matched.livraisons;
-        fiche.point_livraison = matched.point_livraison;
-        fiche.nbr_colis_prevu = matched.nbr_colis_prevu;
-        fiche.nbr_colis_reel = matched.nbr_colis_reel;
-        fiche.statut = matched.statut;
+        fiche.livraisons.push(matchedOrderLivraison.livraison);
+        fiche.livraisons.concat(incompleteLivraison);
+
+        fiche.point_livraison = matchedOrderLivraison.point_livraison;
+        fiche.nbr_colis_prevu = matchedOrderLivraison.nbr_colis_prevu;
+        fiche.nbr_colis_reel = matchedOrderLivraison.nbr_colis_reel;
+        fiche.statut = matchedOrderLivraison.statut;
         fiche.notifications = await this.notificationService.findByLivreurAndTournee(tournee.livreur.id_livreur, tournee.date_tournee, tournee.heure_debut, tournee.heure_fin);
         fiche.date_scan_bordereau = bordereau.date_scan_bordereau;
         fiche.date_scan_dernier_colis = await this.colisService.getDateLastColisDechargmentForTournee(tournee.id);
@@ -165,7 +164,7 @@ export class OrdreLivraisonService {
         return fiche;
     }
 
-    async save(dto: OrdreLivraisonCreateDto){
+    async save(dto: OrdreLivraisonDto){
         if(!dto) throw new BadRequestException("Données ordre de livraison invalides");
 
         const ordre_livraison = await this.getOrdreLivraison(dto);
@@ -175,18 +174,13 @@ export class OrdreLivraisonService {
         return this.ordreRepo.save(prepared);
     }
     
-    async batchSave(dto: OrdreLivraisonCreateDto[]) {
+    async batchSave(dto: OrdreLivraisonDto[]) {
         const dataSource = this.ordreRepo.manager.connection as DataSource;
         const queryRunner = dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-            // 1. Update colis status for all incomplete livraisons
-            for (const data of dto) {
-                await this.filterColisAndHandleStatus(data.incompletedLivraisons, queryRunner);
-            }
-
             // 2. Prepare and save ordre de livraison entities
             const ordres_livraison: OrdreLivraisonEntity[] = [];
             for (const data of dto) {
@@ -194,7 +188,7 @@ export class OrdreLivraisonService {
                 ordre.statut = StatutOrdreLivraison.EN_ATTENTE;
 
                 //save status of colis and livraison
-                await queryRunner.manager.save(LivraisonEntity, ordre.livraisons);
+                await queryRunner.manager.save(LivraisonEntity, ordre.livraison);
                 ordres_livraison.push(ordre);
             }
 
@@ -243,48 +237,43 @@ export class OrdreLivraisonService {
         }
     } 
 
-    private getNbrColisPrevu(livraisons: LivraisonEntity[]): number{
-        let total = 0;
-        livraisons.forEach((l: LivraisonEntity) => {
-            total += l.colis.length;
-        });
+    private getNbrColisPrevu(livraison: LivraisonEntity): number{
+        return livraison.colis.length;
+    }
 
+    private getNbrColisReel(incompleteLivraison: LivraisonEntity[]): number{
+        let total = 0;
+        incompleteLivraison.forEach(l => {
+            l.colis.forEach(colis => {
+                if(colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR || colis.statut_colis === StatusColis.ANOMALIE){
+                    total += 1;
+                }
+            })
+        });
+        
         return total;
     }
 
-    private getNbrColisReel(dto: OrdreLivraisonCreateDto): number{
-        let total_prevu = this.getNbrColisPrevu(dto.livraisons);
-        
-        dto.incompletedLivraisons.forEach(l => {
-            total_prevu += l.colis.length;
-        });
-        
-        return total_prevu;
-    }
-
-    async mapToOrdreLivraisonCreateDTo(idTournee: number, dto: number[]): Promise<OrdreLivraisonCreateDto[]>{
+    async mapToOrdreLivraisonCreateDTo(idTournee: number, dto: OrdreLivraisonCreateDto): Promise<OrdreLivraisonDto[]>{
         if(!idTournee || !dto) throw new BadRequestException("Données invalides");
+        const ordresLivraison: OrdreLivraisonDto[] = [];
 
         const existingTournee:TourneeLivraisonEntity|null = await this.tourneeRepo.findOneBy({id: idTournee});
         if(!existingTournee) throw new NotFoundException(`Tournée de livraison avec ID:{${idTournee}} introuvable`);
         this.checkStatutTourneeLivraison(existingTournee);
 
         
-        return Promise.all(dto.map(async (idPL) => {
-            const ordre_livraison = new OrdreLivraisonCreateDto();
-            const pl = await this.plRepo.findOneBy({id: idPL});
-            if(!pl) throw new NotFoundException(`Point de livraison avec ID:{${idPL}} introuvable!`);
+        dto.id_livraisons.map(async (idLivraison) => {
+            const livraison = await this.livraisonService.findById(idLivraison)
 
-            const incompleteLivraisons:LivraisonEntity[] = await this.livraisonService.findDeliveryNotCompletedByIdPL(idPL);
-            const matchedLivraisons:LivraisonEntity[] = await this.livraisonService.findByDateTourneeAndPointLivraison(idPL, existingTournee.date_tournee, existingTournee.heure_debut, existingTournee.heure_fin);
-
+            const ordre_livraison = new OrdreLivraisonDto();
             ordre_livraison.tournee = existingTournee;
-            ordre_livraison.pointLivraion = pl;
-            ordre_livraison.livraisons = matchedLivraisons;
-            ordre_livraison.incompletedLivraisons = incompleteLivraisons;
+            ordre_livraison.pointLivraion = livraison.client.point_livraison;
+            ordre_livraison.livraison = livraison;
+            ordresLivraison.push(ordre_livraison);
+        });
 
-            return ordre_livraison;
-        }));
+        return ordresLivraison
     }
 
     private async filterColisAndHandleStatus(
@@ -311,24 +300,27 @@ export class OrdreLivraisonService {
         }
     }
 
-    private async getOrdreLivraison(dto: OrdreLivraisonCreateDto){
+    private async getOrdreLivraison(dto: OrdreLivraisonDto){
         const ordre_livraison = new OrdreLivraisonEntity();
+
+        const incompleteLivraisons: LivraisonEntity[] = await this.livraisonService.findLivraisonIncompleteByIdClient(dto.livraison.client.id);
+        
         ordre_livraison.point_obtenu = 0;
         ordre_livraison.estimation_retard = "00:00:00";
-        ordre_livraison.nbr_colis_prevu = this.getNbrColisPrevu(dto.livraisons);
-        ordre_livraison.nbr_colis_reel = this.getNbrColisReel(dto);
+        ordre_livraison.nbr_colis_prevu = this.getNbrColisPrevu(dto.livraison);
+        ordre_livraison.nbr_colis_reel = this.getNbrColisReel(incompleteLivraisons);
         ordre_livraison.tournee_livraison = dto.tournee;
-        ordre_livraison.livraisons = dto.incompletedLivraisons.concat(dto.livraisons);
+        ordre_livraison.livraison = dto.livraison;
         ordre_livraison.point_livraison = dto.pointLivraion;
 
-        for (const livraison of ordre_livraison.livraisons) {
-            livraison.statut_livraison = StatusLivraison.DISTRIBUEUR_ASSIGNÉ;
-            livraison.colis.forEach(c => {
-                if(c.statut_colis !== StatusColis.RELIQUAT){
-                    c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION
-                }
-            });
-        }
+        const livraison = ordre_livraison.livraison
+        livraison.statut_livraison = StatusLivraison.DISTRIBUEUR_ASSIGNÉ;
+        
+        livraison.colis.forEach(c => {
+            if(c.statut_colis !== StatusColis.RELIQUAT){
+                c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION
+            }
+        });
 
         return ordre_livraison;
     }

@@ -8,7 +8,6 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 import { ContrainteLivraisonEntity } from "../contrainte-livraison/contrainte-livraison.entity";
-import { ContrainteJourEntity } from "../contrainte-jour/contrainte-jour.entity";
 import { ImportCsvResponseDto } from "src/common/dto/csv-import/import-csv-response-dto";
 import { FileCleanUpHandlerService } from "src/common/file-clean-up-handler/file-clean-up-handler.service";
 
@@ -185,9 +184,6 @@ export class CsvImportService {
     allConstraints.map(ck => {
       const matched = dailyConstraints
         .filter(dc => dc.intitule_contrainte === ck.intitule_contrainte)
-        .map(dc => plainToInstance(ContrainteJourEntity, dc));
-
-        (ck.id && ck.contrainte_jour_livraisons && ck.contrainte_jour_livraisons.length > 0) ? ck.contrainte_jour_livraisons.concat(matched) : ck.contrainte_jour_livraisons = matched;
         
         return ck;
     });

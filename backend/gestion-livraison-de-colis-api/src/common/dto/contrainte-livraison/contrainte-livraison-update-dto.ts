@@ -15,15 +15,7 @@ export class ContrainteLivraisonUpdateDto {
         required: false,
         description: "La date doit être en format dd/MM/yyyy"
     })
-    date_debut?: string;
-    
-    @IsNotEmpty()
-    @IsFRDate()
-    @ApiProperty({
-        required: false,
-        description: "La date doit être en format dd/MM/yyyy"
-    })
-    date_fin?: string;
+    date_contrainte?: string;
     
     @IsOptional()
     @IsNotEmpty()

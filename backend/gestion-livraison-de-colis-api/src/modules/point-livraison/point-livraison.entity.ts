@@ -49,7 +49,7 @@ export class PointLivraisonEntity {
 
     @OneToMany(() => ContrainteLivraisonEntity, (c) => c.point_livraison, {
         eager: true, 
-        cascade:true, 
+        cascade: ["insert"], 
         onUpdate: "CASCADE",
         nullable: true
     })
@@ -76,7 +76,9 @@ export class PointLivraisonEntity {
     @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.point_livraison)
     ordres_livraison: OrdreLivraisonEntity[];
 
-    @OneToMany(() => CreneauLivraisonEntity, (creneau) => creneau.point_livraison)
+    @OneToMany(() => CreneauLivraisonEntity, (creneau) => creneau.point_livraison, {
+        eager: true
+    })
     creneaux_livraison: CreneauLivraisonEntity[];
 
     getCreneauxLivraison(dateLivraison: Date){

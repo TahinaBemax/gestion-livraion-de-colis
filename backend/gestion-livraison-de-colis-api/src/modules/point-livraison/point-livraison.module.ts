@@ -10,7 +10,6 @@ import { ContrainteEvenementEntity } from '../contrainte-evenement/contrainte-ev
 import { ContrainteLivraisonEntity } from '../contrainte-livraison/contrainte-livraison.entity';
 import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-livraison.module';
 import { EvenementLocalModule } from '../evenement-local/evenement-local.module';
-import { ContrainteJourModule } from '../contrainte-jour/contrainte-jour.module';
 import { PointLivraisonEntity } from './point-livraison.entity';
 import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity';
 import { EvenementLocalService } from '../evenement-local/evenement-local.service';
@@ -19,7 +18,6 @@ import { ClientModule } from '../client/client.module';
 @Module({
   imports: [
     forwardRef(() => ContrainteLivraisonModule), 
-    ContrainteJourModule,
     forwardRef(() => PrestataireModule),
     forwardRef(() => EvenementLocalModule),
     forwardRef(() => ClientModule),

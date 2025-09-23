@@ -1,6 +1,5 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ColisEntity } from "../colis/colis.entity";
-import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 import { ProblemeLivraisonEntity } from "./probleme-livraison.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
 import { ClientEntity } from "../client/client.entity";
@@ -56,13 +55,8 @@ export class LivraisonEntity {
     })
     problemes_livraison: ProblemeLivraisonEntity[];
 
-    @ManyToMany(() => OrdreLivraisonEntity, (ordre) => ordre.livraisons)
-    @JoinTable({
-        name: 'details_ordre_livraison',
-        joinColumn: { name: 'id_livraison', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'id_ordre_livraison', referencedColumnName: 'id'},
-    })    
-    ordres_livraison: OrdreLivraisonEntity[];
+    @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.livraison)  
+    ordre_livraison: OrdreLivraisonEntity;
 
     @ManyToOne(() => ClientEntity, (c) => c.livraisons, {
         eager: true,

@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { Livreur } from '../livreur/livreur.entity';
 import { StatutTourneeLivaison } from 'src/common/enum/status-tournee-livraison';
-import { PlanningLivraisonEntity } from '../planning-livraison/planning-livraison.entity';
 import { isValid, isWithinInterval, parseISO } from 'date-fns';
 import { StatutPlanningLivaison } from 'src/common/enum/status-planning-livraison';
 import { Prestataire } from '../prestataire/prestataire.entity';
@@ -19,8 +18,6 @@ export class TourneeLivraisonService {
         private readonly tourneeRep: Repository<TourneeLivraisonEntity>,
         @InjectRepository(Livreur)
         private readonly livreurRep: Repository<Livreur>,
-        @InjectRepository(PlanningLivraisonEntity)
-        private readonly planningRep: Repository<PlanningLivraisonEntity>,
         @InjectRepository(Prestataire)
         private readonly prestataireRep: Repository<Prestataire>,
     ){}
@@ -91,11 +88,8 @@ export class TourneeLivraisonService {
             const livreur: Livreur = await this.getLivreur(dto.id_livreur);
             existing.livreur = livreur;
         }
-        const planning_livraison: PlanningLivraisonEntity = existing.planning_livraison;
-        this.isDateTourneeBetween(dto.date_tournee, planning_livraison.date_debut, planning_livraison.date_fin);
 
         existing.date_tournee = dto.date_tournee;
-        existing.planning_livraison = planning_livraison;
 
         return this.tourneeRep.save(existing);
     }
@@ -118,12 +112,6 @@ export class TourneeLivraisonService {
         return livreur;
     }
 
-    private async getPlanning(id: number): Promise<PlanningLivraisonEntity>{
-        const planning_livraison: PlanningLivraisonEntity|null = await this.planningRep.findOne({where: {id: id}});
-        if(!planning_livraison) throw new NotFoundException(`Planning livraison avec ID:${id} introuvable!`);
-
-        return planning_livraison;
-    }
 
     private isDateTourneeBetween(date_tournee: string, date_debut: string, date_fin:string){
         const parsedDate = Utils.parseToFRDate(date_tournee);
@@ -147,25 +135,17 @@ export class TourneeLivraisonService {
         if(!dto) throw new BadRequestException("Données tournée livraison invalides");
 
         const tournee = plainToInstance(TourneeLivraisonEntity, dto);
-        const planning_livraison: PlanningLivraisonEntity= await this.getPlanning(idPlanning);
-        
-        if(planning_livraison.statut_planning === StatutPlanningLivaison.ANNULE 
-            || planning_livraison.statut_planning === StatutPlanningLivaison.TERMINE
-        ) throw new BadRequestException(`Impossible de créer un tournée de livraison pour un planning de livraison avec statut: ${planning_livraison.statut_planning}`);
 
         if(dto.id_livreur){
             const livreur: Livreur = await this.getLivreur(dto.id_livreur);
             tournee.livreur = livreur;
         }
         
-        this.isDateTourneeBetween(dto.date_tournee, planning_livraison.date_debut, planning_livraison.date_fin);
-
         const matchedPrestataire = await this.prestataireRep.findOneBy({id_prestataire: dto.id_prestatiare});
         if(!matchedPrestataire) throw new BadRequestException("Prestataire inexistant!");
 
         tournee.date_tournee = dto.date_tournee;
         tournee.prestataire = matchedPrestataire;
-        tournee.planning_livraison = planning_livraison;
         tournee.statut = StatutTourneeLivaison.BROUILLON;
 
         return tournee;        

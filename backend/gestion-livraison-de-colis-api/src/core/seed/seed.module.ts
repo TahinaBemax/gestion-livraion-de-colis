@@ -5,7 +5,6 @@ import { BordereauLivraisonModule } from 'src/modules/bordereau-livraison/border
 import { ColisModule } from 'src/modules/colis/colis.module';
 import { LivraisonsModule } from 'src/modules/livraisons/livraisons.module';
 import { LivreurModule } from 'src/modules/livreur/livreur.module';
-import { PlanningLivraisonModule } from 'src/modules/planning-livraison/planning-livraison.module';
 import { PointLivraisonModule } from 'src/modules/point-livraison/point-livraison.module';
 import { PrestataireModule } from 'src/modules/prestataire/prestataire.module';
 import { TourneeLivraisonModule } from 'src/modules/tournee-livraison/tournee-livraison.module';
@@ -19,7 +18,6 @@ import { ClientModule } from 'src/modules/client/client.module';
       PointLivraisonModule,
       LivraisonsModule,
       ColisModule,
-      PlanningLivraisonModule,
       TourneeLivraisonModule,
       BordereauLivraisonModule,
       ClientModule

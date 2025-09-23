@@ -4,6 +4,12 @@ import * as bcrypt from "bcrypt";
 import * as QRCode from 'qrcode';
 
 export class Utils {
+    static getDayInWord(date: Date): string{
+        const local: string = 'fr-FR';
+        const jourSemaine = date.toLocaleDateString(local, {weekday: 'long'});
+
+        return jourSemaine.toLowerCase();
+    }
     static isPresentOrFuture(startDate: string): boolean{
         try {
             const isValidDate = Utils.parseToFRDate(startDate);

@@ -37,7 +37,7 @@ ALTER TABLE
    contraintes_livraison
 ADD CONSTRAINT 
    intitule_contrainte_unique
-UNIQUE(intitule_contrainte, date_debut, date_fin, id_point_livraison);
+UNIQUE(intitule_contrainte, date_contrainte, id_point_livraison);
 
 /* */
 

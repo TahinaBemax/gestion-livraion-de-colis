@@ -1,5 +1,4 @@
 import { ClientService } from './../../modules/client/client.service';
-import { CreateCreneauLivraisonDto } from 'src/common/dto/creneau-livraison/create-creneau-livraison-dto';
 import { CategorieLivreurEnum } from 'src/common/enum/categorie-livreur.enum';
 import { PrestataireService } from 'src/modules/prestataire/prestataire.service';
 import { UserService } from './../../modules/user/user.service';
@@ -7,7 +6,6 @@ import { Injectable } from '@nestjs/common';
 import { LivreurService } from 'src/modules/livreur/livreur.service';
 import { PointLivraisonService } from 'src/modules/point-livraison/point-livraison.service';
 import { ColisService } from 'src/modules/colis/colis.service';
-import { PlanningLivraisonService } from 'src/modules/planning-livraison/planning-livraison.service';
 import { TourneeLivraisonService } from 'src/modules/tournee-livraison/tournee-livraison.service';
 import { BordereauLivraisonService } from 'src/modules/bordereau-livraison/bordereau-livraison.service';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
@@ -27,6 +25,8 @@ import { User } from 'src/modules/user/user.entity';
 import { LivraisonCreateDto } from 'src/common/dto/livraison/create-livraison-dto';
 import { ClientCreateDto } from 'src/common/dto/client/client-create-dto';
 import { DataSource } from 'typeorm';
+import { CreneauLivraisonEntity } from 'src/modules/creneau-livraison/creneau-livraison.entity';
+import { PointLivraisonEntity } from 'src/modules/point-livraison/point-livraison.entity';
 
 @Injectable()
 export class SeedService {
@@ -37,7 +37,6 @@ export class SeedService {
         readonly plService: PointLivraisonService,
         readonly colisService: ColisService,
         readonly livraisonService: LivreurService,
-        readonly planningService: PlanningLivraisonService,
         readonly tourneeService: TourneeLivraisonService,
         readonly bordereauService: BordereauLivraisonService,
         readonly ClientService: ClientService,
@@ -112,14 +111,10 @@ export class SeedService {
             const clients = this.clients();
             for (let i = 0; i < pointsLivraison.length; i++) {
                 const savedPL = await this.plService.create(pointsLivraison[i]);
+                this.saveCreneauLivraison(savedPL);
                 clients[i].id_point_livraison = savedPL.id;
                 await this.ClientService.save(clients[i]);
             }
-    
-            // Exemple pour colis / planning / tournée
-            // await this.colisService.save(this.colis());
-            // const planning = await this.planningService.saveDraftPlanning(this.plannings());
-            // await this.tourneeService.save(planning.id, this.tournee(savedLivreurs[0].id_livreur));
     
             console.log("✅ Données de test insérées avec succès !");
             
@@ -129,7 +124,64 @@ export class SeedService {
         }
     }
 
-    
+    private saveCreneauLivraison(savedPL: PointLivraisonEntity){
+                const lundi = new CreneauLivraisonEntity();
+                    lundi.annee = new Date().getFullYear()
+                    lundi.heure_debut = "08:00:00";
+                    lundi.heure_fin = "17:00:00";
+                    lundi.jour_semaine = "Lundi";
+                lundi.point_livraison = savedPL;
+                
+                const mardi = new CreneauLivraisonEntity();
+                    mardi.annee = new Date().getFullYear()
+                    mardi.heure_debut = "08:00:00";
+                    mardi.heure_fin = "17:00:00";
+                    mardi.jour_semaine = "Mardi";
+                    mardi.point_livraison = savedPL;
+
+                const mercredi = new CreneauLivraisonEntity();
+                    mercredi.annee = new Date().getFullYear()
+                    mercredi.heure_debut = "08:00:00";
+                    mercredi.heure_fin = "17:00:00";
+                    mercredi.jour_semaine = "Mercredi";
+                    mercredi.point_livraison = savedPL;
+                    
+                const Jeudi = new CreneauLivraisonEntity();
+                    Jeudi.annee = new Date().getFullYear()
+                    Jeudi.heure_debut = "08:00:00";
+                    Jeudi.heure_fin = "17:00:00";
+                    Jeudi.jour_semaine = "Jeudi";
+                    Jeudi.point_livraison = savedPL;
+
+                const Vendredi = new CreneauLivraisonEntity();
+                    Vendredi.annee = new Date().getFullYear()
+                    Vendredi.heure_debut = "08:00:00";
+                    Vendredi.heure_fin = "17:00:00";
+                    Vendredi.jour_semaine = "Vendredi";
+                    Vendredi.point_livraison = savedPL;
+
+                const Samedi = new CreneauLivraisonEntity();
+                    Samedi.annee = new Date().getFullYear()
+                    Samedi.heure_debut = "08:00:00";
+                    Samedi.heure_fin = "16:00:00";
+                    Samedi.jour_semaine = "Samedi";
+                    Samedi.point_livraison = savedPL;
+
+                const dimanche = new CreneauLivraisonEntity();
+                    dimanche.annee = new Date().getFullYear()
+                    dimanche.heure_debut = "08:00:00";
+                    dimanche.heure_fin = "12:00:00";
+                    dimanche.jour_semaine = "Dimanche";
+                    dimanche.point_livraison = savedPL;
+
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(lundi);
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(mardi);
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(mercredi);
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(Jeudi);
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(Vendredi);
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(Samedi);
+        this.dataSource.getRepository(CreneauLivraisonEntity).save(dimanche);
+    }
     private utilisateur(): CreateUserDto[]{
         const adminTempoOne: CreateUserDto = new CreateUserDto();
         adminTempoOne.nom = "Admin";
@@ -299,7 +351,7 @@ export class SeedService {
     }
 
     private pointsLivraison() {
-        // Point de livraison 1
+        // ++++ Point de livraison 1 ++++++
         const pl1 = new CreatePointLivraisonDto();
         pl1.numero_magasin = "Super U";
         pl1.code_postal = "101";
@@ -310,10 +362,10 @@ export class SeedService {
         // Point de livraison 2 avec contrainte
         const pl2 = new CreatePointLivraisonDto();
         const contrainte1 = new ContrainteLivraisonDto();
-        contrainte1.date_debut = "01/10/2025";
-        contrainte1.date_fin = "02/10/2025";
+        contrainte1.date_contrainte = "01/10/2025";
         contrainte1.intitule_contrainte = "Contrainte 1";
-        contrainte1.priorite_contrainte = "Normale";
+        contrainte1.heure_debut_livrrable = "10:00:00";
+        contrainte1.heure_fin_livrrable = "16:00:00";
 
         pl2.numero_magasin = "Jumbo Scoore";
         pl2.code_postal = "101";
@@ -333,10 +385,10 @@ export class SeedService {
         // Point de livraison 4 avec contrainte
         const pl4 = new CreatePointLivraisonDto();
         const contrainte2 = new ContrainteLivraisonDto();
-        contrainte2.date_debut = "05/10/2025";
-        contrainte2.date_fin = "06/10/2025";
+        contrainte2.date_contrainte = "05/10/2025";
         contrainte2.intitule_contrainte = "Contrainte 2";
-        contrainte2.priorite_contrainte = "Haute";
+        contrainte2.heure_debut_livrrable = "10:00:00"
+        contrainte2.heure_fin_livrrable = "16:00:00"
 
         pl4.numero_magasin = "Leader Price";
         pl4.code_postal = "103";
@@ -356,10 +408,10 @@ export class SeedService {
         // Point de livraison 6 avec contrainte
         const pl6 = new CreatePointLivraisonDto();
         const contrainte3 = new ContrainteLivraisonDto();
-        contrainte3.date_debut = "10/10/2025";
-        contrainte3.date_fin = "12/10/2025";
+        contrainte3.date_contrainte = "10/10/2025";
         contrainte3.intitule_contrainte = "Contrainte 3";
-        contrainte3.priorite_contrainte = "Urgente";
+        contrainte3.heure_debut_livrrable = "10:00:00"
+        contrainte3.heure_fin_livrrable = "16:00:00"
 
         pl6.numero_magasin = "Hyper U";
         pl6.code_postal = "105";

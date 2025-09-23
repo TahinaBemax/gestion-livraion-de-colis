@@ -1,6 +1,6 @@
 import { BordereauLivraisonEntity } from './../bordereau-livraison/bordereau-livraison.entity';
 import { TourneeLivraisonEntity } from './../tournee-livraison/tournee-livraison.entity';
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { LivraisonEntity } from "../livraisons/livraison.entity";
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 
@@ -30,13 +30,13 @@ export class OrdreLivraisonEntity {
     @JoinColumn({referencedColumnName: "id", name: "id_tournee"})
     tournee_livraison: Promise<TourneeLivraisonEntity>|TourneeLivraisonEntity;
 
-    @ManyToMany(() => LivraisonEntity, (l) => l.ordres_livraison, {
+    @OneToOne(() => LivraisonEntity, (l) => l.ordre_livraison, {
         eager: true,
     })
-    livraisons: LivraisonEntity[];
+    @JoinColumn({ name: "id_livraison", referencedColumnName: "id" })
+    livraison: LivraisonEntity;
 
-    @OneToOne(() => BordereauLivraisonEntity, (b) => b.ordre_livraison, {
-        onDelete: "CASCADE",
+    @OneToMany(() => BordereauLivraisonEntity, (b) => b.ordre_livraison, {
         lazy: true
     })
     bordereau_livraison: Promise<BordereauLivraisonEntity>|BordereauLivraisonEntity;

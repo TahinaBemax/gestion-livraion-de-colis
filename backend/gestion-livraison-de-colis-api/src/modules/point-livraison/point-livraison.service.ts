@@ -210,12 +210,12 @@ export class PointLivraisonService {
         if(dto && dto.length > 0){
             return dto.map(c => {
                 const contrainte = new ContrainteLivraisonEntity();
-                Utils.isPresentOrFuture(c.date_debut) && Utils.isBefore(c.date_debut, c.date_fin);
+                Utils.isPresentOrFuture(c.date_contrainte)
 
                 contrainte.intitule_contrainte = c.intitule_contrainte;
-                contrainte.date_debut = c.date_debut;
-                contrainte.date_fin = c.date_fin;
-                contrainte.priorite_contrainte = c.priorite_contrainte;
+                contrainte.date_contrainte = c.date_contrainte;
+                contrainte.heure_debut_livrable = c.heure_debut_livrrable;
+                contrainte.heure_fin_livrable = c.heure_fin_livrrable;
 
                 return contrainte;
             });

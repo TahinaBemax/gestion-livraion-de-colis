@@ -36,6 +36,7 @@ VALUES
 
 
 /* La date de scan du premier colis au chargement pour tous les tournées*/
+/*
 CREATE OR REPLACE VIEW 
     premier_colis_au_chargement
 AS
@@ -58,10 +59,10 @@ JOIN
 ON 
     c.id_livraison = l.id_livraison
 ORDER BY
-    c.date_heure_chargement DESC;
-
+    c.date_heure_chargement DESC; */
 
 /* La date de scan du dernier colis à la livraison */
+/*
 CREATE OR REPLACE VIEW 
     dernier_colis_au_dechargement
 AS
@@ -84,4 +85,5 @@ JOIN
 ON 
     c.id_livraison = l.id_livraison
 ORDER BY
-    c.date_heure_dechargement DESC;
+    c.date_heure_dechargement DESC; */
+/* -- --- --- */

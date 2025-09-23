@@ -7,6 +7,7 @@ import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity'
 import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enum';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
+import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
 
 
 @Injectable()
@@ -79,7 +80,6 @@ export class BordereauLivraisonService {
             bordereau.adresse_destinataire =  ordre.point_livraison.numero_rue + ', ' + ordre.point_livraison.nom_rue + ', ' + ordre.point_livraison.ville;  
             bordereau.contact_destinataire = "";
 
-            bordereau.livreur = (await ordre.tournee_livraison).livreur;
             bordereaux.push(bordereau);
         }
 
@@ -91,10 +91,14 @@ export class BordereauLivraisonService {
         return await this.bordereauRep.delete(id);
     }
 
-    async scanBordereauLivraison(idOrdreLivraison: number): Promise<Boolean>{
+    async scanBordereauLivraison(idOrdreLivraison: number, idLivreur: number): Promise<Boolean>{
         try {
             const matched = await this.ordreService.findById(idOrdreLivraison);
             if(matched){
+                const tournee: TourneeLivraisonEntity = await matched.tournee_livraison;
+                if(tournee.livreur.id_livreur != idLivreur){
+                    throw new BadRequestException("Ce n'est pas votre bordereau de livraison!");
+                }
                 const bordereau = await this.findByIdOrdreLivraison(idOrdreLivraison);
     
                 if(bordereau){
@@ -111,6 +115,7 @@ export class BordereauLivraisonService {
             }
 
         } catch (error) {
+            throw error;
         }
         return false
     }

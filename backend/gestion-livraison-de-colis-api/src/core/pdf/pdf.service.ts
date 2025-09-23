@@ -125,7 +125,7 @@ export class PdfService {
             .text('Bordereau de livraison N°: ' + bl.id, 50, 180,)
             .text('Date: ' + bl.date_bordereau)
             .text('Date livraison: ' + bl.date_livraison)
-            .text('Livreur: ' + bl.livreur.user.nom + ' ' + bl.livreur.user.prenom);
+            .text('Livreur: ');
 
         doc.font(fontBold)
             .fontSize(fontSize)
@@ -271,11 +271,9 @@ export class PdfService {
     private getProduits(bl: BordereauLivraisonEntity){
         const produits: DetailColisEntity[] = [];
 
-        bl.ordre_livraison.livraisons.forEach(livraison => {
-            livraison.colis.forEach(colis => {
-                colis.details_colis.forEach(produit => {
-                    produits.push(produit);
-                });
+        bl.ordre_livraison.livraison.colis.forEach(colis => {
+            colis.details_colis.forEach(produit => {
+                produits.push(produit);
             });
         });
 

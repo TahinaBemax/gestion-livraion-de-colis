@@ -15,6 +15,8 @@ import { ClientEntity } from '../client/client.entity';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
 import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 import { ScanColisResponse } from 'src/common/dto/scan-colis/scan-colis-response';
+import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
+import { Utils } from 'src/common/utils/utils';
 
 @Injectable()
 export class LivraisonsService {
@@ -46,19 +48,19 @@ export class LivraisonsService {
      * @param statuts 
      * @returns 
      */
-    async getLivraisonAndCountColis(idLivraison: number): Promise<ScanColisResponse | null>{
-        const livraison = await this.livraisonRep.createQueryBuilder("l")
-            .leftJoinAndSelect("l.colis", "c")
-            .loadRelationCountAndMap("l.colis_a_charger", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NULL"),)
-            .loadRelationCountAndMap("l.colis_charges", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NOT NULL"),)
-            .where("l.id = :id", {id: idLivraison})
-            .getOne();
+    // async getLivraisonAndCountColis(idLivraison: number): Promise<ScanColisResponse | null>{
+    //     const livraison = await this.livraisonRep.createQueryBuilder("l")
+    //         .leftJoinAndSelect("l.colis", "c")
+    //         .loadRelationCountAndMap("l.colis_a_charger", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NULL"),)
+    //         .loadRelationCountAndMap("l.colis_charges", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NOT NULL"),)
+    //         .where("l.id = :id", {id: idLivraison})
+    //         .getOne();
 
-        if(livraison){
-            const dto = new ScanColisResponse();
-            dto.heure_debut = livraison.heure_debut?? livraison.client.point_livraison;
-        }
-    }
+    //     if(livraison){
+    //         const dto = new ScanColisResponse();
+    //         dto.heure_debut = livraison.heure_debut?? livraison.client.point_livraison;
+    //     }
+    // }
 
     /**
      * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
@@ -96,10 +98,30 @@ export class LivraisonsService {
             .innerJoinAndSelect("client.point_livraison", "pl")
             .innerJoinAndSelect("l.colis", "c")
             .where("pl.id =:id", { id: idPL })
+            .andWhere("(l.statut_livraison =:statut)", {
+                statut: StatusLivraison.EN_ATTENTE,
+            })
+            .getMany();
+    }
+
+    /**
+     * 
+     * @param idPL 
+     * @param idClient 
+     * @returns 
+     */
+    async findLivraisonIncompleteByIdClient(idClient:number): Promise<LivraisonEntity[]> {
+        if(!idClient) throw new Error(`ID point de livraison invalid!`);
+
+        return this.livraisonRep
+            .createQueryBuilder("l")
+            .innerJoinAndSelect("l.client", "client")
+            .innerJoinAndSelect("client.point_livraison", "pl")
+            .innerJoinAndSelect("l.colis", "c")
+            .where("client.id =:idClient", { idClient: idClient })
             .andWhere("(l.statut_livraison =:echec OR l.statut_livraison =:retourne_expediteur OR l.statut_livraison =:partielle)", {
                 echec: StatusLivraison.ECHEC_LIVRAISON,
-                retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR,
-                partielle: StatusLivraison.LIVRAISON_PARTIELLE,
+                retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR
             })
             .getMany();
     }
@@ -255,6 +277,8 @@ export class LivraisonsService {
         if(!client) throw new BadRequestException("Client inexistant.");
         if(!point_livraison) throw new BadRequestException("Ce client n'est pas encore rattaché à un point de livraison");
 
+        this.checkTime(dto, point_livraison);
+
         livraison.notes = dto.notes;
         livraison.date_livraison = dto.date_livraison;
         livraison.heure_debut =dto.heure_debut;
@@ -295,5 +319,28 @@ export class LivraisonsService {
         }
 
         return existing;
+    }
+
+    private checkTime(dto: LivraisonCreateDto, pointLivraison: PointLivraisonEntity){
+        const dateLivraison: Date = Utils.parseToFRDate(dto.date_livraison);
+        pointLivraison.creneaux_livraison.forEach(horaire => {
+            if(horaire.annee == dateLivraison.getFullYear() && horaire.jour_semaine.toLocaleLowerCase() == Utils.getDayInWord(dateLivraison)){
+                if(dto.heure_debut){
+                    const dateHeureDebut = new Date(`${dto.date_livraison}T${dto.heure_debut}`);
+                    const dateHeureFin = dto.heure_fin ? new Date(`${dto.date_livraison}T${dto.heure_fin}`) : dateHeureDebut;
+
+                    const plDateHeureDebut = new Date(`${dto.date_livraison}T${horaire.heure_debut}`);
+                    const plDateHeureFin = new Date(`${dto.date_livraison}T${horaire.heure_fin}`);
+    
+                    if(plDateHeureDebut <= dateHeureDebut && plDateHeureFin >= dateHeureDebut && plDateHeureFin >= dateHeureFin){
+                        return true;
+                    }
+    
+                    throw new BadRequestException(`L'heure de la livraison doit être comprise entre ${horaire.heure_debut} - ${horaire.heure_fin}`)
+                }
+
+                return true;
+            }
+        })
     }
 }
