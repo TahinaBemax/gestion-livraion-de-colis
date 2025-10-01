@@ -31,10 +31,10 @@ export class LivraisonEntity {
     date_livraison: string;
     
     @Column({type: "time"})
-    heure_debut?: string;
+    heure_debut: string;
     
     @Column({type: "time"})
-    heure_fin?: string;
+    heure_fin: string;
     
     @Column()
     notes?: string;

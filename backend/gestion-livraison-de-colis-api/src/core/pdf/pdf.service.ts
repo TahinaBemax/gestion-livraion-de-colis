@@ -1,3 +1,4 @@
+import { Utils } from 'src/common/utils/utils';
 import { Injectable } from '@nestjs/common';
 import * as PDFDocument from 'pdfkit';
 import { BordereauLivraisonEntity } from 'src/modules/bordereau-livraison/bordereau-livraison.entity';
@@ -242,7 +243,7 @@ export class PdfService {
                     product.id,
                     product.description_produit,
                     product.poids_produit + 'kg',
-                    product.valeur_produit + 'Ar'
+                    Utils.currencyFormat(product.valeur_produit)
                 ];
     
                 row.forEach((cell, i) => {

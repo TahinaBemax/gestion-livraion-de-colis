@@ -17,6 +17,7 @@ import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 import { ScanColisResponse } from 'src/common/dto/scan-colis/scan-colis-response';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 import { Utils } from 'src/common/utils/utils';
+import { ClientService } from '../client/client.service';
 
 @Injectable()
 export class LivraisonsService {
@@ -26,8 +27,7 @@ export class LivraisonsService {
         private readonly pointLivraisonService: PointLivraisonService,
         @InjectRepository(ProblemeLivraisonEntity)
         private readonly problemeLivraisonRep: Repository<ProblemeLivraisonEntity>,
-        @InjectRepository(ClientEntity)
-        private readonly clientRep: Repository<ClientEntity>
+        private readonly clientService: ClientService
     ){}
 
     /**
@@ -121,7 +121,8 @@ export class LivraisonsService {
             .where("client.id =:idClient", { idClient: idClient })
             .andWhere("(l.statut_livraison =:echec OR l.statut_livraison =:retourne_expediteur OR l.statut_livraison =:partielle)", {
                 echec: StatusLivraison.ECHEC_LIVRAISON,
-                retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR
+                retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR,
+                partielle: StatusLivraison.LIVRAISON_PARTIELLE
             })
             .getMany();
     }
@@ -237,14 +238,25 @@ export class LivraisonsService {
 
     private getColis(dto: DetailColisDto[]){
         if(! Array.isArray(dto)) throw new BadRequestException("Colis doit être un tableau");
+        const listColis: ColisEntity[] = [];
 
-        const colis: ColisEntity[] = plainToInstance(ColisEntity, dto);
-        return colis.map(c => {
-            c.statut_colis = StatusColis.EN_ATTENTE;
-            c.poids_total = this.getSumWeight(c.details_colis);  
-            
-            return c;
+        dto.forEach(item => {
+            const colis = new ColisEntity();
+            const produit = new DetailColisEntity();
+
+            produit.description_produit = item.description_produit;
+            produit.poids_produit = item.poids_produit;
+            produit.valeur_produit = item.valeur_produit;
+
+            colis.statut_colis = StatusColis.EN_ATTENTE;
+            colis.poids_total = produit.poids_produit;
+            colis.details_colis = [];  
+            colis.details_colis.push(produit);  
+
+            listColis.push(colis);
         });
+
+        return listColis;
     } 
 
     private getSumWeight(detailsColis: DetailColisEntity[]) {
@@ -271,13 +283,12 @@ export class LivraisonsService {
 
     private async mapToLivraisonEntity(dto: LivraisonCreateDto){
         const livraison: LivraisonEntity = new LivraisonEntity();
-        const client = await this.clientRep.findOneBy({id: dto.id_client});
+        const client = await this.clientService.findById(dto.id_client);
         const point_livraison = await this.pointLivraisonService.findByClient(dto.id_client);
 
-        if(!client) throw new BadRequestException("Client inexistant.");
         if(!point_livraison) throw new BadRequestException("Ce client n'est pas encore rattaché à un point de livraison");
 
-        this.checkTime(dto, point_livraison);
+        this.checkTime(dto.date_livraison, dto.heure_debut, dto.heure_fin, point_livraison);
 
         livraison.notes = dto.notes;
         livraison.date_livraison = dto.date_livraison;
@@ -302,8 +313,8 @@ export class LivraisonsService {
 
         existing.notes = dto.notes;
         existing.date_livraison = dto.date_livraison?? existing.date_livraison;
-        existing.heure_debut = dto.heure_debut;
-        existing.heure_fin = dto.heure_fin;
+        existing.heure_debut = dto.heure_debut?? existing.heure_debut;
+        existing.heure_fin = dto.heure_fin?? existing.heure_fin;
         
         existing.nom_destinataire = dto.nom_destinataire?? existing.nom_destinataire;
         existing.adresse_principale = dto.adresse_principale?? existing.adresse_principale;
@@ -312,8 +323,10 @@ export class LivraisonsService {
         existing.pays = dto.pays;
         existing.code_postal = dto.code_postal?? existing.code_postal;
 
+        this.checkTime(existing.date_livraison, existing.heure_debut, existing.heure_fin, existing.client.point_livraison);
+
         if(dto.id_client){
-            const client = await this.clientRep.findOneBy({id: dto.id_client});
+            const client = await this.clientService.findById(dto.id_client);
             if(!client) throw new BadRequestException("Client inexistant.");
             existing.client = client;
         }
@@ -321,21 +334,21 @@ export class LivraisonsService {
         return existing;
     }
 
-    private checkTime(dto: LivraisonCreateDto, pointLivraison: PointLivraisonEntity){
-        const dateLivraison: Date = Utils.parseToFRDate(dto.date_livraison);
+    private checkTime(date_livraison: string, heure_debut: string, heure_fin: string, pointLivraison: PointLivraisonEntity){
+        const dateLivraison: Date = Utils.parseToFRDate(date_livraison);
+        if(!pointLivraison) throw new BadRequestException("Point de livraison est null");
+
         pointLivraison.creneaux_livraison.forEach(horaire => {
             if(horaire.annee == dateLivraison.getFullYear() && horaire.jour_semaine.toLocaleLowerCase() == Utils.getDayInWord(dateLivraison)){
-                if(dto.heure_debut){
-                    const dateHeureDebut = new Date(`${dto.date_livraison}T${dto.heure_debut}`);
-                    const dateHeureFin = dto.heure_fin ? new Date(`${dto.date_livraison}T${dto.heure_fin}`) : dateHeureDebut;
-
-                    const plDateHeureDebut = new Date(`${dto.date_livraison}T${horaire.heure_debut}`);
-                    const plDateHeureFin = new Date(`${dto.date_livraison}T${horaire.heure_fin}`);
-    
-                    if(plDateHeureDebut <= dateHeureDebut && plDateHeureFin >= dateHeureDebut && plDateHeureFin >= dateHeureFin){
+                if(heure_debut){    
+                    if(
+                        Utils.compareTwoTimes(horaire.heure_debut, heure_debut) <= 0 && 
+                        Utils.compareTwoTimes(horaire.heure_fin, heure_debut) >= 0 && 
+                        Utils.compareTwoTimes(horaire.heure_fin, heure_fin) >= 0
+                    ){
                         return true;
                     }
-    
+                    
                     throw new BadRequestException(`L'heure de la livraison doit être comprise entre ${horaire.heure_debut} - ${horaire.heure_fin}`)
                 }
 

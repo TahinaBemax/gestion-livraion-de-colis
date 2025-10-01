@@ -1,3 +1,4 @@
+import { ColisService } from 'src/modules/colis/colis.service';
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporaire.service';
@@ -25,6 +26,7 @@ export class LivreurController {
         private readonly livreurTempService: LivreurTemporaireService,
         private readonly livreurService: LivreurService,
         private readonly livraisonService: LivraisonsService,
+        private readonly colisService: ColisService,
         private readonly notifService: NotificationService,
     ){}
 
@@ -184,5 +186,12 @@ export class LivreurController {
     @UseGuards(SameUserGuard)
     async getNotifications(@Param("id", ParseIntPipe) id: number){
         return this.notifService.findLivreurNotifications(id);
+    }
+
+    @Post("/:id/colis/:idColis/chargement")
+        @ApiOperation({summary: "Scan du colis au moment du chargement du Camion"})
+        @UseGuards(SameUserGuard)
+    async scanColis(@Param("id", ParseIntPipe) id: number, @Param("idColis", ParseIntPipe) idColis: number){
+        return this.colisService.scanColisAuChargementCamion(id, idColis);
     }
 }

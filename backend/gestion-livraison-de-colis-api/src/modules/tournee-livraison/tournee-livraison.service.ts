@@ -2,14 +2,12 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { TourneeLivraisonEntity } from './tournee-livraison.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
-import { Utils } from 'src/common/utils/utils';
 import { Repository } from 'typeorm';
 import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { Livreur } from '../livreur/livreur.entity';
 import { StatutTourneeLivaison } from 'src/common/enum/status-tournee-livraison';
-import { isValid, isWithinInterval, parseISO } from 'date-fns';
-import { StatutPlanningLivaison } from 'src/common/enum/status-planning-livraison';
 import { Prestataire } from '../prestataire/prestataire.entity';
+import { LivraisonTournee } from 'src/common/dto/tournee-livraison/liste-livraison-tournee-dto';
 
 @Injectable()
 export class TourneeLivraisonService {
@@ -21,6 +19,91 @@ export class TourneeLivraisonService {
         @InjectRepository(Prestataire)
         private readonly prestataireRep: Repository<Prestataire>,
     ){}
+
+    private async getLivraisonsByTournee(tournee: TourneeLivraisonEntity): Promise<LivraisonTournee[]> {
+        const listLivraison: LivraisonTournee[] = [];
+        const ordresLivraison = tournee.ordres_livraison;
+
+        // Map ordre de livraison en LivraisonTournée
+        for (const ordre of ordresLivraison) {
+            const bl = await ordre.bordereau_livraison;
+            if(bl && bl.date_scan_bordereau == tournee.date_tournee){
+                const livraison = new LivraisonTournee();
+                const pointLivraison = ordre.point_livraison;
+    
+                livraison.idLivraison = ordre.livraison.id;
+                livraison.nombreColis = ordre.nbr_colis_reel;
+                livraison.heureDebut = ordre.livraison.heure_debut;
+                livraison.heureFin = ordre.livraison.heure_fin;
+                livraison.nomPointLivraison = `${pointLivraison.numero_magasin}`;
+                livraison.adresse = `${pointLivraison.ville}, ${pointLivraison.code_postal}, ${pointLivraison.numero_rue} - ${pointLivraison.nom_rue}`;
+                livraison.statut = ordre.livraison.statut_livraison;
+    
+                listLivraison.push(livraison);
+            }
+        }
+
+        return listLivraison;
+    }
+
+    private async getOrdreLivraisonGroupedByPointLivraison(idTournee:number){
+        if(!idTournee) throw new BadRequestException("ID tournee est null!");
+    
+        const tournee = await this.findById(idTournee);
+        const listLivraison: LivraisonTournee[] = await this.getLivraisonsByTournee(tournee);    
+        const ordresLivraison = tournee.ordres_livraison;
+        const nomPointLivraison: Set<string> = new Set();
+    
+        //Obtenir la liste de point livraions distinct
+        ordresLivraison.forEach(o => {
+            const nomPL = o.point_livraison.numero_magasin;
+            if (!nomPointLivraison.has(nomPL)) {
+                nomPointLivraison.add(nomPL);
+            }
+        });
+        //Groupe les livraison par point de livraison
+        return listLivraison.reduce((acc, livraison) => {
+            if(!acc[livraison.nomPointLivraison]){
+                acc[livraison.nomPointLivraison] = [];
+            }
+    
+            acc[livraison.nomPointLivraison].push(livraison);
+            return acc;
+        }, {} as Record<string, LivraisonTournee[]>);
+
+    }
+
+    async invertedOrdreLivraison(idTournee:number){
+        const groupByPointLivraison: Record<string, LivraisonTournee[]> = await this.getOrdreLivraisonGroupedByPointLivraison(idTournee);
+        const invertedOrderedlistLivraison: LivraisonTournee[] = [];
+
+        // trier les livraison par ordre décroissante pour chaque point de livraison
+        for(const pl in groupByPointLivraison) {
+            groupByPointLivraison[pl].sort((a, b) => {
+                return b.heureDebut.localeCompare(a.heureDebut)
+            });
+
+            invertedOrderedlistLivraison.concat(groupByPointLivraison[pl]);
+        }
+
+        return invertedOrderedlistLivraison;
+    }
+
+    async ordreLivraisonOrderByPointLivraison(idTournee:number){
+        const groupByPointLivraison:Record<string, LivraisonTournee[]> = await this.getOrdreLivraisonGroupedByPointLivraison(idTournee);
+        const orderedByPointLivraison: LivraisonTournee[] = [];
+
+        // trier les livraison par ordre décroissante pour chaque point de livraison
+        for(const pl in groupByPointLivraison) {
+            groupByPointLivraison[pl].sort((a, b) => {
+                return a.heureDebut.localeCompare(b.heureDebut)
+            });
+
+            orderedByPointLivraison.concat(groupByPointLivraison[pl]);
+        }
+
+        return orderedByPointLivraison;
+    }
 
     async findAll(): Promise<TourneeLivraisonEntity[]> {
         return this.tourneeRep.find({relations: ["ordres_livraison"] });
@@ -44,19 +127,19 @@ export class TourneeLivraisonService {
         return mathced;
     }
 
-    async save(idPlanning: number, dto: TourneeLivraisonCreateDto){
+    async save(idPrestataire: number, dto: TourneeLivraisonCreateDto){
         if(!dto) throw new BadRequestException("Données tournée livraison invalides");
 
-        const tournee = await this.getTourneeLivraisonInstance(idPlanning, dto);
+        const tournee = await this.getTourneeLivraisonInstance(idPrestataire, dto);
         const prepared = this.tourneeRep.create(tournee);
         return this.tourneeRep.save(prepared);
     }
 
-    async batchSave(idPlanning: number, dtos: TourneeLivraisonCreateDto[]){
+    async batchSave(idPrestataire: number, dtos: TourneeLivraisonCreateDto[]){
         if(!dtos) throw new BadRequestException("Données tournée livraison invalides");
 
         const tournees:TourneeLivraisonEntity[] = await Promise.all(dtos.map(async (dto) => {
-            return await this.getTourneeLivraisonInstance(idPlanning, dto);
+            return await this.getTourneeLivraisonInstance(idPrestataire, dto);
         }));
 
         const prepared = this.tourneeRep.create(tournees);
@@ -112,26 +195,7 @@ export class TourneeLivraisonService {
         return livreur;
     }
 
-
-    private isDateTourneeBetween(date_tournee: string, date_debut: string, date_fin:string){
-        const parsedDate = Utils.parseToFRDate(date_tournee);
-
-        if(!isValid(parsedDate)) throw new Error("Date invalide");
-
-        const target_date = new Date(parsedDate.setHours(0, 0, 0, 0));
-        target_date.setDate(target_date.getDate() + 1);
-        
-        const start_date = parseISO(date_debut);
-        const end_date = parseISO(date_fin);
-
-        if(!isWithinInterval(target_date, {start: start_date, end: end_date})){
-            throw new BadRequestException(`La date du tournée doit être entre ${date_debut} et ${date_fin}`);
-        }
-
-        return true;
-    }
-
-    private async getTourneeLivraisonInstance(idPlanning: number, dto: TourneeLivraisonCreateDto){
+    private async getTourneeLivraisonInstance(id_prestatiare: number, dto: TourneeLivraisonCreateDto){
         if(!dto) throw new BadRequestException("Données tournée livraison invalides");
 
         const tournee = plainToInstance(TourneeLivraisonEntity, dto);
@@ -141,12 +205,12 @@ export class TourneeLivraisonService {
             tournee.livreur = livreur;
         }
         
-        const matchedPrestataire = await this.prestataireRep.findOneBy({id_prestataire: dto.id_prestatiare});
+        const matchedPrestataire = await this.prestataireRep.findOneBy({id_prestataire: id_prestatiare});
         if(!matchedPrestataire) throw new BadRequestException("Prestataire inexistant!");
 
         tournee.date_tournee = dto.date_tournee;
         tournee.prestataire = matchedPrestataire;
-        tournee.statut = StatutTourneeLivaison.BROUILLON;
+        tournee.statut = StatutTourneeLivaison.PLANIFIE;
 
         return tournee;        
     }

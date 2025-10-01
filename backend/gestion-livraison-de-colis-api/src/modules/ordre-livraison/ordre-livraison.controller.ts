@@ -57,10 +57,17 @@ export class OrdreLivraisonController {
 
     @Put(':id')
         @ApiOperation({ summary: 'Modifier un ordre de livraison' })
-        @ApiParam({ name: 'id', type: 'string' })
+        @ApiParam({ name: 'id'})
         @ApiBody({ type: OrdreLivraisonUpdateDto })
     async update(@Param('id', ParseIntPipe) id: number, @Body() updateDto: OrdreLivraisonUpdateDto) {
         return this.ordreLivraisonService.update(id, updateDto);
+    }
+
+    @Put('/:id/annule')
+        @ApiOperation({ summary: "Annulé la création d'un ordre de livraison"})
+        @ApiParam({ name: 'id'})
+    async annule(@Param('id', ParseIntPipe) id: number) {
+        return this.ordreLivraisonService.annule(id);
     }
 
 

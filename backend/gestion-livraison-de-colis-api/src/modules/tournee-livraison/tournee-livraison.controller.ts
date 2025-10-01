@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TourneeLivraisonService } from './tournee-livraison.service';
 import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
@@ -43,10 +43,10 @@ export class TourneeLivraisonController {
          * @param statuts Nouveau statut de la tournée de livraison
          * @returns Tournée de livraison modifiée
          */
-    @Put("/:id/change-statuts")
-        @ApiQuery({type: "Annulé, Planifié, En cours, Terminé, Partiellement exécuté", description: ""})
-    changeStatuts(@Param("id", ParseIntPipe) id: number, @Query("statuts") statuts: string){
-        return this.tourneeService.changeStatuts(id, statuts);
+    @Put("/:id/change-statut")
+        @ApiQuery({type: "Annulé, Planifié, En cours, Terminé, Partiellement exécuté"})
+    changeStatuts(@Param("id", ParseIntPipe) id: number, @Query("statut") statut: string){
+        return this.tourneeService.changeStatuts(id, statut);
     }
 
         /**
@@ -63,20 +63,20 @@ export class TourneeLivraisonController {
     
     /* -- --- ORDRE DE LIVRAISON --- --- --*/
 
-        /**
-         * CREATION D'UN OU PLUSIEURS ORDRES DE LIVRAISON
-         * @param id Identifiant de la tournée de livraison
-         * @param dto Données des points de livraison
-         * @returns Ordres de livraison enregistrés
-         */
-    @Post("/:id/ordres-livraison")
-        @ApiOperation({ summary: 'Create ordre livraison' })
-        @ApiBody({type: [OrdreLivraisonCreateDto]})
-        @ApiResponse({ status: 201, description: 'Ordre livraison created.' })
-    async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: OrdreLivraisonCreateDto){
-        const mapped: OrdreLivraisonDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
-        return this.ordreLivraisonService.batchSave(mapped);
-    }
+    //     /**
+    //      * CREATION D'UN OU PLUSIEURS ORDRES DE LIVRAISON
+    //      * @param id Identifiant de la tournée de livraison
+    //      * @param dto Données des points de livraison
+    //      * @returns Ordres de livraison enregistrés
+    //      */
+    // @Post("/:id/ordres-livraison")
+    //     @ApiOperation({ summary: 'Create ordre livraison' })
+    //     @ApiBody({type: [OrdreLivraisonCreateDto]})
+    //     @ApiResponse({ status: 201, description: 'Ordre livraison created.' })
+    // async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: OrdreLivraisonCreateDto){
+    //     const mapped: OrdreLivraisonDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
+    //     return this.ordreLivraisonService.batchSave(mapped);
+    // }
 
         /**
          * LISTE DES ORDRES DE LIVRAISON D'UNE TOURNEE DE LIVRAISON
@@ -88,13 +88,24 @@ export class TourneeLivraisonController {
         return this.ordreLivraisonService.findAllByTournee(id);
     }
 
-            /**
+        /**
          * LISTE DES LIVRAISONs D'UNE TOURNEE DE LIVRAISON
          * @param id Identifiant de la tournée de livraison
          * @return Liste des ordres de livraison 
          */
     @Get("/:id/livraisons")
-    async getLivraisons(@Param("id", ParseIntPipe) id: number){
-        return this.ordreLivraisonService.findAllByTournee(id);
+    @ApiOperation({summary: "Liste des livraison à charger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
+    @ApiQuery({description: "Etape de livraison", example: "chargement ou dechargement"})
+    async getLivraisons(
+        @Query("etape") etape:string,
+        @Param("id", ParseIntPipe) id: number)
+    {
+        if(etape === "chargement"){
+            return this.tourneeService.invertedOrdreLivraison(id);
+        } else if(etape === "dechargement") {
+            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+        } else {
+            throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
+        }
     }
 }

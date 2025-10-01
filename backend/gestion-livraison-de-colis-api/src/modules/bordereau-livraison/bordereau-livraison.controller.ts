@@ -40,11 +40,16 @@ export class BordereauLivraisonController {
         @UserTypes(TypeUtilisateur.Livreur)
         @ApiOperation({summary: "Scanner le bordereau de livraison"})
         @ApiBody({type: BordereauLivraisonCreateDto})
-    scanBordereauLivraison(
+    async scanBordereauLivraison(
         @Query("idOrdreLivraison", ParseIntPipe) idOrdreLivraison: number,
         @Query("idLivreur", ParseIntPipe) idLivreur: number
     ){
-        return this.bordereauService.scanBordereauLivraison(idOrdreLivraison, idLivreur);
+        const response = await this.bordereauService.scanBordereauLivraison(idOrdreLivraison, idLivreur);
+        if(response){
+            return {scan_reussi: true, message: "Scan réussi!"};
+        }
+
+        return {scan_reussi: false, message: "Scan échoué!"};
     }
 
         /**

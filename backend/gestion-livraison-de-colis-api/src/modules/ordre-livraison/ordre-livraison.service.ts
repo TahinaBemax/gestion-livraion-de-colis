@@ -35,13 +35,13 @@ export class OrdreLivraisonService {
     ){}
 
     async findAll(): Promise<OrdreLivraisonEntity[]> {
-        return this.ordreRepo.find({relations: ["livraisons", "tournee_livraison", "point_livraison"] });
+        return this.ordreRepo.find({relations: ["livraison", "tournee_livraison", "point_livraison"] });
     }
 
     async findByIDS(ids: number[]){
         return this.ordreRepo.find({
             where: { id: In(ids) },
-            relations: ["tournee_livraison", "livraisons"]
+            relations: ["tournee_livraison", "livraison"]
         });
     }
 
@@ -50,14 +50,14 @@ export class OrdreLivraisonService {
             return this.ordreRepo.find(
                 {
                     where: {statut: statut},
-                    relations: ["livraisons", "point_livraison", "tournee_livraison"] 
+                    relations: ["livraison", "point_livraison", "tournee_livraison"] 
                 }
             );
         }
 
         return this.ordreRepo.find({
             where: {statut: In([StatutOrdreLivraison.EN_COURS, StatutOrdreLivraison.EFFECTUE])},
-            relations: ["livraisons", "point_livraison", "tournee_livraison"]
+            relations: ["livraison", "point_livraison", "tournee_livraison"]
         });
     }
 
@@ -125,7 +125,7 @@ export class OrdreLivraisonService {
     async findById(id: number): Promise<OrdreLivraisonEntity> {
         const matched = await this.ordreRepo.findOne({
             where: {id: id},
-            relations: ["livraisons", "tournee_livraison", "point_livraison"] 
+            relations: ["livraison", "tournee_livraison", "point_livraison"] 
         });
 
         if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
@@ -205,8 +205,40 @@ export class OrdreLivraisonService {
         }
     }
 
+    async annule(id: number){
+        if(!id) throw new BadRequestException("Id tournée de livraison invalide");
+        const existing = await this.findById(id);
+
+        if(existing.statut === StatutOrdreLivraison.EFFECTUE || existing.statut === StatutOrdreLivraison.EN_COURS){
+            throw new BadRequestException(`Impossibele d'annulé un ordre de livraison avec statut: ${existing.statut}!`);
+        }
+
+        const dataSource = this.ordreRepo.manager.connection as DataSource;
+        const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            existing.livraison.statut_livraison = StatusLivraison.EN_ATTENTE;
+            existing.livraison.colis.forEach(c => c.statut_colis = StatusColis.EN_ATTENTE);
+            
+            queryRunner.manager.save(LivraisonEntity, existing.livraison);
+            queryRunner.manager.delete(OrdreLivraisonEntity, id);
+
+            queryRunner.commitTransaction();
+        } catch (error) {
+            queryRunner.rollbackTransaction();
+            throw error;
+        }
+    }
+
     async update(id: number, dto: OrdreLivraisonUpdateDto){
         if(!dto || !id) throw new BadRequestException("Données planning livraison invalides");
+
+        if((dto.statut && dto.statut === StatutOrdreLivraison.ANNULE) || (dto.statut && dto.statut === StatutOrdreLivraison.EN_ATTENTE)){
+            throw new BadRequestException(`Le nouveau statut ne doit pas être ${dto.statut}`);
+        }
+
         const existing = await this.findById(id);
         this.checkStatutTourneeLivraison((await existing.tournee_livraison));
 

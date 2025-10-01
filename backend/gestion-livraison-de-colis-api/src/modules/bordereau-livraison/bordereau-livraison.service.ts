@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/create-bordereau-livraison-dto';
 import { Repository, In, DataSource, DeleteResult } from 'typeorm';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
-import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enum';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
 import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
@@ -27,13 +26,13 @@ export class BordereauLivraisonService {
     }
 
     async findAll(): Promise<BordereauLivraisonEntity[]> {
-        return this.bordereauRep.find({relations: ['ordre_livraison' ,'livreur', 'contenu']});
+        return this.bordereauRep.find({relations: ['ordre_livraison']});
     }
 
     async findById(id: string): Promise<BordereauLivraisonEntity> {
         const matched =  await this.bordereauRep.findOne({
             where: { id: id },
-            relations: ['ordre_livraison' ,'livreur', 'contenu']
+            relations: ['ordre_livraison']
         });
 
         if(!matched) throw new NotFoundException("Bordereau de livraison inexistant!");
@@ -44,7 +43,6 @@ export class BordereauLivraisonService {
     async findByIdOrdreLivraison(id: number): Promise<BordereauLivraisonEntity|null> {
         const matched = await this.bordereauRep.createQueryBuilder("bordereau")
             .innerJoinAndSelect("bordereau.ordre_livraison", "ordre")
-            .innerJoinAndSelect("bordereau.livreur", "livreur")
             .where("ordre.id = :ID", {id})
             .getOne();
 
@@ -56,7 +54,7 @@ export class BordereauLivraisonService {
         const bordereaux = new Array<BordereauLivraisonEntity>();
         const ordres_livraison: OrdreLivraisonEntity[] = await this.ordreService.findByIDS(dto.id_ordre_livraison);
 
-        if(ordres_livraison.length === 0 ) throw new Error("Ordres de livraison vide!");
+        if(ordres_livraison.length === 0 ) throw new BadRequestException("Aucun ordre de livraison n'a été touvé");
 
         for (const ordre of ordres_livraison) {
             if(ordre.statut === StatutOrdreLivraison.EN_ATTENTE || ordre.statut === StatutOrdreLivraison.ANNULE)

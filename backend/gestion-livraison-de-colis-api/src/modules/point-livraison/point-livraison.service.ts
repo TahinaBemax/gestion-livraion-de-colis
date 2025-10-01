@@ -1,6 +1,6 @@
 
 import { In, Repository } from 'typeorm';
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePointLivraisonDto } from 'src/common/dto/point-livraison/point-livraison-create-dto';
 import { Prestataire } from '../prestataire/prestataire.entity';
@@ -34,7 +34,7 @@ export class PointLivraisonService {
 
     async findAll(): Promise<PointLivraisonEntity[]> {
         return this.pointLivraisonRep.find({
-            relations: ["contraintes_livraison", "evenements"]
+            relations: ["contraintes_livraison", "evenements", "pl.creneaux_livraison"]
         });
     }
 
@@ -42,7 +42,7 @@ export class PointLivraisonService {
         const matched = await this.pointLivraisonRep.findOne(
             {
                 where: {id: id},
-                relations: ["contraintes_livraison", "evenements"]
+                relations: ["contraintes_livraison", "evenements", "pl.creneaux_livraison"]
             }
         );
 
@@ -58,7 +58,7 @@ export class PointLivraisonService {
             .innerJoinAndSelect("pl.prestataire", "p")
             .leftJoinAndSelect("pl.evenements", "event")
             .leftJoinAndSelect("pl.contraintes_livraison", "cl")
-            .leftJoinAndSelect("cl.contrainte_jour_livraisons", "cjl")
+            .leftJoinAndSelect("pl.creneaux_livraison", "creneaux")
             .where("p.id_prestataire = :id", {id: `${id}`})
             .getMany();
     }
@@ -68,7 +68,7 @@ export class PointLivraisonService {
             .leftJoinAndSelect("pl.clients", "c")
             .leftJoinAndSelect("pl.evenements", "event")
             .leftJoinAndSelect("pl.contraintes_livraison", "cl")
-            .leftJoinAndSelect("cl.contrainte_jour_livraisons", "cjl")
+            .leftJoinAndSelect("pl.creneaux_livraison", "creneaux")
             .where("c.id = :id", {id: `${id}`})
             .getOne();
     }
@@ -100,6 +100,7 @@ export class PointLivraisonService {
             .leftJoinAndSelect("pl.evenements", "event")
             .leftJoinAndSelect("pl.prestataire", "p")
             .leftJoinAndSelect("pl.contraintes_livraison", "cl")
+            .leftJoinAndSelect("pl.creneaux_livraison", "creneaux")
             .where("pl.ville ILIKE :ville", {ville: `%${city}%`})
             .andWhere("pl.nom_point_livraison ILIKE :magasin", {magasin: `%${numMagasin}%`})
             .getMany();
@@ -210,7 +211,7 @@ export class PointLivraisonService {
         if(dto && dto.length > 0){
             return dto.map(c => {
                 const contrainte = new ContrainteLivraisonEntity();
-                Utils.isPresentOrFuture(c.date_contrainte)
+                //Utils.isPresentOrFuture(c.date_contrainte)
 
                 contrainte.intitule_contrainte = c.intitule_contrainte;
                 contrainte.date_contrainte = c.date_contrainte;

@@ -32,8 +32,7 @@ export class ColisEntity{
 
     @OneToMany(() => DetailColisEntity, (d) => d.colis, {
         eager: true, 
-        cascade: true, 
-        onUpdate: "CASCADE"
+        cascade: ["insert"]
     })
     details_colis: DetailColisEntity[];
 

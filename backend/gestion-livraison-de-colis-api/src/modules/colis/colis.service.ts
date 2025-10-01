@@ -11,6 +11,9 @@ import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisUpdateDto } from 'src/common/dto/colis/update-colis-dto';
 import { DetailColisEntity } from './detail-colis.entity';
 import { ProblemeColisEntity } from './probleme-colis.entity';
+import { Livreur } from '../livreur/livreur.entity';
+import { LivreurService } from '../livreur/livreur.service';
+import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
 
 @Injectable()
 export class ColisService {
@@ -19,8 +22,71 @@ export class ColisService {
         private readonly colisRep: Repository<ColisEntity>,
         @InjectRepository(ProblemeColisEntity)
         private readonly problemeRep: Repository<ProblemeColisEntity>,
-        private datasource: DataSource
+        private datasource: DataSource,
+        private readonly livreurService: LivreurService
     ){}
+
+    /**
+     * SCAN DU COLIS AU MOMENT DE CHARGEMENT DU CAMION
+     * @param idLivreur 
+     * @param idColis
+     * @returns message
+     */
+
+    async scanColisAuChargementCamion(idLivreur: number, idColis:number): Promise<string> {
+        if(!idColis || !idLivreur) throw new BadRequestException("ID Colis ou ID Livreur invalid!");
+
+        var message = "code barre reconnu et colis valide";
+        const livreur: Livreur = await this.livreurService.findByUserID(idColis);
+        var existingColis: ColisEntity;
+
+        if(!livreur.peut_faire_chargement_colis){
+            throw new BadRequestException("Vous n'avez pas l'accés à cette fonctionnalité!");
+        }
+
+        try {
+            existingColis = await this.findById(idColis);
+
+            if(existingColis.statut_colis === StatusColis.LIVRE || existingColis.statut_colis === StatusColis.EN_COURS_LIVRAISON){
+                throw new BadRequestException('Ce colis est déja scanné!');
+            }
+
+            if(existingColis.statut_colis === StatusColis.RELIQUAT){
+                message = "code barre reconnu et colis en reliquat";
+            }
+        } catch (error) {
+            throw new BadRequestException('Code barre inconnu');
+        }
+
+        if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
+            throw new BadRequestException('Code barre reconnu et colis non rattaché à cette ordre');
+        }
+
+        existingColis.statut_colis = StatusColis.CHARGE_DANS_LA_CAMION;
+        existingColis.date_heure_chargement = new Date().toUTCString();
+
+        this.colisRep.save(existingColis);
+
+        return message;
+    }
+
+    /**
+     * VERIER SI CE COLIS EST RATTACHE A CE LIVREUR
+     * @return boolean
+     */
+    async estRattacheLivreur(idLivreur: number, idColis: number):Promise<boolean> {
+        const tourneeRepository:Repository<TourneeLivraisonEntity> = this.datasource.manager.getRepository(TourneeLivraisonEntity);
+        const count = await tourneeRepository.createQueryBuilder('tournee')
+        .innerJoin("tournee.ordres_livraison", "ordres")
+        .innerJoin("tournee.livreur", "livreur")
+        .innerJoin("ordres.livraison", "livraison")
+        .innerJoin("livraison.colis", "colis")
+        .where("livreur.id_livreur =: idLivreur", {idLivreur})
+        .andWhere("colis.id = :idColis", {idColis})
+        .getCount();
+
+        return count > 0;
+    }
 
     /**
      * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
@@ -207,12 +273,6 @@ export class ColisService {
         });
 
         return sum;
-    }
-
-    private async generateCodeBarre(colis: ColisEntity): Promise<string> {
-        const data: string = `${colis.id}`;
-        
-        return QRCode.toDataURL(data);
     }
 
     private async generateCodeBarreClient(colis: ColisEntity): Promise<string> {

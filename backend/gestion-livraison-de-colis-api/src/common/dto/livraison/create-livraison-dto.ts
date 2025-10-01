@@ -14,20 +14,18 @@ export class LivraisonCreateDto {
     date_livraison: string;
     
     @ApiProperty({
-        example: "10:20:00",
-        required: false
+        example: "10:20:00"
     })
     @IsTime()
     @IsOptional()
-    heure_debut?: string;
+    heure_debut: string;
     
     @ApiProperty({
-        example: "14:00:00",
-        required: false
+        example: "14:00:00"
     })
     @IsTime()
     @IsNotEmpty()
-    heure_fin?: string;
+    heure_fin: string;
              
     @IsNotEmpty()
     @IsArray()
