@@ -7,6 +7,7 @@ import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity'
 import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enum';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
 import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
+import { Utils } from 'src/common/utils/utils';
 
 
 @Injectable()
@@ -94,6 +95,12 @@ export class BordereauLivraisonService {
             const matched = await this.ordreService.findById(idOrdreLivraison);
             if(matched){
                 const tournee: TourneeLivraisonEntity = await matched.tournee_livraison;
+                const now = new Date();
+                const dateTournee = Utils.parseToFRDate(tournee.date_tournee);
+                if(now < dateTournee){
+                    throw new BadRequestException(`Scan de bordereau n'est pas disponible qu'appartir du date ${dateTournee}`);
+                }
+                
                 if(tournee.livreur.id_livreur != idLivreur){
                     throw new BadRequestException("Ce n'est pas votre bordereau de livraison!");
                 }

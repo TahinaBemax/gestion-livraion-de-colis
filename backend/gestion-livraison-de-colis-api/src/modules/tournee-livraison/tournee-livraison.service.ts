@@ -8,6 +8,7 @@ import { Livreur } from '../livreur/livreur.entity';
 import { StatutTourneeLivaison } from 'src/common/enum/status-tournee-livraison';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivraisonTournee } from 'src/common/dto/tournee-livraison/liste-livraison-tournee-dto';
+import { Utils } from 'src/common/utils/utils';
 
 @Injectable()
 export class TourneeLivraisonService {
@@ -27,7 +28,12 @@ export class TourneeLivraisonService {
         // Map ordre de livraison en LivraisonTournée
         for (const ordre of ordresLivraison) {
             const bl = await ordre.bordereau_livraison;
-            if(bl && bl.date_scan_bordereau == tournee.date_tournee){
+            const dateTournee = Utils.parseToFRDate(tournee.date_tournee);
+            const dateScanBL = Utils.parseToFRDate(bl.date_scan_bordereau);
+
+            const dateScanBlString = `${dateScanBL.getDate()}/${dateScanBL.getMonth}/${dateScanBL.getFullYear}}`;
+            const dateTourneeString = `${dateTournee.getDate()}/${dateTournee.getMonth}/${dateTournee.getFullYear}}`;
+            if(bl && dateScanBlString === dateTourneeString){
                 const livraison = new LivraisonTournee();
                 const pointLivraison = ordre.point_livraison;
     
@@ -152,9 +158,14 @@ export class TourneeLivraisonService {
 
         if(statuts.filter(s => s === statut).length === 0) throw new BadRequestException(`Statut inconnue! Le statut doit être: ${statuts}`);
 
-        const tournée = await this.findById(id);
-        tournée.statut = statut;
-        await this.tourneeRep.save(tournée);
+        const tournee = await this.findById(id);
+
+        if(tournee.statut !== StatutTourneeLivaison.BROUILLON && tournee.statut !== StatutTourneeLivaison.PLANIFIE){
+            throw new BadRequestException(`Impossible de modifier le statut en ${statut}!`);
+        }
+        
+        tournee.statut = statut;
+        await this.tourneeRep.save(tournee);
 
         return "Statuts modifié avec succés!";
     }
@@ -164,7 +175,7 @@ export class TourneeLivraisonService {
         const existing = await this.findById(id);
 
         if(existing.statut !== StatutTourneeLivaison.BROUILLON && existing.statut !== StatutTourneeLivaison.PLANIFIE){
-            throw new BadRequestException(`Planning de livraison avec statuts: ${existing.statut} ne peut plus être modifier!`);
+            throw new BadRequestException(`Tournée avec statuts: ${existing.statut} n'est plus modifiable!`);
         }
 
         if(dto.id_livreur){

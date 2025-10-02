@@ -39,7 +39,6 @@ export class BordereauLivraisonController {
         @Roles(UserRole.User)
         @UserTypes(TypeUtilisateur.Livreur)
         @ApiOperation({summary: "Scanner le bordereau de livraison"})
-        @ApiBody({type: BordereauLivraisonCreateDto})
     async scanBordereauLivraison(
         @Query("idOrdreLivraison", ParseIntPipe) idOrdreLivraison: number,
         @Query("idLivreur", ParseIntPipe) idLivreur: number

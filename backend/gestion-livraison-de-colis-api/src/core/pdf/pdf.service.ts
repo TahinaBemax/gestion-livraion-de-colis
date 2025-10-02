@@ -11,34 +11,13 @@ import { DetailColisEntity } from 'src/modules/colis/detail-colis.entity';
 @Injectable()
 export class PdfService {
 
-    async generatePDF(): Promise<Buffer> {
-        const pdfBuffer: Buffer = await new Promise(resolve => {
-            const doc = new PDFDocument({
-                size: 'LETTER',
-                bufferPages: true,
-            });
-
-            doc.text('Hello World', 100, 50);
-            doc.end();
-
-            const buffer = [];
-            doc.on('data', buffer.push.bind(buffer))
-            doc.on('end', () => {
-                const data = Buffer.concat(buffer);
-                resolve(data);
-            })
-        });
-
-        return pdfBuffer;
-    }
-
     async generateBonLivraison(bl: BordereauLivraisonEntity): Promise<Buffer> {
         const font = "Times-Roman";
         const fontBold = "Times-Bold";
         const fontParagraphSize = 20;
         const fontColorParagraphSize = '#333333';
 
-        const pdfBuffer: Buffer = await new Promise(resolve => {
+        const pdfBuffer: Buffer = await new Promise(async resolve => {
             const doc = new PDFDocument({ margin: 50 });
 
             // Title
@@ -51,20 +30,24 @@ export class PdfService {
             const filePath = 'uploads/images/logo.png';
             this.setLogoToRight(doc, filePath);
 
-            this.horizontalLine(doc);
-
-            // Company + Destinataire
-            this.companyInformation(bl, doc, fontBold, font);
-            this.destinataireInformation(bl, doc, fontBold, font);
-
-            // Table (auto-break)
-            this.tableauProduit(bl, doc);
-
-            // Signature
-            this.signature(bl, doc, fontBold, font, doc.y + 30);
-
-            // 👉 Barcode at the end of the LAST page
-            this.barCode(doc, bl);
+            try {
+                this.horizontalLine(doc);
+    
+                // Company + Destinataire
+                this.companyInformation(bl, doc, fontBold, font);
+                await this.destinataireInformation(bl, doc, fontBold, font);
+    
+                // Table (auto-break)
+                this.tableauProduit(bl, doc);
+    
+                // Signature
+                this.signature(bl, doc, fontBold, font, doc.y + 30);
+    
+                // 👉 Barcode at the end of the LAST page
+                await this.barCode(doc, bl);
+            } catch (error) {
+                throw error;
+            }
 
             // Finalize
             doc.end();
@@ -109,10 +92,10 @@ export class PdfService {
         doc.font(fontNormal)
             .fontSize(fontSize)
             .text(bl.adresse_expediteur)
-            .text("Numero de telephone: " + bl.contact_expediteur)
+            .text("Numero de telephone: " + Utils.reformatToPhoneNumber(bl.contact_expediteur));
     }
 
-    private destinataireInformation(
+    private async destinataireInformation(
         bl:BordereauLivraisonEntity,
         doc: PDFKit.PDFDocument, 
         fontBold: string, 
@@ -120,13 +103,16 @@ export class PdfService {
     ){
         const fontSize = 12;
         const titlefontSize = 14;
+        const tournee = await bl.ordre_livraison.tournee_livraison;
+        const livreur =  `${tournee.livreur.user.nom} ${tournee.livreur.user.prenom}`;
+
         doc
             .font(fontNormal)
             .fontSize(fontSize)
             .text('Bordereau de livraison N°: ' + bl.id, 50, 180,)
             .text('Date: ' + bl.date_bordereau)
             .text('Date livraison: ' + bl.date_livraison)
-            .text('Livreur: ');
+            .text('Livreur: ' + livreur);
 
         doc.font(fontBold)
             .fontSize(fontSize)
@@ -157,7 +143,7 @@ export class PdfService {
         doc
             .font(fontBold)
             .fontSize(fontSize)
-            .text('Client:', 50, startY)
+            .text('Client', 50, startY)
             .font(fontNormal)
             .text('Reçu le: ', 50, startY + 20)
             .text('Signature: ', 50 ,startY + 40);
@@ -165,7 +151,7 @@ export class PdfService {
         doc
             .font(fontBold)
             .fontSize(fontSize)
-            .text('Expediteur:', docWith - 200, startY)
+            .text('Expediteur', docWith - 200, startY)
             .font(fontNormal)
             .text('Livré le: ', docWith - 200, startY + 20);
     }

@@ -1,0 +1,1 @@
+UPDATE bordereaux_livraison set date_scan_bordereau = null;

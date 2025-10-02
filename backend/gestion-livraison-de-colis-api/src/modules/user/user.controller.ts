@@ -130,9 +130,11 @@ export class UserController {
      * @returns Liste Notification
      */
     @Get("/:id/notifications")
+        @ApiTags("Notification")
         @UseGuards(SameUserGuard)
         @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)
         @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire)
+        @ApiOperation({summary: "Lister les notifications réçu par cet utilisateur"})
     getNotifications(@Param("id", ParseIntPipe) id: number): Promise<NotificationEntity[]> {
         return this.notifService.findByUser(id);
     }

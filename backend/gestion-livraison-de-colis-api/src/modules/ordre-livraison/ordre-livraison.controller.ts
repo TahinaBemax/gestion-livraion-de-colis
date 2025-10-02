@@ -14,19 +14,21 @@ export class OrdreLivraisonController {
     constructor(private readonly ordreLivraisonService: OrdreLivraisonService) {}
 
     @Get()
-    @ApiOperation({ summary: 'Get all ordre livraisons' })
+    @ApiOperation({ summary: 'Liste des ordres de livraison. (Utilisateur Tempo One)' })
     @ApiResponse({ status: 200, description: 'List of ordre livraisons.' })
     @UserTypes(TypeUtilisateur.TempoOne)
     async findAll() {
         return this.ordreLivraisonService.findAll();
     }
 
-    @Get('/historiques')
-        @ApiOperation({ summary: 'Historique des livraisons', description: ` Lister les ordres de livraison déjà effectués et en cours de traitement et puet être filtré, par prestataire, par zone géographique, par client, par date` })
+    @Get('/historique')
+        @ApiOperation({ summary: 'Historique des livraisons (Utilisateur Tempo One)', description: ` Lister les ordres de livraison déjà effectués et en cours de traitement et peut être filtré, par prestataire, par zone géographique, par client, par date` })
         @ApiQuery({name: "idPrestataire", description: "", required: false})
         @ApiQuery({name: "idClient", description: "", required: false})
         @ApiQuery({name: "dateTournee", description: "La date du tournéé", required: false})
         @ApiQuery({name: "zoneGeographique", description: "code postal ou ville", required: false})
+        @Roles(UserRole.Admin)
+        @UserTypes(TypeUtilisateur.TempoOne)
     async filterBy(
         @Query("idPrestataire") idPrestataire: string|undefined, 
         @Query("idClient") idClient: string|undefined,
@@ -40,17 +42,13 @@ export class OrdreLivraisonController {
     @Get(':id')
     @ApiOperation({ summary: 'Get ordre livraison by id' })
     @ApiParam({ name: 'id', type: 'string' })
-    @ApiResponse({ status: 200, description: 'Ordre livraison found.' })
-    @ApiResponse({ status: 404, description: 'Ordre livraison not found.' })
     async findOne(@Param('id', ParseIntPipe) id: number) {
         return this.ordreLivraisonService.findById(id);
     }
 
     @Get('/:id/fiche-ordre-livraison')
-    @ApiOperation({ summary: 'Get ordre livraison by id' })
+    @ApiOperation({ summary: "Fiche ordre de livraison (information complete de l'ordre de livraison)" })
     @ApiParam({ name: 'id', type: 'string' })
-    @ApiResponse({ status: 200, description: 'Ordre livraison found.' })
-    @ApiResponse({ status: 404, description: 'Ordre livraison not found.' })
     async getFicheOrdreLivraison(@Param('id', ParseIntPipe) id: number) {
         return this.ordreLivraisonService.getFicheOrdreLivraison(id);
     }

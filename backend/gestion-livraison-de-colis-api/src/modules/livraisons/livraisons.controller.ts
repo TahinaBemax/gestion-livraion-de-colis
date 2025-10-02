@@ -23,6 +23,7 @@ export class LivraisonsController {
      * @returns Liste des livraisons
      */
     @Get("/historique")
+    @ApiOperation({summary: "Liste des livraisons encours et déja livré"})
     async getLivraisonsEncoursEtLivre(): Promise<LivraisonEntity[]>{
         const statuts: StatusLivraison[] = [
             StatusLivraison.LIVRE, 
@@ -35,21 +36,12 @@ export class LivraisonsController {
         return this.livraisonService.findByStatuts(statuts);
     }
 
-    // /**
-    //  * LISTE DES LIVRAISON EFFECTUES ET EN COURS DE TRAITEMENT
-    //  * @returns Liste des livraisons
-    //  */
-    // @Get("/:id/scan-colis")
-    // async scanColis(@Param("id", ParseIntPipe) id: number): Promise<LivraisonEntity | null>{
-    //     return this.livraisonService.getLivraisonAndCountColis(id);
-    // }
-
     /**
      * FILTRE LES LIVRAISON PAR Prestataire, Client, Date de livraison 
      * @returns Liste des livraisons
      */
     @Get("/filtre")
-        @ApiOperation({description: "Filtré les livraisons par Prestataire, Client, Date de livraison et Zone Geographique(Code postal ou Ville)"})
+        @ApiOperation({summary: "Filtré les livraisons par Prestataire, Client, Date de livraison et Zone Geographique(Code postal ou Ville)"})
         @ApiQuery({name: "idPrestataire", required: false})
         @ApiQuery({name: "idClient", required: false})
         @ApiQuery({name: "dateLivraison", required: false})
@@ -103,11 +95,11 @@ export class LivraisonsController {
      * @returns Liste des livraisons
      */
     @Put("/:id")
-    @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: LivraisonCreateDto})
-    @ApiCreatedResponse()
-    @ApiBadRequestResponse()
-    @ApiNotFoundResponse()
+        @HttpCode(HttpStatus.CREATED)
+        @ApiBody({type: LivraisonCreateDto})
+        @ApiCreatedResponse()
+        @ApiBadRequestResponse()
+        @ApiOperation({summary: "Modifier un livraison"})
     update(@Param("id", ParseIntPipe) id: number, @Body() dto: LivraisonUpdateDto){
         return this.livraisonService.update(id, dto);
     }
@@ -119,10 +111,10 @@ export class LivraisonsController {
      * @returns Un message
      */
     @Put("/:id/statut")
-    @HttpCode(HttpStatus.CREATED)
-    @ApiCreatedResponse()
-    @ApiBadRequestResponse()
-    @ApiNotFoundResponse()
+        @ApiOperation({summary: "Modifier le statut d'un livraison"})
+        @HttpCode(HttpStatus.CREATED)
+        @ApiCreatedResponse()
+        @ApiBadRequestResponse()
     changeStatuts(@Param("id", ParseIntPipe) id: number, @Query("statut") statut: string){
         return this.livraisonService.updateStatut(id, statut);
     }

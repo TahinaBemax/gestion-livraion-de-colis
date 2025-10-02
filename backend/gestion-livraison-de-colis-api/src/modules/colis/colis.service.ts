@@ -39,18 +39,23 @@ export class ColisService {
         var message = "code barre reconnu et colis valide";
         const livreur: Livreur = await this.livreurService.findByUserID(idColis);
         var existingColis: ColisEntity;
-
+        
         if(!livreur.peut_faire_chargement_colis){
             throw new BadRequestException("Vous n'avez pas l'accés à cette fonctionnalité!");
         }
-
+        
         try {
             existingColis = await this.findById(idColis);
+            const bl = await existingColis.livraisons[0].ordre_livraison.bordereau_livraison;
 
+            if(!bl.date_scan_bordereau){
+                throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
+            }
+            
             if(existingColis.statut_colis === StatusColis.LIVRE || existingColis.statut_colis === StatusColis.EN_COURS_LIVRAISON){
                 throw new BadRequestException('Ce colis est déja scanné!');
             }
-
+            
             if(existingColis.statut_colis === StatusColis.RELIQUAT){
                 message = "code barre reconnu et colis en reliquat";
             }
@@ -215,6 +220,13 @@ export class ColisService {
         if(!id || !dto) throw new BadRequestException("Données Colis invalides!");
 
         const existing = await this.findById(id);
+
+        if(
+            existing.statut_colis !== StatusColis.A_CHARGE_DANS_LA_CAMION &&
+            existing.statut_colis !== StatusColis.EN_ATTENTE
+        ){
+            throw new BadRequestException(`Impossible de modifier un colis avec statut ${existing.statut_colis}`);
+        }
         
         existing.poids_total = this.getSumWeight(dto.details_colis);
         existing.statut_colis = dto.status;

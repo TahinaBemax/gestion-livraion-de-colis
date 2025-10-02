@@ -216,8 +216,11 @@ export class LivraisonsService {
         const statuts = Object.values(StatusLivraison);
         const matched = statuts.filter((s) => s === statut)
 
-        if(!matched || matched.length === 0) throw new BadRequestException(`Statut: {${statut}} inconnue! Voici les statuts acceptés: ${statuts}`);
+        if(!matched || matched.length === 0) throw new BadRequestException(`Statut: {${statut}} inconnu! Voici les statuts acceptés: ${statuts}`);
         
+        if(existing.statut_livraison === StatusLivraison.LIVRE || existing.statut_livraison === StatusLivraison.ANNULE){
+            throw new BadRequestException(`Impossible de modifier le statut d'un livraison avec un statut: ${existing.statut_livraison}`);
+        }
         existing.statut_livraison = statut;
 
         await this.livraisonRep.save(existing);
@@ -310,6 +313,10 @@ export class LivraisonsService {
 
     private async mapUpdateDtoToLivraisonEntity(id: number, dto: LivraisonUpdateDto){
         const existing = await this.findById(id);
+
+        if(existing.statut_livraison !== StatusLivraison.DISTRIBUEUR_ASSIGNÉ && existing.statut_livraison !== StatusLivraison.EN_ATTENTE){
+            throw new BadRequestException(`Un livraison avec statut ${existing.statut_livraison} n'est plus modifiable!`);
+        }
 
         existing.notes = dto.notes;
         existing.date_livraison = dto.date_livraison?? existing.date_livraison;

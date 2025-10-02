@@ -6,11 +6,10 @@ import { ContrainteLivraisonService } from './contrainte-livraison.service';
 import { ContrainteLivraisonEntity } from './contrainte-livraison.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
-import { ContrainteJourDto } from 'src/common/dto/contrainte-jour/contrainte-jour-dto';
 import { ContrainteLivraisonUpdateDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-update-dto';
 
 @Controller('contraintes-livraisons')
-@ApiTags("contraintes-livraisons")
+@ApiTags("Contrainte de livraison")
 @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
 export class ContrainteLivraisonController {
     constructor(private readonly contrainteService: ContrainteLivraisonService){}

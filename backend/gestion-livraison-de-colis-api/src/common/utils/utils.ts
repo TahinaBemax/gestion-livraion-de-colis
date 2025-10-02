@@ -5,11 +5,10 @@ import * as QRCode from 'qrcode';
 
 export class Utils {
     static currencyFormat(nombre: number){
-        return new Intl.NumberFormat("fr-MG", {
-            style: "currency",
-            currency: "MGA",
-            minimumFractionDigits: 0,
-        }).format(nombre);
+        return Number(nombre).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
     }
 
     static getDayInWord(date: Date): string{
@@ -53,7 +52,7 @@ export class Utils {
     static parseToFRDate(date: string): Date{
         try {
             if(!date) throw new Error("La date est null");
-            const parsed = parse(date, "dd/MM/yyyy", new Date());
+            const parsed = parse(date, "yyyy-MM-dd", new Date());
     
             if(!isValid(parsed)) throw new BadRequestException(`Date:${date} invalide`);
             parsed.setUTCHours(0, 0, 0, 0);
