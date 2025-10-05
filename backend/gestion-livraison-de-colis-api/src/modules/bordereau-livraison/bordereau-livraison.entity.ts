@@ -27,7 +27,7 @@ export class BordereauLivraisonEntity {
     @Column({type: "date"})
     date_bordereau: string;
 
-    @Column({ type: "timestamp", nullable: true })
+    @Column({ type: "timestamptz", nullable: true })
     date_scan_bordereau: string;
 
     @Column({type: "date"})

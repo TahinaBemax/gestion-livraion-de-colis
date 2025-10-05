@@ -41,10 +41,15 @@ export class BordereauLivraisonService {
         return matched;
     }
 
+    /**
+     * RECHERCHE UN BORDEREAU DE LIVRAISON PAR ID ORDRE DE LIVRAISON
+     * @param id
+     * @returns BordereauLivraisonEntity
+     */
     async findByIdOrdreLivraison(id: number): Promise<BordereauLivraisonEntity|null> {
         const matched = await this.bordereauRep.createQueryBuilder("bordereau")
             .innerJoinAndSelect("bordereau.ordre_livraison", "ordre")
-            .where("ordre.id = :ID", {id})
+            .where("ordre.id = :ID", {ID: id})
             .getOne();
 
         return matched;
@@ -107,12 +112,7 @@ export class BordereauLivraisonService {
                 const bordereau = await this.findByIdOrdreLivraison(idOrdreLivraison);
     
                 if(bordereau){
-                    const now = new Date();
-                    const day = now.getDay();
-                    const month = now.getMonth() + 1;
-                    const year = now.getFullYear();
-                    bordereau.date_scan_bordereau = `${day}/${month}/${year}`;
-    
+                    bordereau.date_scan_bordereau = new Date().toUTCString();
                     this.bordereauRep.save(bordereau);
                 }
 

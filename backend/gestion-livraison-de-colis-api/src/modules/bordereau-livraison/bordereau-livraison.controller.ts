@@ -45,10 +45,10 @@ export class BordereauLivraisonController {
     ){
         const response = await this.bordereauService.scanBordereauLivraison(idOrdreLivraison, idLivreur);
         if(response){
-            return {scan_reussi: true, message: "Scan réussi!"};
+            return {est_reussi: true, message: "Scan réussi!"};
         }
 
-        return {scan_reussi: false, message: "Scan échoué!"};
+        return {est_reussi: false, message: "Scan échoué!"};
     }
 
         /**

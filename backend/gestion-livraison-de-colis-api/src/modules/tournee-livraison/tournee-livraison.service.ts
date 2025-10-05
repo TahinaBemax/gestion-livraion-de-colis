@@ -9,6 +9,8 @@ import { StatutTourneeLivaison } from 'src/common/enum/status-tournee-livraison'
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivraisonTournee } from 'src/common/dto/tournee-livraison/liste-livraison-tournee-dto';
 import { Utils } from 'src/common/utils/utils';
+import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
+import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
 
 @Injectable()
 export class TourneeLivraisonService {
@@ -24,29 +26,44 @@ export class TourneeLivraisonService {
     private async getLivraisonsByTournee(tournee: TourneeLivraisonEntity): Promise<LivraisonTournee[]> {
         const listLivraison: LivraisonTournee[] = [];
         const ordresLivraison = tournee.ordres_livraison;
+        var countBL = 0;
 
         // Map ordre de livraison en LivraisonTournée
         for (const ordre of ordresLivraison) {
-            const bl = await ordre.bordereau_livraison;
-            const dateTournee = Utils.parseToFRDate(tournee.date_tournee);
-            const dateScanBL = Utils.parseToFRDate(bl.date_scan_bordereau);
+            const bl:BordereauLivraisonEntity = await ordre.bordereau_livraison;
+            if(bl){
+                countBL++;
+                const date = bl.date_scan_bordereau;
+                if(!date){
+                    continue;
+                }
 
-            const dateScanBlString = `${dateScanBL.getDate()}/${dateScanBL.getMonth}/${dateScanBL.getFullYear}}`;
-            const dateTourneeString = `${dateTournee.getDate()}/${dateTournee.getMonth}/${dateTournee.getFullYear}}`;
-            if(bl && dateScanBlString === dateTourneeString){
-                const livraison = new LivraisonTournee();
-                const pointLivraison = ordre.point_livraison;
-    
-                livraison.idLivraison = ordre.livraison.id;
-                livraison.nombreColis = ordre.nbr_colis_reel;
-                livraison.heureDebut = ordre.livraison.heure_debut;
-                livraison.heureFin = ordre.livraison.heure_fin;
-                livraison.nomPointLivraison = `${pointLivraison.numero_magasin}`;
-                livraison.adresse = `${pointLivraison.ville}, ${pointLivraison.code_postal}, ${pointLivraison.numero_rue} - ${pointLivraison.nom_rue}`;
-                livraison.statut = ordre.livraison.statut_livraison;
-    
-                listLivraison.push(livraison);
+                const dateTournee = Utils.parseToFRDate(tournee.date_tournee);
+                const dateScanBL = Utils.parseToFRDate(bl.date_scan_bordereau);
+                const dateScanBlString = `${dateScanBL.getDate()}/${dateScanBL.getMonth}/${dateScanBL.getFullYear}}`;
+                const dateTourneeString = `${dateTournee.getDate()}/${dateTournee.getMonth}/${dateTournee.getFullYear}}`;
+                
+                if(dateScanBlString === dateTourneeString){
+                    const livraison = new LivraisonTournee();
+                    const pointLivraison = ordre.point_livraison;
+        
+                    livraison.idLivraison = ordre.livraison.id;
+                    livraison.nombreColis = ordre.nbr_colis_reel;
+                    livraison.heureDebut = ordre.livraison.heure_debut;
+                    livraison.heureFin = ordre.livraison.heure_fin;
+                    livraison.nomPointLivraison = `${pointLivraison.numero_magasin}`;
+                    livraison.adresse = `${pointLivraison.ville}, ${pointLivraison.code_postal}, ${pointLivraison.numero_rue} - ${pointLivraison.nom_rue}`;
+                    livraison.statut = ordre.livraison.statut_livraison;
+        
+                    listLivraison.push(livraison);
+                }
             }
+        }
+
+        if(countBL > 0 && listLivraison.length === 0) {
+            throw new BadRequestException("Aucun bordereau de livraison déja scané a été trouvé!");
+        } else if(countBL == 0) {
+            throw new BadRequestException("Aucun bordereau de livraison a été trouvé pour ce tournée!");
         }
 
         return listLivraison;
