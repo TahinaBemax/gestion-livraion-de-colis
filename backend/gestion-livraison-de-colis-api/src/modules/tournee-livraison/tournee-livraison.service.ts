@@ -31,6 +31,7 @@ export class TourneeLivraisonService {
         // Map ordre de livraison en LivraisonTournée
         for (const ordre of ordresLivraison) {
             const bl:BordereauLivraisonEntity = await ordre.bordereau_livraison;
+            
             if(bl){
                 countBL++;
                 const date = bl.date_scan_bordereau;

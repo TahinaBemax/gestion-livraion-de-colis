@@ -38,7 +38,7 @@ export class ColisController {
     }
     
     @Put("/:id")
-    @ApiBody({type: ColisCreateDto})
+    @ApiBody({type: ColisUpdateDto})
     @ApiOperation({summary:"Modifier l'information du colis"})
     update(@Param("id", ParseIntPipe) id: number, @Body() dto: ColisUpdateDto){
         return this.colisService.update(id, dto);

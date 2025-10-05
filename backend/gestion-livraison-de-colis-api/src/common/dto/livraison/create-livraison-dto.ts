@@ -33,15 +33,9 @@ export class LivraisonCreateDto {
         type: [DetailColisDto],
         example: [
             {
-                nom_destinataire: "",
-                details_colis: 
-                [
-                    {
-                        description: "",
-                        poids: 0,
-                        valeur_declaree: 20
-                    }
-                ]
+                description_produit: "",
+                poids_produit: 0,
+                valeur_produit: 20
             }
         ]
     })

@@ -73,7 +73,7 @@ export class OrdreLivraisonService {
     async findAllByTournee(id: number): Promise<OrdreLivraisonEntity[]> {
         return this.ordreRepo.createQueryBuilder("o")
             .innerJoinAndSelect("o.tournee_livraison", "tournee")
-            .innerJoinAndSelect("o.livraisons", "l")
+            .innerJoinAndSelect("o.livraison", "l")
             .innerJoinAndSelect("o.point_livraison", "pl")
             .where("tournee.id = :id", {id: id})
             .getMany();

@@ -120,4 +120,13 @@ export class PointLivraisonController {
     async saveClients(@Param("id", ParseIntPipe) id: number,@Body() data: ClientCreateDto[]){
         return this.clientService.batchSave(id, data);
     }
+
+    @Get("/:id/clients")
+    @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiTags("Clients")
+        @ApiOperation({summary: "Ajouter des clients à un point de livraison"})
+        @ApiBody({type: [ClientCreateDto]})
+    async getClients(@Param("id", ParseIntPipe) id: number){
+        return this.clientService.findAllByIDPrestataire(id);
+    }
 }

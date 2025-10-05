@@ -37,6 +37,16 @@ export class LivraisonsController {
     }
 
     /**
+     * LIVRAION INCOMPLETES POUR UN CLIENT 
+     * @returns Liste des livraisons
+     */
+    @Get("/incomplete")
+    @ApiOperation({summary: "Lister les livraions incomplete/échec de livraison ou livraison partielle d'un client"})
+    async getIncompleteLivraison(@Query("idClient", ParseIntPipe) idClient: number): Promise<LivraisonEntity[]>{
+        return this.livraisonService.findLivraisonIncompleteByIdClient(idClient);
+    }
+
+    /**
      * FILTRE LES LIVRAISON PAR Prestataire, Client, Date de livraison 
      * @returns Liste des livraisons
      */

@@ -9,7 +9,6 @@ import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 import * as QRCode from 'qrcode';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisUpdateDto } from 'src/common/dto/colis/update-colis-dto';
-import { DetailColisEntity } from './detail-colis.entity';
 import { ProblemeColisEntity } from './probleme-colis.entity';
 import { Livreur } from '../livreur/livreur.entity';
 import { LivreurService } from '../livreur/livreur.service';
@@ -76,6 +75,37 @@ export class ColisService {
     }
 
     /**
+     * CHANGER LA STATU D'UN COLIS 
+     * @param idColis
+     * @returns message
+     */
+
+    async changerStatutColis(idColis:number, statut: string): Promise<string> {
+        if(!idColis) throw new BadRequestException("ID Colis ou ID Livreur invalid!");
+        var message = "Statut changé avec success!";
+        var error = "Impossible de changer le statut d'un colis avec statut: ";
+
+        const allowedStatut = Object.values(StatusColis);
+        if(allowedStatut.filter(s => s === statut).length === 0) 
+            throw new BadRequestException(`Statut inconnue! Le statut doit être: ${allowedStatut}`);
+
+        try {
+            const colis = await this.findById(idColis);
+
+            if(colis.statut_colis === StatusColis.LIVRE) {
+                throw new BadRequestException(`${error} ${colis.statut_colis}`);
+            } 
+
+            colis.statut_colis = statut
+            this.colisRep.save(colis);
+        } catch (error) {
+            throw error;
+        }
+
+        return message;
+    }
+
+    /**
      * VERIER SI CE COLIS EST RATTACHE A CE LIVREUR
      * @return boolean
      */
@@ -125,7 +155,6 @@ export class ColisService {
 
         return mathced;
     }
-
 
     async findByCodeBarreClient(code: string): Promise<ColisEntity>
     {
@@ -222,15 +251,21 @@ export class ColisService {
         const existing = await this.findById(id);
 
         if(
-            existing.statut_colis !== StatusColis.A_CHARGE_DANS_LA_CAMION &&
-            existing.statut_colis !== StatusColis.EN_ATTENTE
+            !(existing.statut_colis === StatusColis.A_CHARGE_DANS_LA_CAMION || 
+                existing.statut_colis === StatusColis.EN_ATTENTE || 
+                existing.statut_colis !== StatusColis.ANOMALIE)
         ){
             throw new BadRequestException(`Impossible de modifier un colis avec statut ${existing.statut_colis}`);
         }
         
-        existing.poids_total = this.getSumWeight(dto.details_colis);
-        existing.statut_colis = dto.status;
-        existing.details_colis = plainToInstance(DetailColisEntity, dto.details_colis);
+        existing.poids_total = dto.poids_produit?? existing.poids_total;
+        existing.statut_colis = dto.status?? existing.statut_colis;
+
+        const produit = existing.details_colis[0];
+
+        produit.description_produit = dto.description_produit?? produit.description_produit;
+        produit.poids_produit = dto.poids_produit?? produit.poids_produit;
+        produit.valeur_produit = dto.valeur_produit?? produit.valeur_produit;
         
         return this.colisRep.save(existing);
     }
@@ -292,4 +327,6 @@ export class ColisService {
         
         return QRCode.toDataURL(data);
     }
+
+
 }

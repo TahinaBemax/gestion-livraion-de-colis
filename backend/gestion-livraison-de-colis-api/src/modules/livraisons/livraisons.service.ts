@@ -146,9 +146,12 @@ export class LivraisonsService {
     }
 
     async findAll(): Promise<LivraisonEntity[]>{
-        return this.livraisonRep.find({
-            relations: ["client", "colis"]
-        });
+        return this.livraisonRep.createQueryBuilder("livraison")
+        .leftJoinAndSelect("livraison.client", "client")
+        .leftJoinAndSelect("livraison.colis", "colis")
+        .leftJoinAndSelect("colis.details_colis", "produit")
+        .leftJoinAndSelect("livraison.problemes_livraison", "problemes")
+        .getMany();
     }
 
     async findById(id: number): Promise<LivraisonEntity>{
