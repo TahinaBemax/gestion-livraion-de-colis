@@ -29,8 +29,6 @@ export class LiveurMapper {
         
         livreur.categorie_livreur = categorie;
         livreur.peut_faire_chargement_colis = true;
-        livreur.total_points = 0;
-        livreur.total_livraison_effectue = 0;
 
         user.prestataire = prestataire;
         livreur.user = user;

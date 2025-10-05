@@ -17,13 +17,11 @@ import { EvenementLocalModule } from './modules/evenement-local/evenement-local.
 import { ContrainteEvenementModule } from './modules/contrainte-evenement/contrainte-evenement.module';
 import { CreneauLivraisonModule } from './modules/creneau-livraison/creneau-livraison.module';
 import { ContrainteLivraisonModule } from './modules/contrainte-livraison/contrainte-livraison.module';
-import { ContrainteJourModule } from './modules/contrainte-jour/contrainte-jour.module';
 import { FileCleanUpHandlerModule } from './common/file-clean-up-handler/file-clean-up-handler.module';
 import { ImageUploadModule } from './modules/image-upload/image-upload.module';
 import { EmailModule } from './core/email/email.module';
 import { ColisModule } from './modules/colis/colis.module';
 import { LivraisonsModule } from './modules/livraisons/livraisons.module';
-import { PlanningLivraisonModule } from './modules/planning-livraison/planning-livraison.module';
 import { TourneeLivraisonModule } from './modules/tournee-livraison/tournee-livraison.module';
 import { OrdreLivraisonModule } from './modules/ordre-livraison/ordre-livraison.module';
 import { BordereauLivraisonModule } from './modules/bordereau-livraison/bordereau-livraison.module';
@@ -65,13 +63,11 @@ import { SeedModule } from './core/seed/seed.module';
     ContrainteEvenementModule,
     CreneauLivraisonModule,
     ContrainteLivraisonModule,
-    ContrainteJourModule,
     FileCleanUpHandlerModule,
     ImageUploadModule,
     EmailModule,
     ColisModule,
     LivraisonsModule,
-    PlanningLivraisonModule,
     TourneeLivraisonModule,
     OrdreLivraisonModule,
     BordereauLivraisonModule,

@@ -1,5 +1,5 @@
 import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/create-bordereau-livraison-dto';
-import { Body, Controller, Delete, Get, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { BordereauLivraisonService } from './bordereau-livraison.service';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -11,7 +11,7 @@ import { PdfService } from 'src/core/pdf/pdf.service';
 @Controller('bordereaux-livraison')
 @ApiTags("Bordereau de livraison")
 @Roles(UserRole.Admin)
-@UserTypes(TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
+@UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
 export class BordereauLivraisonController {
     constructor(
         readonly bordereauService: BordereauLivraisonService,
@@ -28,6 +28,27 @@ export class BordereauLivraisonController {
         @ApiBody({type: BordereauLivraisonCreateDto})
     save(@Body() dto: BordereauLivraisonCreateDto){
         return this.bordereauService.create(dto);
+    }
+
+    /**
+     * CREATION D'UN BORDEREAU DE LIVRAISON
+     * @param dto Données bordereau de livraison
+     * @returns Bordereau de livraison enregistré
+     */
+    @Put("/scan")
+        @Roles(UserRole.User)
+        @UserTypes(TypeUtilisateur.Livreur)
+        @ApiOperation({summary: "Scanner le bordereau de livraison"})
+    async scanBordereauLivraison(
+        @Query("idOrdreLivraison", ParseIntPipe) idOrdreLivraison: number,
+        @Query("idLivreur", ParseIntPipe) idLivreur: number
+    ){
+        const response = await this.bordereauService.scanBordereauLivraison(idOrdreLivraison, idLivreur);
+        if(response){
+            return {est_reussi: true, message: "Scan réussi!"};
+        }
+
+        return {est_reussi: false, message: "Scan échoué!"};
     }
 
         /**

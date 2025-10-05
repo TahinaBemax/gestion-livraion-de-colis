@@ -1,6 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Livreur } from "../livreur/livreur.entity";
-import { PlanningLivraisonEntity } from "../planning-livraison/planning-livraison.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
 import { Prestataire } from "../prestataire/prestataire.entity";
 
@@ -26,10 +25,6 @@ export class TourneeLivraisonEntity {
     })
     @JoinColumn({name: "id_livreur"})
     livreur: Livreur;
-    
-    @ManyToOne(() => PlanningLivraisonEntity, (p) => p.tournees_livraison, {eager: false})
-    @JoinColumn({name: "id_planning_livraison", referencedColumnName: "id"})
-    planning_livraison: PlanningLivraisonEntity;
 
     @ManyToOne(() => Prestataire, (p) => p.tournees_livraison, { eager: true })
     @JoinColumn({name: "id_prestataire", referencedColumnName: "id_prestataire"})

@@ -23,9 +23,4 @@ export class TourneeLivraisonCreateDto {
     @IsOptional()
     @ApiProperty({ required: false})
     id_livreur?: number;
-
-    @IsNumber()
-    @IsNotEmpty()
-    @ApiProperty()
-    id_prestatiare: number;
 }

@@ -6,11 +6,10 @@ import { ContrainteLivraisonService } from './contrainte-livraison.service';
 import { ContrainteLivraisonEntity } from './contrainte-livraison.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
-import { ContrainteJourDto } from 'src/common/dto/contrainte-jour/contrainte-jour-dto';
 import { ContrainteLivraisonUpdateDto } from 'src/common/dto/contrainte-livraison/contrainte-livraison-update-dto';
 
 @Controller('contraintes-livraisons')
-@ApiTags("contraintes-livraisons")
+@ApiTags("Contrainte de livraison")
 @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
 export class ContrainteLivraisonController {
     constructor(private readonly contrainteService: ContrainteLivraisonService){}
@@ -36,14 +35,5 @@ export class ContrainteLivraisonController {
     update(@Param("id", ParseIntPipe) id: number, @Body() dto: ContrainteLivraisonUpdateDto) {
         return this.contrainteService.update(id, dto);
     }
-    
-    @Post("/:id/contraintes-jours")
-    @Roles(UserRole.Admin)
-    @HttpCode(HttpStatus.CREATED)
-    @ApiBody({type: ContrainteJourDto})
-    @ApiCreatedResponse({type: ContrainteJourDto})
-    @ApiBadRequestResponse({description: "Données Invalides"})
-    addDayConstraintToDeliveryConstraint(@Param("id", ParseIntPipe) id: number, @Body() dto: ContrainteJourDto[]){
-        return this.contrainteService.attachDayConstraintsToDeliveryConstraint(id, dto);
-    }
+
 }

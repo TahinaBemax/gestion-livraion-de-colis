@@ -108,6 +108,13 @@ export class LivreurService {
         return `Compte Livreur ${(isActivate) ? 'activé': 'desactivé'} avec succés!`;
     }
 
+    /**
+     * ACTIVE OU DESACTIVE LA FONCTIONNALITE SCAN COLIS AU MOMENT DU CHARGEMENT DU CAMION
+     * @param id_prestataire 
+     * @param id 
+     * @param canScan 
+     * @returns 
+     */
     async canScan(id_prestataire:number, id: number, canScan: boolean): Promise<string>{
         const matched = await this.findById(id);
         const prestataire = await matched.user.prestataire;

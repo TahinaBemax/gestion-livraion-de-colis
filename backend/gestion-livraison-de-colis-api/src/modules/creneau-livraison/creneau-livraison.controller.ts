@@ -6,8 +6,7 @@ import { CreneauLivraisonResponseDto, CreneauLivraisonListResponseDto, CreneauLi
 import { CreneauLivraisonMapper } from './creneau-livraison.mapper';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreneauLivraisonEntity } from './creneau-livraison.entity';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Créneaux de Livraison')
 @Controller('creneaux-livraison')
@@ -51,6 +50,7 @@ export class CreneauLivraisonController {
     })
     @ApiQuery({ name: 'id', description: 'ID du point de livraison' })
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+    @ApiOperation({summary: "Lister les créneaux de livraions d'un point de livraison donnée!"})
     async findByPointLivraison(@Param('id') id: number): Promise<CreneauLivraisonListResponseDto> {
         const entities = await this.creneauLivraisonService.findByPointLivraison(id);
         const data = CreneauLivraisonMapper.toResponseDtoList(entities);
@@ -61,38 +61,38 @@ export class CreneauLivraisonController {
         };
     }
 
-    @Get('annee/:annee')
-    @ApiOkResponse({ 
-        description: 'Créneaux de livraison pour une année', 
-        type: CreneauLivraisonListResponseDto 
-    })
-    @ApiQuery({ name: 'annee', description: 'Année des créneaux' })
-    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
-    async findByAnnee(@Param('annee') annee: number): Promise<CreneauLivraisonListResponseDto> {
-        const entities = await this.creneauLivraisonService.findByAnnee(annee);
-        const data = CreneauLivraisonMapper.toResponseDtoList(entities);
-        return {
-            data,
-            total: data.length,
-            message: `${data.length} créneau(x) de livraison trouvé(s) pour l'année ${annee}`
-        };
-    }
+    // @Get('annee/:annee')
+    // @ApiOkResponse({ 
+    //     description: 'Créneaux de livraison pour une année', 
+    //     type: CreneauLivraisonListResponseDto 
+    // })
+    // @ApiQuery({ name: 'annee', description: 'Année des créneaux' })
+    // @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+    // async findByAnnee(@Param('annee') annee: number): Promise<CreneauLivraisonListResponseDto> {
+    //     const entities = await this.creneauLivraisonService.findByAnnee(annee);
+    //     const data = CreneauLivraisonMapper.toResponseDtoList(entities);
+    //     return {
+    //         data,
+    //         total: data.length,
+    //         message: `${data.length} créneau(x) de livraison trouvé(s) pour l'année ${annee}`
+    //     };
+    // }
 
-    @Get('jour/:jourSemaine')
-    @ApiOkResponse({ 
-        description: 'Créneaux de livraison pour un jour de la semaine', 
-        type: CreneauLivraisonListResponseDto 
-    })
-    @ApiQuery({ name: 'jourSemaine', description: 'Jour de la semaine' })
-    async findByJourSemaine(@Param('jourSemaine') jourSemaine: string): Promise<CreneauLivraisonListResponseDto> {
-        const entities = await this.creneauLivraisonService.findByJourSemaine(jourSemaine);
-        const data = CreneauLivraisonMapper.toResponseDtoList(entities);
-        return {
-            data,
-            total: data.length,
-            message: `${data.length} créneau(x) de livraison trouvé(s) pour le ${jourSemaine}`
-        };
-    }
+    // @Get('jour/:jourSemaine')
+    // @ApiOkResponse({ 
+    //     description: 'Créneaux de livraison pour un jour de la semaine', 
+    //     type: CreneauLivraisonListResponseDto 
+    // })
+    // @ApiQuery({ name: 'jourSemaine', description: 'Jour de la semaine' })
+    // async findByJourSemaine(@Param('jourSemaine') jourSemaine: string): Promise<CreneauLivraisonListResponseDto> {
+    //     const entities = await this.creneauLivraisonService.findByJourSemaine(jourSemaine);
+    //     const data = CreneauLivraisonMapper.toResponseDtoList(entities);
+    //     return {
+    //         data,
+    //         total: data.length,
+    //         message: `${data.length} créneau(x) de livraison trouvé(s) pour le ${jourSemaine}`
+    //     };
+    // }
 
     @Post()
     @HttpCode(HttpStatus.CREATED)
@@ -124,12 +124,14 @@ export class CreneauLivraisonController {
         description: 'Créneau de livraison supprimé avec succès',
         type: CreneauLivraisonDeleteResponseDto
     })
+    @ApiOperation({summary: "Supprimer un créneau de livraison"})
     @ApiBadRequestResponse({ description: 'Créneau introuvable' })
     delete(@Param('id') id: number): Promise<CreneauLivraisonDeleteResponseDto> {
         return this.creneauLivraisonService.delete(id);
     }
 
     @Delete('point-livraison/:id')
+    @ApiOperation({summary: "Supprimer des créneaux de livraison par un Point de livraison donné"})
     @ApiOkResponse({ 
         description: 'Créneaux de livraison supprimés avec succès',
         type: CreneauLivraisonDeleteResponseDto

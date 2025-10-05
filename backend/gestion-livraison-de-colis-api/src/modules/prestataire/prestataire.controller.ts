@@ -1,3 +1,5 @@
+import { TourneeLivraisonService } from 'src/modules/tournee-livraison/tournee-livraison.service';
+import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, UseGuards} from '@nestjs/common';
 import { PrestataireService } from './prestataire.service';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
@@ -5,7 +7,7 @@ import { LivreurService } from '../livreur/livreur.service';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PrestataireSwaggerDto } from 'src/common/swagger-dto/prestataire/prestataire-swagger-dto';
 import { LivreurSwaggerDto } from 'src/common/swagger-dto/livreur/livreur-swagger-dto';
 import { UserSwaggerDto } from 'src/common/swagger-dto/user/user-swagger-dto';
@@ -21,6 +23,8 @@ import { PrestataireUpdateDto } from 'src/common/dto/prestataire/update-prestata
 import { Prestataire } from './prestataire.entity';
 import { Livreur } from '../livreur/livreur.entity';
 import { SamePrestataireGuard } from 'src/common/guards/same-prestataire.guard';
+import { OrdreLivraisonCreateDto } from 'src/common/dto/ordre-livraison/ordre-livraison-create-dto';
+import { OrdreLivraisonDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
 
 
 @Controller('prestataires')
@@ -34,6 +38,7 @@ export class PrestataireController {
         private readonly userService: UserService,
         private readonly ordreLivraisonService: OrdreLivraisonService,
         private readonly notificationService: NotificationService,
+        private readonly tourneeService: TourneeLivraisonService,
     ){}
 
     /* UTILISATEUR PRESTATAIRE */
@@ -273,36 +278,6 @@ export class PrestataireController {
         return this.livreurService.create(id, data);
     }
 
-    // /**
-    //  * DESACTIVER UN LIVREUR
-    //  * @param id_prestataire ID du prestataire
-    //  * @param idLivreur ID du livreur à désactiver 
-    //  * @returns Message de succès
-    //  */
-    // @Delete("/:idPrestataire/livreurs/:idLivreur/desactivate")
-    // @ApiOperation({summary: "Désactiver le compte d'un livreur!"})
-    // @ApiCreatedResponse({description: "Compte désactivé!", type: "string"})
-    // @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
-    // @ApiInternalServerErrorResponse({description: "Internal server error"})
-    // desactivateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number): Promise<{message: string}>{
-    //     return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, false);
-    // }
-
-    // /**
-    //  * ACTIVER UN LIVREUR
-    //  * @param id_prestataire ID du prestataire
-    //  * @param idLivreur ID du livreur à activer 
-    //  * @returns Message de succès
-    //  */
-    // @Put("/:idPrestataire/livreurs/:idLivreur/activate")
-    //     @ApiParam({name: "idPrestataire", description: "ID du prestataire"})
-    //     @ApiParam({name: "idLivreur", description: "ID du livreur"})
-    //     @ApiOperation({summary: "Activer le compte d'un livreur!"})
-    //     @ApiCreatedResponse({description: "Compte activé!", type: "string"})
-    //     @ApiNotFoundResponse({description: "Prestataire ou Livreur Introuvable"})
-    // activateLivreur(@Param("idPrestataire") id_prestataire: number, @Param("idLivreur") idLivreur: number){
-    //     return this.livreurService.changeAccountStatus(id_prestataire, idLivreur, true);
-    // }
 
     /**
      * ACTIVER OU DESACTIVER LA FONCTIONNALITE DE SCAN AU MOMENT DU CHARGEMENT DU CAMION
@@ -384,11 +359,39 @@ export class PrestataireController {
     }
 
 
+    /* +++++ +++ TOURNEE DE LIVRAISON +++ +++++ */
+    @Post("/:idPrestataire/tournees")
+    @UseGuards(SamePrestataireGuard)
+    @ApiTags("Tournée de livraison")
+        @ApiOperation({ summary: 'Créer un tournée'})
+        @ApiBody({type: [TourneeLivraisonCreateDto]})
+    async saveTourneeLivraison(@Param("idPrestataire") idPrestataire:number, @Body() data: TourneeLivraisonCreateDto[])   
+    {
+        if(!idPrestataire) throw new BadRequestException("ID Prestataire est obligatoir.");
+
+        return this.tourneeService.batchSave(idPrestataire, data);
+    }
+
+        /**
+         * CREATION D'UN OU PLUSIEURS ORDRES DE LIVRAISON
+         * @param id Identifiant de la tournée de livraison
+         * @param dto Données des points de livraison
+         * @returns Ordres de livraison enregistrés
+         */
+    @Post("/:idPrestataire/tournees/:id/ordres-livraison")
+        @UseGuards(SamePrestataireGuard)
+        @ApiOperation({ summary: 'Créer un ordre livraison' })
+        @ApiBody({type: OrdreLivraisonCreateDto})
+        @ApiTags("Tournée de livraison")
+    async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: OrdreLivraisonCreateDto){
+        const mapped: OrdreLivraisonDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
+        return this.ordreLivraisonService.batchSave(mapped);
+    }
+
     /* +++++ +++ ORDRE DE LIVRAISON +++ +++++ */
     @Get("/:idPrestataire/ordres-livraison/historique")
     @UseGuards(SamePrestataireGuard)
     @ApiTags("Ordre de Livraison")
-    @Get('/historiques')
         @ApiOperation({ summary: 'Historique des livraisons',
              description: ` Lister les ordres de livraison déjà effectués et en cours de traitement et puet être filtré, par prestataire, par zone géographique, par client, par date` 
             })

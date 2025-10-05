@@ -13,6 +13,7 @@ import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity'
 import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-livraison.module';
 import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module';
 import { NotificationModule } from '../notification/notification.module';
+import { TourneeLivraisonModule } from '../tournee-livraison/tournee-livraison.module';
 
 @Module({
   providers: [
@@ -27,6 +28,7 @@ import { NotificationModule } from '../notification/notification.module';
     forwardRef(() => ContrainteLivraisonModule),
     forwardRef(() => UserModule),
     forwardRef(() => LivreurModule),
+    forwardRef(() => TourneeLivraisonModule),
     TypeOrmModule.forFeature([
       Prestataire, 
       User, 

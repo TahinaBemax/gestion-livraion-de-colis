@@ -8,10 +8,8 @@ import { PrestataireService } from '../prestataire/prestataire.service';
 import { User } from '../user/user.entity';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 import { ContrainteLivraisonEntity } from './contrainte-livraison.entity';
-import { ContrainteJourEntity } from '../contrainte-jour/contrainte-jour.entity';
 import { EvenementLocalEntity } from '../evenement-local/evenement-local.entity';
 import { EvenementLocalService } from '../evenement-local/evenement-local.service';
-import { ContrainteJourService } from '../contrainte-jour/contrainte-jour.service';
 import { ContrainteEvenementEntity } from '../contrainte-evenement/contrainte-evenement.entity';
 
 @Module({
@@ -19,7 +17,6 @@ import { ContrainteEvenementEntity } from '../contrainte-evenement/contrainte-ev
     forwardRef(() => PointLivraisonModule),
     TypeOrmModule.forFeature([
       ContrainteLivraisonEntity, 
-      ContrainteJourEntity,
       Prestataire, 
       EvenementLocalEntity, 
       User,
@@ -29,7 +26,6 @@ import { ContrainteEvenementEntity } from '../contrainte-evenement/contrainte-ev
   ],
   providers: [
     ContrainteLivraisonService,
-    ContrainteJourService,
     PrestataireService,
     EvenementLocalService
   ],

@@ -14,6 +14,10 @@ import { DetailColisEntity } from '../colis/detail-colis.entity';
 import { ClientEntity } from '../client/client.entity';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
 import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
+import { ScanColisResponse } from 'src/common/dto/scan-colis/scan-colis-response';
+import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
+import { Utils } from 'src/common/utils/utils';
+import { ClientService } from '../client/client.service';
 
 @Injectable()
 export class LivraisonsService {
@@ -23,8 +27,7 @@ export class LivraisonsService {
         private readonly pointLivraisonService: PointLivraisonService,
         @InjectRepository(ProblemeLivraisonEntity)
         private readonly problemeLivraisonRep: Repository<ProblemeLivraisonEntity>,
-        @InjectRepository(ClientEntity)
-        private readonly clientRep: Repository<ClientEntity>
+        private readonly clientService: ClientService
     ){}
 
     /**
@@ -39,6 +42,25 @@ export class LivraisonsService {
         }
         );
     }
+
+    /**
+     * Nombre de colis charge et nombre de colis à charger 
+     * @param statuts 
+     * @returns 
+     */
+    // async getLivraisonAndCountColis(idLivraison: number): Promise<ScanColisResponse | null>{
+    //     const livraison = await this.livraisonRep.createQueryBuilder("l")
+    //         .leftJoinAndSelect("l.colis", "c")
+    //         .loadRelationCountAndMap("l.colis_a_charger", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NULL"),)
+    //         .loadRelationCountAndMap("l.colis_charges", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NOT NULL"),)
+    //         .where("l.id = :id", {id: idLivraison})
+    //         .getOne();
+
+    //     if(livraison){
+    //         const dto = new ScanColisResponse();
+    //         dto.heure_debut = livraison.heure_debut?? livraison.client.point_livraison;
+    //     }
+    // }
 
     /**
      * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
@@ -76,10 +98,31 @@ export class LivraisonsService {
             .innerJoinAndSelect("client.point_livraison", "pl")
             .innerJoinAndSelect("l.colis", "c")
             .where("pl.id =:id", { id: idPL })
+            .andWhere("(l.statut_livraison =:statut)", {
+                statut: StatusLivraison.EN_ATTENTE,
+            })
+            .getMany();
+    }
+
+    /**
+     * 
+     * @param idPL 
+     * @param idClient 
+     * @returns 
+     */
+    async findLivraisonIncompleteByIdClient(idClient:number): Promise<LivraisonEntity[]> {
+        if(!idClient) throw new Error(`ID point de livraison invalid!`);
+
+        return this.livraisonRep
+            .createQueryBuilder("l")
+            .innerJoinAndSelect("l.client", "client")
+            .innerJoinAndSelect("client.point_livraison", "pl")
+            .innerJoinAndSelect("l.colis", "c")
+            .where("client.id =:idClient", { idClient: idClient })
             .andWhere("(l.statut_livraison =:echec OR l.statut_livraison =:retourne_expediteur OR l.statut_livraison =:partielle)", {
                 echec: StatusLivraison.ECHEC_LIVRAISON,
                 retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR,
-                partielle: StatusLivraison.LIVRAISON_PARTIELLE,
+                partielle: StatusLivraison.LIVRAISON_PARTIELLE
             })
             .getMany();
     }
@@ -173,8 +216,11 @@ export class LivraisonsService {
         const statuts = Object.values(StatusLivraison);
         const matched = statuts.filter((s) => s === statut)
 
-        if(!matched || matched.length === 0) throw new BadRequestException(`Statut: {${statut}} inconnue! Voici les statuts acceptés: ${statuts}`);
+        if(!matched || matched.length === 0) throw new BadRequestException(`Statut: {${statut}} inconnu! Voici les statuts acceptés: ${statuts}`);
         
+        if(existing.statut_livraison === StatusLivraison.LIVRE || existing.statut_livraison === StatusLivraison.ANNULE){
+            throw new BadRequestException(`Impossible de modifier le statut d'un livraison avec un statut: ${existing.statut_livraison}`);
+        }
         existing.statut_livraison = statut;
 
         await this.livraisonRep.save(existing);
@@ -195,14 +241,25 @@ export class LivraisonsService {
 
     private getColis(dto: DetailColisDto[]){
         if(! Array.isArray(dto)) throw new BadRequestException("Colis doit être un tableau");
+        const listColis: ColisEntity[] = [];
 
-        const colis: ColisEntity[] = plainToInstance(ColisEntity, dto);
-        return colis.map(c => {
-            c.statut_colis = StatusColis.EN_ATTENTE;
-            c.poids_total = this.getSumWeight(c.details_colis);  
-            
-            return c;
+        dto.forEach(item => {
+            const colis = new ColisEntity();
+            const produit = new DetailColisEntity();
+
+            produit.description_produit = item.description_produit;
+            produit.poids_produit = item.poids_produit;
+            produit.valeur_produit = item.valeur_produit;
+
+            colis.statut_colis = StatusColis.EN_ATTENTE;
+            colis.poids_total = produit.poids_produit;
+            colis.details_colis = [];  
+            colis.details_colis.push(produit);  
+
+            listColis.push(colis);
         });
+
+        return listColis;
     } 
 
     private getSumWeight(detailsColis: DetailColisEntity[]) {
@@ -229,11 +286,12 @@ export class LivraisonsService {
 
     private async mapToLivraisonEntity(dto: LivraisonCreateDto){
         const livraison: LivraisonEntity = new LivraisonEntity();
-        const client = await this.clientRep.findOneBy({id: dto.id_client});
+        const client = await this.clientService.findById(dto.id_client);
         const point_livraison = await this.pointLivraisonService.findByClient(dto.id_client);
 
-        if(!client) throw new BadRequestException("Client inexistant.");
         if(!point_livraison) throw new BadRequestException("Ce client n'est pas encore rattaché à un point de livraison");
+
+        this.checkTime(dto.date_livraison, dto.heure_debut, dto.heure_fin, point_livraison);
 
         livraison.notes = dto.notes;
         livraison.date_livraison = dto.date_livraison;
@@ -256,10 +314,14 @@ export class LivraisonsService {
     private async mapUpdateDtoToLivraisonEntity(id: number, dto: LivraisonUpdateDto){
         const existing = await this.findById(id);
 
+        if(existing.statut_livraison !== StatusLivraison.DISTRIBUEUR_ASSIGNÉ && existing.statut_livraison !== StatusLivraison.EN_ATTENTE){
+            throw new BadRequestException(`Un livraison avec statut ${existing.statut_livraison} n'est plus modifiable!`);
+        }
+
         existing.notes = dto.notes;
         existing.date_livraison = dto.date_livraison?? existing.date_livraison;
-        existing.heure_debut = dto.heure_debut;
-        existing.heure_fin = dto.heure_fin;
+        existing.heure_debut = dto.heure_debut?? existing.heure_debut;
+        existing.heure_fin = dto.heure_fin?? existing.heure_fin;
         
         existing.nom_destinataire = dto.nom_destinataire?? existing.nom_destinataire;
         existing.adresse_principale = dto.adresse_principale?? existing.adresse_principale;
@@ -268,12 +330,37 @@ export class LivraisonsService {
         existing.pays = dto.pays;
         existing.code_postal = dto.code_postal?? existing.code_postal;
 
+        this.checkTime(existing.date_livraison, existing.heure_debut, existing.heure_fin, existing.client.point_livraison);
+
         if(dto.id_client){
-            const client = await this.clientRep.findOneBy({id: dto.id_client});
+            const client = await this.clientService.findById(dto.id_client);
             if(!client) throw new BadRequestException("Client inexistant.");
             existing.client = client;
         }
 
         return existing;
+    }
+
+    private checkTime(date_livraison: string, heure_debut: string, heure_fin: string, pointLivraison: PointLivraisonEntity){
+        const dateLivraison: Date = Utils.parseToFRDate(date_livraison);
+        if(!pointLivraison) throw new BadRequestException("Point de livraison est null");
+
+        pointLivraison.creneaux_livraison.forEach(horaire => {
+            if(horaire.annee == dateLivraison.getFullYear() && horaire.jour_semaine.toLocaleLowerCase() == Utils.getDayInWord(dateLivraison)){
+                if(heure_debut){    
+                    if(
+                        Utils.compareTwoTimes(horaire.heure_debut, heure_debut) <= 0 && 
+                        Utils.compareTwoTimes(horaire.heure_fin, heure_debut) >= 0 && 
+                        Utils.compareTwoTimes(horaire.heure_fin, heure_fin) >= 0
+                    ){
+                        return true;
+                    }
+                    
+                    throw new BadRequestException(`L'heure de la livraison doit être comprise entre ${horaire.heure_debut} - ${horaire.heure_fin}`)
+                }
+
+                return true;
+            }
+        })
     }
 }

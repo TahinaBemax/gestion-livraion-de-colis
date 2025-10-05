@@ -14,6 +14,7 @@ import { LivreurTemporaireEntity } from './livreur-temporaire/livreur-temporaire
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivraisonsModule } from '../livraisons/livraisons.module';
 import { NotificationModule } from '../notification/notification.module';
+import { ColisModule } from '../colis/colis.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationModule } from '../notification/notification.module';
     forwardRef(() => UserModule),
     forwardRef(() => LivraisonsModule),
     forwardRef(() => NotificationModule),
+    forwardRef(() => ColisModule),
     TypeOrmModule.forFeature([
       Livreur, 
       User, 

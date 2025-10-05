@@ -23,17 +23,17 @@ export function IsFRDate(validationOptions?: ValidationOptions) {
             }
           }
 
-          const parsed = parse(value, 'dd/MM/yyyy', new Date());
-          const isValidDate = isValid(parsed) && format(parsed, 'dd/MM/yyyy') === value;
+          const parsed = parse(value, 'yyyy-MM-dd', new Date());
+          const isValidDate = isValid(parsed) && format(parsed, 'yyyy-MM-dd') === value;
           
           if (!isValidDate) {
-            throw new BadRequestException(`Le format de la date pour ${propertyName} doit être en dd/MM/yyyy. Valeur reçue: ${value}`);
+            throw new BadRequestException(`Le format de la date pour ${propertyName} doit être en yyyy-MM-dd. Valeur reçue: ${value}`);
           }
           
           return true;
         },
         defaultMessage() {
-          return 'Le format de la date doit être en dd/MM/yyyy';
+          return 'Le format de la date doit être en yyyy-MM-dd';
         },
       },
     });

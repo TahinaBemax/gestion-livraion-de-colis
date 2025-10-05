@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, OneToMany, ManyToOne } from "typeorm";
 import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
-import { ContrainteJourEntity } from "../contrainte-jour/contrainte-jour.entity";
 
 @Entity("contraintes_livraison")
 export class ContrainteLivraisonEntity {
@@ -11,22 +10,15 @@ export class ContrainteLivraisonEntity {
     intitule_contrainte: string;
 
     @Column({type: "date"})
-    date_debut: string;
+    date_contrainte: string;
 
-    @Column({type: "date"})
-    date_fin: string;
+    @Column({type: "time"})
+    heure_fin_livrable: string;
 
-    @Column({nullable: true})
-    priorite_contrainte?: string;
+    @Column({type: "time"})
+    heure_debut_livrable: string;
 
     @ManyToOne(() => PointLivraisonEntity, (pl) => pl.contraintes_livraison)
     @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
     point_livraison?: PointLivraisonEntity;
-
-    @OneToMany(() => ContrainteJourEntity, (contrainte) => contrainte.contrainte_livraison, {
-        eager: true, 
-        cascade: true, 
-        onUpdate: "CASCADE"
-    })
-    contrainte_jour_livraisons?: ContrainteJourEntity[];
 }

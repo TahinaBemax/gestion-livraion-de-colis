@@ -1,3 +1,4 @@
+import { Utils } from 'src/common/utils/utils';
 import { Injectable } from '@nestjs/common';
 import * as PDFDocument from 'pdfkit';
 import { BordereauLivraisonEntity } from 'src/modules/bordereau-livraison/bordereau-livraison.entity';
@@ -5,30 +6,10 @@ import { BarcodeService } from '../code_barre/code_barre.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
+import { DetailColisEntity } from 'src/modules/colis/detail-colis.entity';
 
 @Injectable()
 export class PdfService {
-
-    async generatePDF(): Promise<Buffer> {
-        const pdfBuffer: Buffer = await new Promise(resolve => {
-            const doc = new PDFDocument({
-                size: 'LETTER',
-                bufferPages: true,
-            });
-
-            doc.text('Hello World', 100, 50);
-            doc.end();
-
-            const buffer = [];
-            doc.on('data', buffer.push.bind(buffer))
-            doc.on('end', () => {
-                const data = Buffer.concat(buffer);
-                resolve(data);
-            })
-        });
-
-        return pdfBuffer;
-    }
 
     async generateBonLivraison(bl: BordereauLivraisonEntity): Promise<Buffer> {
         const font = "Times-Roman";
@@ -36,7 +17,7 @@ export class PdfService {
         const fontParagraphSize = 20;
         const fontColorParagraphSize = '#333333';
 
-        const pdfBuffer: Buffer = await new Promise(resolve => {
+        const pdfBuffer: Buffer = await new Promise(async resolve => {
             const doc = new PDFDocument({ margin: 50 });
 
             // Title
@@ -49,20 +30,24 @@ export class PdfService {
             const filePath = 'uploads/images/logo.png';
             this.setLogoToRight(doc, filePath);
 
-            this.horizontalLine(doc);
-
-            // Company + Destinataire
-            this.companyInformation(bl, doc, fontBold, font);
-            this.destinataireInformation(bl, doc, fontBold, font);
-
-            // Table (auto-break)
-            this.tableauProduit(bl, doc);
-
-            // Signature
-            this.signature(bl, doc, fontBold, font, doc.y + 30);
-
-            // 👉 Barcode at the end of the LAST page
-            this.barCode(doc, bl);
+            try {
+                this.horizontalLine(doc);
+    
+                // Company + Destinataire
+                this.companyInformation(bl, doc, fontBold, font);
+                await this.destinataireInformation(bl, doc, fontBold, font);
+    
+                // Table (auto-break)
+                this.tableauProduit(bl, doc);
+    
+                // Signature
+                this.signature(bl, doc, fontBold, font, doc.y + 30);
+    
+                // 👉 Barcode at the end of the LAST page
+                await this.barCode(doc, bl);
+            } catch (error) {
+                throw error;
+            }
 
             // Finalize
             doc.end();
@@ -107,10 +92,10 @@ export class PdfService {
         doc.font(fontNormal)
             .fontSize(fontSize)
             .text(bl.adresse_expediteur)
-            .text("Numero de telephone: " + bl.contact_expediteur)
+            .text("Numero de telephone: " + Utils.reformatToPhoneNumber(bl.contact_expediteur));
     }
 
-    private destinataireInformation(
+    private async destinataireInformation(
         bl:BordereauLivraisonEntity,
         doc: PDFKit.PDFDocument, 
         fontBold: string, 
@@ -118,13 +103,16 @@ export class PdfService {
     ){
         const fontSize = 12;
         const titlefontSize = 14;
+        const tournee = await bl.ordre_livraison.tournee_livraison;
+        const livreur =  `${tournee.livreur.user.nom} ${tournee.livreur.user.prenom}`;
+
         doc
             .font(fontNormal)
             .fontSize(fontSize)
             .text('Bordereau de livraison N°: ' + bl.id, 50, 180,)
             .text('Date: ' + bl.date_bordereau)
             .text('Date livraison: ' + bl.date_livraison)
-            .text('Livreur: ' + bl.livreur.user.nom + ' ' + bl.livreur.user.prenom);
+            .text('Livreur: ' + livreur);
 
         doc.font(fontBold)
             .fontSize(fontSize)
@@ -155,7 +143,7 @@ export class PdfService {
         doc
             .font(fontBold)
             .fontSize(fontSize)
-            .text('Client:', 50, startY)
+            .text('Client', 50, startY)
             .font(fontNormal)
             .text('Reçu le: ', 50, startY + 20)
             .text('Signature: ', 50 ,startY + 40);
@@ -163,7 +151,7 @@ export class PdfService {
         doc
             .font(fontBold)
             .fontSize(fontSize)
-            .text('Expediteur:', docWith - 200, startY)
+            .text('Expediteur', docWith - 200, startY)
             .font(fontNormal)
             .text('Livré le: ', docWith - 200, startY + 20);
     }
@@ -222,38 +210,38 @@ export class PdfService {
         startY += rowHeight;
 
         // Rows
-        bl.contenu.forEach((product, rowIndex) => {
-            // ✅ Check page space
-            if (startY + rowHeight > doc.page.height - doc.page.margins.bottom - 100) {
-                doc.addPage();
-                startY = doc.y;
-            }
-
-            // Alternating background
-            if (rowIndex % 2 === 0) {
-                doc.rect(startX, startY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
-                .fill('#f9f9f9');
-            }
-
-            // Row cells
-            x = startX;
-            const row = [
-                product.id,
-                product.description_produit,
-                product.poids_produit + 'kg',
-                product.valeur_produit + 'Ar'
-            ];
-
-            row.forEach((cell, i) => {
-                doc.fillColor('#000000')
-                .font('Helvetica')
-                .fontSize(12)
-                .text(cell.toString(), x + 5, startY + 5, { width: colWidths[i] - 10, align: i >= 2 ? 'right' : 'left' });
-                x += colWidths[i];
+        this.getProduits(bl).forEach((product, rowIndex) => {
+                // ✅ Check page space
+                if (startY + rowHeight > doc.page.height - doc.page.margins.bottom - 100) {
+                    doc.addPage();
+                    startY = doc.y;
+                }
+    
+                // Alternating background
+                if (rowIndex % 2 === 0) {
+                    doc.rect(startX, startY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+                    .fill('#f9f9f9');
+                }
+    
+                // Row cells
+                x = startX;
+                const row = [
+                    product.id,
+                    product.description_produit,
+                    product.poids_produit + 'kg',
+                    Utils.currencyFormat(product.valeur_produit)
+                ];
+    
+                row.forEach((cell, i) => {
+                    doc.fillColor('#000000')
+                    .font('Helvetica')
+                    .fontSize(12)
+                    .text(cell.toString(), x + 5, startY + 5, { width: colWidths[i] - 10, align: i >= 2 ? 'right' : 'left' });
+                    x += colWidths[i];
+                });
+    
+                startY += rowHeight;
             });
-
-            startY += rowHeight;
-        });
 
         return startY;
     }
@@ -265,5 +253,17 @@ export class PdfService {
         .moveTo(50, 100)             // Starting point of line (x=50, y=100)
         .lineTo(550, 100)            // Ending point of line (x=550, y=100)
         .stroke();                   // Draw the line
+    }
+
+    private getProduits(bl: BordereauLivraisonEntity){
+        const produits: DetailColisEntity[] = [];
+
+        bl.ordre_livraison.livraison.colis.forEach(colis => {
+            colis.details_colis.forEach(produit => {
+                produits.push(produit);
+            });
+        });
+
+        return produits;
     }
 }
