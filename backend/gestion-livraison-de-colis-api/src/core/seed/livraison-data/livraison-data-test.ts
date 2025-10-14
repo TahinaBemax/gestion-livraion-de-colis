@@ -6,9 +6,9 @@ export class LivraisonDataTest {
         // POINT DE LIVRAISON 1
         // ++++++ PREMIERE LIVRAISON ++++++
         const livraison1 = new LivraisonCreateDto();
-        livraison1.date_livraison = "2025-10-02";
+        livraison1.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
         livraison1.heure_debut = "10:20:00";
-        livraison1.heure_fin = "14:00:00";
+        livraison1.heure_fin = "12:00:00";
         livraison1.id_client = idClient;
         
         const livraison1Produit1 = new DetailColisDto();
@@ -25,7 +25,7 @@ export class LivraisonDataTest {
 
         // ++++++ DEUXIME LIVRAISON ++++++
         const livraison2 = new LivraisonCreateDto();
-        livraison2.date_livraison = "2025-10-02";
+        livraison2.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
         livraison2.heure_debut = "09:00:00";
         livraison2.heure_fin = "10:00:00";
         livraison2.id_client = idClient;
@@ -44,7 +44,7 @@ export class LivraisonDataTest {
         // POINT DE LIVRAISON 2
         // ++++++ PREMIERE LIVRAISON ++++++
         const livraison1 = new LivraisonCreateDto();
-        livraison1.date_livraison = "2025-10-02";
+        livraison1.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
         livraison1.heure_debut = "08:20:00";
         livraison1.heure_fin = "10:00:00";
         livraison1.id_client = idClient;

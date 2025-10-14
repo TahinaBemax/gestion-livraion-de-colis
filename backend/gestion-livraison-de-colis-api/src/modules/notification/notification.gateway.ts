@@ -1,4 +1,3 @@
-import { NotificationCreateDto } from './../../common/dto/notification/notification-create-dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   WebSocketGateway,
@@ -10,14 +9,10 @@ import {
   ConnectedSocket
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AlertDto } from 'src/common/dto/notification/notification-socket-dto';
-import { UserService } from '../user/user.service';
-import { LivreurService } from '../livreur/livreur.service';
-import { NotificationService } from './notification.service';
-import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 import { ConnectedUserDto } from 'src/common/dto/notification/notification-user-connected-dto';
 import { User } from '../user/user.entity';
-import { info } from 'console';
+import { AlertProblemeColisDto } from './dto/alert-probleme-colis-dto';
+import { AlertProblemeLivraisonDto } from './dto/alert-probleme-livraison-dto';
 
 @WebSocketGateway(
     {
@@ -43,14 +38,12 @@ import { info } from 'console';
 @Injectable()
 export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
-    readonly userService: UserService,
-    readonly livreurService: LivreurService,
-    readonly notifService: NotificationService
+    private readonly problemeColisHandler: ProblemColisHandler,
+    private readonly problemeLivraisonHandler: ProblemLivraisonHandler,
   ){}
 
   @WebSocketServer()
   server: Server;
-
   // store connected users
   private users: ConnectedUserDto[] = []; 
 
@@ -83,83 +76,41 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     this.users = this.users.filter(user => user.socketID !== client.id);
   }
 
-  @SubscribeMessage('send_alert')
-  async handleSendNotification(
-    @MessageBody() data: AlertDto,
-    @ConnectedSocket() client: Socket,
-  ) 
-  {
+
+  @SubscribeMessage('send_problem_colis_alert')
+  async handleProblemColisAlert(@MessageBody() data: AlertProblemeColisDto, @ConnectedSocket() client: Socket) {
     try {
-      this.saveNotification(client.id, data);
-      this.sendMessage(data);
+        this.problemeColisHandler.handle(data, this.server, this.users);
     } catch (error) {
-      console.error(error);
+      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
     }
   }
 
-  private async sendMessage(data: AlertDto){
-    const receiverSocketId = this.users.filter(user =>  data.receiverUserType.includes(user.typeUtilisateur));
-
-    if (receiverSocketId) {
-        try {    
-            const message = data.message;
-            const titre = data.titre;
-            receiverSocketId.forEach(receiver => {
-                this.server.to(receiver.socketID).emit('receive_notification', {
-                      titre,
-                      message,
-                      timestamp: new Date(),
-                });
-                console.log(`Message: ${message} envoyé!`);
-            });
-
-            
-        } catch (error) {
-            console.error(error);
-        }
-    } else {
-      console.warn(`User ${data.receiverUserType} may not online`);
+  @SubscribeMessage('send_problem_livraison_alert')
+  async handleProblemLivraisonAlert(@MessageBody() data: AlertProblemeLivraisonDto, @ConnectedSocket() client: Socket) {
+    try {
+        this.problemeLivraisonHandler.handle(data, this.server, this.users);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
     }
   }
 
-  private async saveNotification(clientSocketID: string, data: AlertDto){
-    const notifCreateDto = new NotificationCreateDto();
-    notifCreateDto.message = data.message;
-    notifCreateDto.titre = data.titre;
-    notifCreateDto.id_receveurs = [];
-
-    if (data.receiverUserType.includes(TypeUtilisateur.TempoOne)) {
-        const tempoOneUsers = await this.userService.findTempoOneUsers();
-        notifCreateDto.id_receveurs = notifCreateDto.id_receveurs.concat(tempoOneUsers.map(user => user.id_utilisateur));
-    } 
-
-    if (data.receiverUserType.includes(TypeUtilisateur.Prestataire)) {
-        const prestataireUsers = await this.userService.findPrestataireUsers(data.idReceiver);
-        notifCreateDto.id_receveurs = notifCreateDto.id_receveurs.concat(prestataireUsers.map(user => user.id_utilisateur));
-    } 
-
-    if(data.receiverUserType.includes(TypeUtilisateur.Livreur)) {
-        notifCreateDto.id_receveurs = notifCreateDto.id_receveurs.concat([data.idReceiver]);
-    } 
-    
-    if(notifCreateDto.id_receveurs.length === 0) {
-        console.error("Type Utiilisateur inconnue");
-        throw new BadRequestException("Type Utiilisateur inconnue");
+  @SubscribeMessage('send_alert_from_prestataire_to_tempoOne')
+  async handleAlertFromPrestataireToTempoOne(@MessageBody() data: AlertProblemeColisDto, @ConnectedSocket() client: Socket) {
+    try {
+        this.problemeColisHandler.handle(data, this.server, this.users);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
     }
-    
-    const senderID = this.getUserIdBySocketID(clientSocketID); 
-    const saved = await this.notifService.save(senderID, notifCreateDto);
-    info("Alert enregistré avec success!");
-
-    return saved;
   }
 
-
-  private getUserIdBySocketID(socketID: string): number {
-    const matched = this.users.filter(u => u.socketID === socketID);
-
-    if(matched.length > 0) return matched[0].userID;
-
-    throw new Error(`L'utilisateur avec ID Socket:${socketID} est introuvable.`);
+  @SubscribeMessage('send_alert_from_tempoOne_to_prestataire')
+  async handleAlertFromTempoOneToPrestataire(@MessageBody() data: AlertProblemeLivraisonDto, @ConnectedSocket() client: Socket) {
+    try {
+        this.problemeLivraisonHandler.handle(data, this.server, this.users);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
+    }
   }
+
 }

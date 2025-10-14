@@ -73,9 +73,10 @@ export class OrdreLivraisonService {
     async findAllByTournee(id: number): Promise<OrdreLivraisonEntity[]> {
         return this.ordreRepo.createQueryBuilder("o")
             .innerJoinAndSelect("o.tournee_livraison", "tournee")
-            .innerJoinAndSelect("o.livraisons", "l")
+            .innerJoinAndSelect("o.livraison", "l")
             .innerJoinAndSelect("o.point_livraison", "pl")
             .where("tournee.id = :id", {id: id})
+            .orderBy("l.heure_debut", "ASC")
             .getMany();
     }
     
@@ -128,7 +129,7 @@ export class OrdreLivraisonService {
             relations: ["livraison", "tournee_livraison", "point_livraison"] 
         });
 
-        if(!matched) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
+        if(!matched) throw new NotFoundException(`Ordre de livraison avec ID:{${id}} est introuvable!`);
 
         return matched;
     }
@@ -340,7 +341,7 @@ export class OrdreLivraisonService {
         ordre_livraison.point_obtenu = 0;
         ordre_livraison.estimation_retard = "00:00:00";
         ordre_livraison.nbr_colis_prevu = this.getNbrColisPrevu(dto.livraison);
-        ordre_livraison.nbr_colis_reel = this.getNbrColisReel(incompleteLivraisons);
+        ordre_livraison.nbr_colis_reel = ordre_livraison.nbr_colis_prevu + this.getNbrColisReel(incompleteLivraisons);
         ordre_livraison.tournee_livraison = dto.tournee;
         ordre_livraison.livraison = dto.livraison;
         ordre_livraison.point_livraison = dto.pointLivraion;

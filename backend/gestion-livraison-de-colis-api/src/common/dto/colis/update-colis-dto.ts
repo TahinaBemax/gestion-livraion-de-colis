@@ -1,20 +1,24 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber } from "class-validator";
 import { StatusColis } from "src/common/enum/status-colis.enum";
-import { DetailColisUpdateDto } from "./update-detail-colis-dto";
 
 export class ColisUpdateDto{
     @IsNotEmpty()
     @ApiProperty({required: false})
-    @IsOptional()
-    id?: number;
-
-    @IsNotEmpty()
-    @ApiProperty()
     @IsEnum(StatusColis)
-    status:string;
+    status?:string;
     
     @IsNotEmpty()
-    @ApiProperty()
-    details_colis: DetailColisUpdateDto[];   
+    @ApiProperty({required: false})
+    description_produit?:string;
+
+    @IsNotEmpty()
+    @ApiProperty({required: false})
+    @IsNumber()
+    poids_produit?:number;
+    
+    @IsNotEmpty()
+    @IsNumber()
+    @ApiProperty({required: false})
+    valeur_produit?: number;   
 }

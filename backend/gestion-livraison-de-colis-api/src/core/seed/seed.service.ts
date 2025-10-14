@@ -63,6 +63,7 @@ export class SeedService {
         const excludes = ["roles", "types_utilisateur", "categories_livreur"];
 
         try {
+            this.dataSource.createQueryRunner().query("ALTER SEQUENCE ref_bordereau RESTART WITH 1");
             for (const entity of entities) {
                 const repository = this.dataSource.getRepository(entity.name);
                 const tableName = entity.tableName;

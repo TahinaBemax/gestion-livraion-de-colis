@@ -34,7 +34,7 @@ export class PointLivraisonService {
 
     async findAll(): Promise<PointLivraisonEntity[]> {
         return this.pointLivraisonRep.find({
-            relations: ["contraintes_livraison", "evenements", "pl.creneaux_livraison"]
+            relations: ["contraintes_livraison", "evenements", "creneaux_livraison"]
         });
     }
 
@@ -42,7 +42,7 @@ export class PointLivraisonService {
         const matched = await this.pointLivraisonRep.findOne(
             {
                 where: {id: id},
-                relations: ["contraintes_livraison", "evenements", "pl.creneaux_livraison"]
+                relations: ["contraintes_livraison", "evenements", "creneaux_livraison"]
             }
         );
 

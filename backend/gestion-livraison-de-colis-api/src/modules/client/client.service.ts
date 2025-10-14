@@ -18,6 +18,17 @@ export class ClientService {
         return this.clientRep.find();
     }
 
+    async findAllByIDPrestataire(idPrestataire: number): Promise<ClientEntity[]> {
+        if(!idPrestataire){
+            throw new BadRequestException("ID Prestataire est null");
+        }
+
+        return this.clientRep.createQueryBuilder("client")
+        .innerJoin("client.point_livraison", "pl")
+        .where("pl.id_point_livraison = :id", {id: idPrestataire})
+        .getMany();
+    }
+
     async findById(id: number): Promise<ClientEntity> {
         const matched = await this.clientRep.findOneBy({id: id});
 

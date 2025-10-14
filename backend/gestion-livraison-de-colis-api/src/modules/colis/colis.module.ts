@@ -7,10 +7,12 @@ import { DetailColisEntity } from './detail-colis.entity';
 import { ProblemeColisEntity } from './probleme-colis.entity';
 import { LivraisonEntity } from '../livraisons/livraison.entity';
 import { LivreurModule } from '../livreur/livreur.module';
+import { LivraisonsModule } from '../livraisons/livraisons.module';
 
 @Module({
   imports: [
     forwardRef(() => LivreurModule),
+    forwardRef(() => LivraisonsModule),
     TypeOrmModule.forFeature([
       ColisEntity,
       DetailColisEntity,

@@ -1,5 +1,5 @@
 import { ColisService } from 'src/modules/colis/colis.service';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporaire.service';
 import { LivreurTemporaireDto } from 'src/common/dto/livreur/livreur-temporaire-dto';
@@ -16,6 +16,7 @@ import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-prob
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { NotificationService } from '../notification/notification.service';
 import { SameUserGuard } from 'src/common/guards/same-user.guard';
+import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
 
 @Controller('livreurs')
 @Roles(UserRole.User, UserRole.ResponsableExploitation)
@@ -28,6 +29,7 @@ export class LivreurController {
         private readonly livraisonService: LivraisonsService,
         private readonly colisService: ColisService,
         private readonly notifService: NotificationService,
+        private readonly tourneeService: TourneeLivraisonService,
     ){}
 
     /* LIVREUR */
@@ -130,8 +132,7 @@ export class LivreurController {
         @ApiBody({type: LivreurTemporaireDto})
         @ApiTags("Livreur Temporaraire")
         @ApiOperation({summary: "Créer un livreur temporaraire"})
-        @ApiOperation({description: "Créer un Livreur temporaraire"})
-        @ApiQuery({description: "ID Utilisateur mais non ID Livreur"})
+        @ApiParam({name: "id", description: "ID Utilisateur mais non ID Livreur"})
     async save(@Param("id", ParseIntPipe) id: number, @Body() dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
         return this.livreurTempService.save(id, dto);
     }
@@ -143,13 +144,15 @@ export class LivreurController {
          * @param dto Données à modifier
          * @returns Livreur temporaire modifié
          */
-    @Put('temporaire/:idLivreurTemp')
+    @Put('/:idLiveur/temporaire/:idLivreurTemp')
+    @UseGuards(SameUserGuard)
         @ApiBody({type: LivreurTemporaireUpdateDto})
         @ApiTags("Livreur Temporaraire")
-        @ApiCreatedResponse()
-        @ApiNotFoundResponse()
         @ApiOperation({summary: "Modifier un Livreur temporaraire"})
-    async update(@Param("idLivreurTemp", ParseIntPipe) idLivreurTemp:number, @Body() dto: LivreurTemporaireUpdateDto){
+    async update(
+        @Param("idLiveur", ParseIntPipe) idLiveur:number,
+        @Param("idLivreurTemp", ParseIntPipe) idLivreurTemp:number, @Body() dto: LivreurTemporaireUpdateDto
+    ){
         return this.livreurTempService.update(idLivreurTemp, dto);
     }
 
@@ -192,12 +195,67 @@ export class LivreurController {
         return this.notifService.findLivreurNotifications(id);
     }
 
-    @Post("/:id/colis/:idColis/chargement")
+    @Post("/:id/colis/:idColis")
+    @UseGuards(SameUserGuard)
         @ApiTags("Chargement et Dechargement Camion")
         @ApiOperation({summary: "Scan du colis au moment du chargement du Camion"})
-        @UseGuards(SameUserGuard)
         @ApiParam({name: "id", description: "ID Utilisateur mais non pas l'ID du livreur"})
-    async scanColis(@Param("id", ParseIntPipe) id: number, @Param("idColis", ParseIntPipe) idColis: number){
-        return this.colisService.scanColisAuChargementCamion(id, idColis);
+        @ApiParam({name: "idColis", description: "ID du colis"})
+        @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement ou dechargement"})
+    async scanColis(
+        @Param("id", ParseIntPipe) id: number, 
+        @Param("idColis", ParseIntPipe) idColis: number,
+        @Query("etape") etape:string
+    ){
+        if(etape === "chargement"){
+            return this.colisService.scanColisAuChargementCamion(id, idColis);        
+        } else if(etape === "dechargement") {
+            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+        } else {
+            throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
+        }
+    }
+
+
+        /**
+         * LISTE DES LIVRAISONs D'UNE TOURNEE DE LIVRAISON
+         * @param id Identifiant de la tournée de livraison
+         * @return Liste des ordres de livraison 
+         */
+    @Get("/:id/tournees/:idTournee/livraisons")
+    @ApiTags("Chargement et Dechargement Camion")
+    @ApiOperation({summary: "Liste des livraison à charger/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
+    @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement ou dechargement"})
+    @ApiParam({name: "idTournee", description: "ID De l'utilisateur"})
+    async getLivraisons(
+        @Query("etape") etape:string,
+        @Param("idTournee", ParseIntPipe) id: number)
+    {
+        if(etape === "chargement"){
+            return this.tourneeService.invertedOrdreLivraison(id);
+        } else if(etape === "dechargement") {
+            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+        } else {
+            throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
+        }
+    }
+
+            /**
+         * LISTE DES COLIS D'UNE LIVRAISON
+         * @param id Identifiant de la tournée de livraison
+         * @return Liste des ordres de livraison 
+         */
+    @Get("/:id/tournees/:idTournee/livraisons/:idLivraison/colis")
+        @ApiTags("Chargement et Dechargement Camion")
+        @ApiOperation({summary: "Liste des colis d'un livraison à charger dans le camion"})
+        @ApiParam({name: "id", description: "ID De l'utilisateur"})
+        @ApiParam({name: "idTournee", description: "ID Du tournee de livraison"})
+        @ApiParam({name: "idLivraison", description: "ID De l'ordre de livraison"})
+    async getColisByIdLivraison(
+        @Param("idTournee", ParseIntPipe) idTournee: number,
+        @Param("id", ParseIntPipe) idUser: number,
+        @Param("idLivraison", ParseIntPipe) idLivraison: number)
+    {
+        return this.tourneeService.getListColisByIDLivraison(idTournee, idLivraison, idUser);
     }
 }
