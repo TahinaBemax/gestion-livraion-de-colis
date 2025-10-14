@@ -16,20 +16,20 @@ export class CreneauLivraisonController {
         private readonly creneauLivraisonService: CreneauLivraisonService
     ) {}
 
-    @Get()
-    @ApiOkResponse({ 
-        description: 'Liste de tous les créneaux de livraison', 
-        type: CreneauLivraisonListResponseDto 
-    })
-    async findAll(): Promise<CreneauLivraisonListResponseDto> {
-        const entities = await this.creneauLivraisonService.findAll();
-        const data = CreneauLivraisonMapper.toResponseDtoList(entities);
-        return {
-            data,
-            total: data.length,
-            message: `${data.length} créneau(x) de livraison trouvé(s)`
-        };
-    }
+    // @Get()
+    // @ApiOkResponse({ 
+    //     description: 'Liste de tous les créneaux de livraison', 
+    //     type: CreneauLivraisonListResponseDto 
+    // })
+    // async findAll(): Promise<CreneauLivraisonListResponseDto> {
+    //     const entities = await this.creneauLivraisonService.findAll();
+    //     const data = CreneauLivraisonMapper.toResponseDtoList(entities);
+    //     return {
+    //         data,
+    //         total: data.length,
+    //         message: `${data.length} créneau(x) de livraison trouvé(s)`
+    //     };
+    // }
 
     @Get('/:id')
     @ApiOkResponse({ 
@@ -43,23 +43,23 @@ export class CreneauLivraisonController {
         return CreneauLivraisonMapper.toResponseDto(entity);
     }
 
-    @Get('point-livraison/:id')
-    @ApiOkResponse({ 
-        description: 'Créneaux de livraison pour un point de livraison', 
-        type: CreneauLivraisonListResponseDto 
-    })
-    @ApiQuery({ name: 'id', description: 'ID du point de livraison' })
-    @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
-    @ApiOperation({summary: "Lister les créneaux de livraions d'un point de livraison donnée!"})
-    async findByPointLivraison(@Param('id') id: number): Promise<CreneauLivraisonListResponseDto> {
-        const entities = await this.creneauLivraisonService.findByPointLivraison(id);
-        const data = CreneauLivraisonMapper.toResponseDtoList(entities);
-        return {
-            data,
-            total: data.length,
-            message: `${data.length} créneau(x) de livraison trouvé(s) pour ce point de livraison`
-        };
-    }
+    // @Get('point-livraison/:id')
+    // @ApiOkResponse({ 
+    //     description: 'Créneaux de livraison pour un point de livraison', 
+    //     type: CreneauLivraisonListResponseDto 
+    // })
+    // @ApiQuery({ name: 'id', description: 'ID du point de livraison' })
+    // @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
+    // @ApiOperation({summary: "Lister les créneaux de livraions d'un point de livraison donnée!"})
+    // async findByPointLivraison(@Param('id') id: number): Promise<CreneauLivraisonListResponseDto> {
+    //     const entities = await this.creneauLivraisonService.findByPointLivraison(id);
+    //     const data = CreneauLivraisonMapper.toResponseDtoList(entities);
+    //     return {
+    //         data,
+    //         total: data.length,
+    //         message: `${data.length} créneau(x) de livraison trouvé(s) pour ce point de livraison`
+    //     };
+    // }
 
     // @Get('annee/:annee')
     // @ApiOkResponse({ 

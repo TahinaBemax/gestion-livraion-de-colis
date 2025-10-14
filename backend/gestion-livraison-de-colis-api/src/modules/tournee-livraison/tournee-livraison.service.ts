@@ -11,6 +11,10 @@ import { LivraisonTournee } from 'src/common/dto/tournee-livraison/liste-livrais
 import { Utils } from 'src/common/utils/utils';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
+import { TourneeLivraisonUpdateDto } from 'src/common/dto/tournee-livraison/update-tournee-livraison-dto';
+import { LivraisonsService } from '../livraisons/livraisons.service';
+import { stat } from 'fs';
+import { StatusColis } from 'src/common/enum/status-colis.enum';
 
 @Injectable()
 export class TourneeLivraisonService {
@@ -21,7 +25,26 @@ export class TourneeLivraisonService {
         private readonly livreurRep: Repository<Livreur>,
         @InjectRepository(Prestataire)
         private readonly prestataireRep: Repository<Prestataire>,
+        private readonly livraisonService: LivraisonsService
     ){}
+
+    async getListColisByIDLivraison(idTournee: number, idOrdreLivraison: number, idUser: number){
+        if(!idTournee || !idOrdreLivraison || !idUser) throw new BadRequestException("Données invalides!");
+
+        const tournee = await this.findById(idTournee);
+        if(tournee.livreur.user.id_utilisateur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
+        const ordreLivraison: OrdreLivraisonEntity|undefined = await tournee.ordres_livraison.find(ol => ol.id === idOrdreLivraison);
+        if(!ordreLivraison) throw new NotFoundException(`Ordre de livraison avec ID:{${idOrdreLivraison}} est introuvable dans cette tournée!`);
+        const livraisonIncomplet = await this.livraisonService.findLivraisonIncompleteByIdClient(ordreLivraison.livraison.client.id);
+
+        livraisonIncomplet.forEach(livraison => livraison.colis.forEach(colis => {
+            if(colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR){
+                colis.statut_colis = StatusColis.RELIQUAT;
+            }
+        }));
+
+        return ordreLivraison.livraison.colis.concat(livraisonIncomplet.flatMap(livraison => livraison.colis));
+    }
 
     private async getLivraisonsByTournee(tournee: TourneeLivraisonEntity): Promise<LivraisonTournee[]> {
         const listLivraison: LivraisonTournee[] = [];
@@ -29,20 +52,21 @@ export class TourneeLivraisonService {
         var countBL = 0;
 
         // Map ordre de livraison en LivraisonTournée
-        for (const ordre of ordresLivraison) {
+        for (const ordre of ordresLivraison) {            
             const bl:BordereauLivraisonEntity = await ordre.bordereau_livraison;
             
             if(bl){
                 countBL++;
-                const date = bl.date_scan_bordereau;
+                const date: string = bl.date_scan_bordereau;
                 if(!date){
                     continue;
                 }
 
-                const dateTournee = Utils.parseToFRDate(tournee.date_tournee);
-                const dateScanBL = Utils.parseToFRDate(bl.date_scan_bordereau);
-                const dateScanBlString = `${dateScanBL.getDate()}/${dateScanBL.getMonth}/${dateScanBL.getFullYear}}`;
-                const dateTourneeString = `${dateTournee.getDate()}/${dateTournee.getMonth}/${dateTournee.getFullYear}}`;
+                const dateTournee = new Date(tournee.date_tournee);
+                const dateScanBL = new Date(date);
+
+                const dateScanBlString = `${dateScanBL.getDate()}/${dateScanBL.getMonth()}/${dateScanBL.getFullYear()}`;
+                const dateTourneeString = `${dateTournee.getDate()}/${dateTournee.getMonth()}/${dateTournee.getFullYear()}`;
                 
                 if(dateScanBlString === dateTourneeString){
                     const livraison = new LivraisonTournee();
@@ -101,13 +125,10 @@ export class TourneeLivraisonService {
         const groupByPointLivraison: Record<string, LivraisonTournee[]> = await this.getOrdreLivraisonGroupedByPointLivraison(idTournee);
         const invertedOrderedlistLivraison: LivraisonTournee[] = [];
 
-        // trier les livraison par ordre décroissante pour chaque point de livraison
-        for(const pl in groupByPointLivraison) {
-            groupByPointLivraison[pl].sort((a, b) => {
-                return b.heureDebut.localeCompare(a.heureDebut)
-            });
-
-            invertedOrderedlistLivraison.concat(groupByPointLivraison[pl]);
+        // trier les livraison par ordre décroissant pour chaque point de livraison
+        for (const pl in groupByPointLivraison) {
+            groupByPointLivraison[pl].sort((a, b) => b.heureDebut.localeCompare(a.heureDebut));
+            invertedOrderedlistLivraison.push(...groupByPointLivraison[pl]);
         }
 
         return invertedOrderedlistLivraison;
@@ -123,7 +144,7 @@ export class TourneeLivraisonService {
                 return a.heureDebut.localeCompare(b.heureDebut)
             });
 
-            orderedByPointLivraison.concat(groupByPointLivraison[pl]);
+            orderedByPointLivraison.push(...groupByPointLivraison[pl]);
         }
 
         return orderedByPointLivraison;
@@ -143,7 +164,12 @@ export class TourneeLivraisonService {
     async findById(id: number): Promise<TourneeLivraisonEntity> {
         const mathced = await this.tourneeRep.findOne({
             where: {id: id},
-            relations: ["ordres_livraison"] 
+            relations: [
+                "ordres_livraison",
+                "ordres_livraison.bordereau_livraison",
+                "ordres_livraison.point_livraison",
+                "ordres_livraison.livraison"
+            ]
         });
 
         if(!mathced) throw new NotFoundException(`Tournée Livraison avec ID:{${id}} est introuvable!`);
@@ -188,7 +214,7 @@ export class TourneeLivraisonService {
         return "Statuts modifié avec succés!";
     }
 
-    async update(id: number, dto: TourneeLivraisonCreateDto){
+    async update(id: number, dto: TourneeLivraisonUpdateDto){
         if(!dto || !id) throw new BadRequestException("Données planning livraison invalides");
         const existing = await this.findById(id);
 
@@ -201,7 +227,10 @@ export class TourneeLivraisonService {
             existing.livreur = livreur;
         }
 
-        existing.date_tournee = dto.date_tournee;
+        existing.date_tournee = dto.date_tournee?? existing.date_tournee;
+        existing.heure_debut = dto.heure_debut?? existing.heure_debut;
+        existing.heure_fin = dto.heure_fin?? existing.heure_fin;
+        
 
         return this.tourneeRep.save(existing);
     }

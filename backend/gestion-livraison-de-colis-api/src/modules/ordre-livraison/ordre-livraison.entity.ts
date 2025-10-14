@@ -36,7 +36,7 @@ export class OrdreLivraisonEntity {
     @JoinColumn({ name: "id_livraison", referencedColumnName: "id" })
     livraison: LivraisonEntity;
 
-    @OneToMany(() => BordereauLivraisonEntity, (b) => b.ordre_livraison, {
+    @OneToOne(() => BordereauLivraisonEntity, (b) => b.ordre_livraison, {
         lazy: true
     })
     bordereau_livraison: Promise<BordereauLivraisonEntity>|BordereauLivraisonEntity;
@@ -44,6 +44,6 @@ export class OrdreLivraisonEntity {
     @ManyToOne(() => PointLivraisonEntity, (p) => p.ordres_livraison, {
         eager: true
     })
-    @JoinColumn({ name: "id_point_livraison", referencedColumnName: "id" })
+    @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})
     point_livraison: PointLivraisonEntity;    
 }

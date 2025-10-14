@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { NotificationEntity } from './notification.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, In, Repository } from 'typeorm';
-import { NotificationCreateDto } from 'src/common/dto/notification/notification-create-dto';
+import { NotificationCreateDto } from 'src/modules/notification/dto/notification-create-dto';
 import { User } from '../user/user.entity';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 

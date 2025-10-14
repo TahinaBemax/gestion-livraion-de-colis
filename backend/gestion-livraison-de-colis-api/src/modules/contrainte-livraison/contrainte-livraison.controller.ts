@@ -20,12 +20,6 @@ export class ContrainteLivraisonController {
         return this.contrainteService.findById(id);
     }
 
-    @Get()
-    @ApiOkResponse({type: [ContrainteLivraisonEntity]})
-    getAll() {
-        return this.contrainteService.findAll();
-    }
-
     @Put("/:id")
     @Roles(UserRole.Admin)
     @HttpCode(HttpStatus.CREATED)

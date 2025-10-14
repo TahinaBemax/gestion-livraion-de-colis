@@ -3,6 +3,7 @@ import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { TourneeLivraisonService } from './tournee-livraison.service';
 import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
+import { TourneeLivraisonUpdateDto } from 'src/common/dto/tournee-livraison/update-tournee-livraison-dto';
 
 @Controller('tournees')
 @ApiTags("Tournée de livraison")
@@ -31,9 +32,9 @@ export class TourneeLivraisonController {
          * @returns Tournée de livraison modifiée
         */
     @Put("/:id")
-       @ApiBody({type: TourneeLivraisonCreateDto})
+       @ApiBody({type: TourneeLivraisonUpdateDto})
        @ApiOperation({summary: "Modifier un tournée de livraison"})
-    update(@Param("id", ParseIntPipe) id: number, @Body() dto: TourneeLivraisonCreateDto){
+    update(@Param("id", ParseIntPipe) id: number, @Body() dto: TourneeLivraisonUpdateDto){
         return this.tourneeService.update(id, dto);
     }
     
@@ -44,7 +45,7 @@ export class TourneeLivraisonController {
          * @returns Tournée de livraison modifiée
          */
     @Put("/:id/change-statut")
-        @ApiQuery({type: "Annulé, Planifié, En cours, Terminé, Partiellement exécuté"})
+        @ApiQuery({name: "statut", type: "Annulé, Planifié, En cours, Terminé, Partiellement exécuté"})
         @ApiOperation({summary: "Modifier le statut d'un tournée de livraison"})
     changeStatuts(@Param("id", ParseIntPipe) id: number, @Query("statut") statut: string){
         return this.tourneeService.changeStatuts(id, statut);
@@ -74,25 +75,25 @@ export class TourneeLivraisonController {
         return this.ordreLivraisonService.findAllByTournee(id);
     }
 
-        /**
-         * LISTE DES LIVRAISONs D'UNE TOURNEE DE LIVRAISON
-         * @param id Identifiant de la tournée de livraison
-         * @return Liste des ordres de livraison 
-         */
-    @Get("/:id/livraisons")
-    @ApiTags("Livraison")
-    @ApiOperation({summary: "Liste des livraison à charger/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
-    @ApiQuery({description: "Etape de livraison", example: "chargement ou dechargement"})
-    async getLivraisons(
-        @Query("etape") etape:string,
-        @Param("id", ParseIntPipe) id: number)
-    {
-        if(etape === "chargement"){
-            return this.tourneeService.invertedOrdreLivraison(id);
-        } else if(etape === "dechargement") {
-            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
-        } else {
-            throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
-        }
-    }
+    //     /**
+    //      * LISTE DES LIVRAISONs D'UNE TOURNEE DE LIVRAISON
+    //      * @param id Identifiant de la tournée de livraison
+    //      * @return Liste des ordres de livraison 
+    //      */
+    // @Get("/:id/livraisons")
+    // @ApiTags("Livraison")
+    // @ApiOperation({summary: "Liste des livraison à charger/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
+    // @ApiQuery({description: "Etape de livraison", example: "chargement ou dechargement"})
+    // async getLivraisons(
+    //     @Query("etape") etape:string,
+    //     @Param("id", ParseIntPipe) id: number)
+    // {
+    //     if(etape === "chargement"){
+    //         return this.tourneeService.invertedOrdreLivraison(id);
+    //     } else if(etape === "dechargement") {
+    //         return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+    //     } else {
+    //         throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
+    //     }
+    // }
 }

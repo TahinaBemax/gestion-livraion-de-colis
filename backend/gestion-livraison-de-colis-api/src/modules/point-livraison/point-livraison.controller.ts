@@ -91,6 +91,22 @@ export class PointLivraisonController {
         if(!dto || !id) throw new BadRequestException(`Données invalide`);
         return this.plService.assignDeliveryConstraintsToPL(id, dto);
     }
+        /**
+         * RATTACHER DES CONTRAINTES DE LIVRAISON SUR UN POINT DE LIVRAISON
+         * @param id ID du point de livraison
+         * @param constraintsLivraison Contraintes de livraison
+         * @returns Liste des contraintes de livraison
+         */
+    @Get("/:id/contraintes-livraison")
+    @ApiTags("Contrainte de livraison")
+    @UserTypes(TypeUtilisateur.TempoOne, TypeUtilisateur.Prestataire)
+        @ApiParam({name: "id", description: "ID du point de livraison"})
+        @ApiOperation({summary: "Liste des contraintes de livraison rattaché à un point de livraison"})
+    async getContrainteLivraisonParIDPL(@Param("id") id: number,){
+        if(!id) throw new BadRequestException(`Données invalide`);
+        const pl = await this.plService.findById(id);
+        return pl.contraintes_livraison;
+    }
 
 
     /* ++++ ++++ CONTRAINTE EVENEMENTS SUR LA VILLE ++++ ++++ */

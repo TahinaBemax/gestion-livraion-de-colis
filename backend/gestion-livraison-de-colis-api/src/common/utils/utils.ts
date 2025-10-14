@@ -1,5 +1,5 @@
 import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
-import { isValid, parse } from "date-fns";
+import { isValid, parse, parseISO } from "date-fns";
 import * as bcrypt from "bcrypt";
 import * as QRCode from 'qrcode';
 
@@ -52,11 +52,11 @@ export class Utils {
     static parseToFRDate(date: string): Date{
         try {
             if(!date) throw new Error("La date est null");
-            const parsed = parse(date, "yyyy-MM-dd", new Date());
+            const parsed = parseISO(date);
     
             if(!isValid(parsed)) throw new BadRequestException(`Date:${date} invalide`);
             parsed.setUTCHours(0, 0, 0, 0);
-            parsed.setDate(parsed.getDate() + 1);
+            //parsed.setDate(parsed.getDate());
     
             return parsed;
         } catch (error) {

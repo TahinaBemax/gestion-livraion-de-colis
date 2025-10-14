@@ -13,6 +13,8 @@ import { ProblemeColisEntity } from './probleme-colis.entity';
 import { Livreur } from '../livreur/livreur.entity';
 import { LivreurService } from '../livreur/livreur.service';
 import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
+import { LivraisonsService } from '../livraisons/livraisons.service';
+import { LivraisonEntity } from '../livraisons/livraison.entity';
 
 @Injectable()
 export class ColisService {
@@ -22,7 +24,8 @@ export class ColisService {
         @InjectRepository(ProblemeColisEntity)
         private readonly problemeRep: Repository<ProblemeColisEntity>,
         private datasource: DataSource,
-        private readonly livreurService: LivreurService
+        private readonly livreurService: LivreurService,
+        private readonly livraisonService: LivraisonsService
     ){}
 
     /**
@@ -139,6 +142,20 @@ export class ColisService {
             .getRawOne<{ a_charger: number, charges: number }>();
     }
 
+    /**
+     * LES COLIS D'UNE LIVRAISON
+     * @param idLivraison 
+     * @returns 
+     */
+    async findAllByIdLivraison(idLivraison: number): Promise<ColisEntity[]>{
+        return await this.colisRep.createQueryBuilder("c")
+            .innerJoin("c.livraison", "livraison")
+            .innerJoinAndSelect("c.details_colis", "produit")
+            .leftJoinAndSelect("c.problemes", "problemes")
+            .where("livraison.id = :idLivraison", {idLivraison})
+            .getMany();
+    }
+
     async findAll(): Promise<ColisEntity[]>
     {
         return this.colisRep.find({relations: ["details_colis"]});
@@ -168,12 +185,15 @@ export class ColisService {
         return mathced;
     }
 
-    async save(dto: ColisCreateDto): Promise<ColisEntity> {
-        if(!dto) throw new BadRequestException("Données Colis invalides!");
+    async save(idLivraison: number, dto: ColisCreateDto): Promise<ColisEntity> {
+        if(!dto || idLivraison) throw new BadRequestException("Données Colis invalides!");
+
+        const livraison: LivraisonEntity = await this.livraisonService.findById(idLivraison);
 
         const colis: ColisEntity = plainToInstance(ColisEntity, dto); 
         colis.statut_colis = StatusColis.EN_ATTENTE;
         colis.poids_total = this.getSumWeight(dto.details_colis);
+        colis.livraisons = livraison ? [livraison] : [];
 
         const queryRunner = this.colisRep.manager.connection.createQueryRunner();
         await queryRunner.connect();
@@ -181,7 +201,6 @@ export class ColisService {
 
         try {
             const savedColis = await queryRunner.manager.save(ColisEntity, colis);
-
             savedColis.code_barre_client_colis = await this.generateCodeBarreClient(savedColis);
 
             const updated = await queryRunner.manager.save(ColisEntity, savedColis);

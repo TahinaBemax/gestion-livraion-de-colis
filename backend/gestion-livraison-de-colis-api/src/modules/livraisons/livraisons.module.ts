@@ -12,12 +12,14 @@ import { ClientEntity } from '../client/client.entity';
 import { LivreurModule } from '../livreur/livreur.module';
 import { PointLivraisonModule } from '../point-livraison/point-livraison.module';
 import { ClientModule } from '../client/client.module';
+import { ColisModule } from '../colis/colis.module';
 
 @Module({
   imports: [
     forwardRef(() => LivreurModule),
     forwardRef(() => PointLivraisonModule),
     forwardRef(() => ClientModule),
+    forwardRef(() => ColisModule),
     TypeOrmModule.forFeature([
       LivraisonEntity,
       ColisEntity,

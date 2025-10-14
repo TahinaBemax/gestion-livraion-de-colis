@@ -8,6 +8,9 @@ import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enu
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
 import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
 import { Utils } from 'src/common/utils/utils';
+import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
+import { StatusColis } from 'src/common/enum/status-colis.enum';
+import { ColisEntity } from '../colis/colis.entity';
 
 
 @Injectable()
@@ -91,7 +94,7 @@ export class BordereauLivraisonService {
     }
 
     async delete(id: string): Promise<DeleteResult>{
-        this.findById(id);
+        await this.findById(id);
         return await this.bordereauRep.delete(id);
     }
 
@@ -110,10 +113,25 @@ export class BordereauLivraisonService {
                     throw new BadRequestException("Ce n'est pas votre bordereau de livraison!");
                 }
                 const bordereau = await this.findByIdOrdreLivraison(idOrdreLivraison);
+                const query = this.dataSource.createQueryRunner();
+                await query.connect();
+                await query.startTransaction();
     
                 if(bordereau){
-                    bordereau.date_scan_bordereau = new Date().toUTCString();
-                    this.bordereauRep.save(bordereau);
+                    try {
+                        bordereau.date_scan_bordereau = new Date().toISOString();
+                        await this.bordereauRep.save(bordereau);
+    
+                        matched.livraison.colis.forEach(c => c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION);
+    
+                        query.manager.save(BordereauLivraisonEntity, bordereau);
+                        query.manager.save(ColisEntity, matched.livraison.colis);
+                        
+                        await query.commitTransaction();
+                    } catch (error) {
+                        await query.rollbackTransaction();
+                        throw error;
+                    }
                 }
 
                 return true;

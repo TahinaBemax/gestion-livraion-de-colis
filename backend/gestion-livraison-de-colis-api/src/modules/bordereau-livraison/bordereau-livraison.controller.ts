@@ -86,6 +86,6 @@ export class BordereauLivraisonController {
 
     @Delete("/:id")
     async delete(@Param("id") id: string){
-        return this.bordereauService.delete(id);
+        return await this.bordereauService.delete(id);
     }
 }

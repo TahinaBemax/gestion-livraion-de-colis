@@ -17,6 +17,7 @@ import { EvenementLocalEntity } from './evenement-local.entity';
     ])
   ],
   providers: [EvenementLocalService],
-  controllers: [EvenementLocalController]
+  controllers: [EvenementLocalController],
+  exports: [EvenementLocalService]
 })
 export class EvenementLocalModule {}

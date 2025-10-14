@@ -36,11 +36,12 @@ export class LivraisonsService {
      * @returns 
      */
     async findByStatuts(statuts: StatusLivraison[]): Promise<LivraisonEntity[]>{
+        if(statuts.length === 0) throw new BadRequestException("Liste des statuts est vide");
+
         return await this.livraisonRep.find({
             where: {statut_livraison: In(statuts)},
             relations: ["client", "colis"]
-        }
-        );
+        });
     }
 
     /**
@@ -81,6 +82,7 @@ export class LivraisonsService {
 
         if(idClient) query.andWhere("c.id = :idClient", {idClient: parseInt(idClient)});
 
+        query.orderBy("l.date_livraison", "DESC");
         return query.getMany();
     }
 
@@ -106,7 +108,6 @@ export class LivraisonsService {
 
     /**
      * 
-     * @param idPL 
      * @param idClient 
      * @returns 
      */
@@ -124,6 +125,7 @@ export class LivraisonsService {
                 retourne_expediteur: StatusLivraison.RETOUR_EXPEDITEUR,
                 partielle: StatusLivraison.LIVRAISON_PARTIELLE
             })
+            .orderBy("l.date_livraison", "DESC")
             .getMany();
     }
         
@@ -151,6 +153,7 @@ export class LivraisonsService {
         .leftJoinAndSelect("livraison.colis", "colis")
         .leftJoinAndSelect("colis.details_colis", "produit")
         .leftJoinAndSelect("livraison.problemes_livraison", "problemes")
+        .orderBy("livraison.date_livraison", "DESC")
         .getMany();
     }
 
@@ -264,17 +267,6 @@ export class LivraisonsService {
 
         return listColis;
     } 
-
-    private getSumWeight(detailsColis: DetailColisEntity[]) {
-        let sum = 0;
-        if(!detailsColis || detailsColis.length === 0) return sum;
-
-        detailsColis.forEach(d => {
-            sum += d.poids_produit;
-        });
-
-        return sum;
-    }    
 
     private batchGenerateCodeBarre(colis: ColisEntity[]){
         return Promise.all(colis.map(async c => {

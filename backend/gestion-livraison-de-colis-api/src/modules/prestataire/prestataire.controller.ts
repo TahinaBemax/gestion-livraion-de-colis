@@ -61,18 +61,6 @@ export class PrestataireController {
   
 
         /**
-         * LISTE DES UTILISATEURS ACTIVES DES PRESTATAIRES
-         * @returns Liste des utilisateurs actives
-         */
-    @Get("/users")
-        @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
-        @ApiOperation({summary: "Liste des utilisateurs actives des prestataires"})
-        @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
-    findPrestataireUsers(): Promise<User[]> {
-        return this.userService.findPrestataireUsers();
-    }
-
-        /**
          * LISTE DES UTILISATEURS PRESTATAIRE ACTIVES FILTRE PAR PRENOM, NOM, ROLE ET ENTREPRISE
          * @param nom 
          * @param prenom 
@@ -80,23 +68,29 @@ export class PrestataireController {
          * @param nomEntreprise 
          * @returns Liste des utilisateurs filtrés
          */
-    @Get('/users/filterBy')
+    @Get('/users')
         @Roles(UserRole.Admin, UserRole.ResponsableExploitation)
         @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
+        @ApiQuery({name: "req", required: false, description: "utilisé pour faire une filtre", example: "filtre"})
         @ApiQuery({name: "nom", required: false})
         @ApiQuery({name: "prenom", required: false})
         @ApiQuery({name: "role", required: false})
         @ApiQuery({name: "nomEntreprise", required: false})
-        @ApiOperation({summary: "Liste des utilisateurs Prestataire, ils peuvent être filtré par prénom, nom, rôle et le nom de l'entreprise"})
+        @ApiOperation({summary: "Liste des utilisateurs des Prestataires, ils peuvent être filtré par prénom, nom, rôle et le nom de l'entreprise"})
         @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
     filterBy
     (
         @Query('nom') nom?:string, 
+        @Query('req') req?:string, 
         @Query('prenom') prenom?:string, 
         @Query('role') role?:string, 
         @Query('nomEntreprise') nomEntreprise?:string
     ): Promise<User[]> {
-        return this.userService.filterBy(nom, prenom, role, nomEntreprise);
+        if(!req) return this.userService.findPrestataireUsers();
+        if(req && req === "filtre"){
+            return this.userService.filterBy(nom, prenom, role, nomEntreprise);
+        }
+        throw new BadRequestException("Paramètre 'req' invalide, Réessayé");
     }
 
     /**
@@ -143,29 +137,17 @@ export class PrestataireController {
     @Get("")
         @UserTypes(TypeUtilisateur.TempoOne)
         @ApiOperation({summary: "Lister les prestataires"})
+        @ApiQuery({name: "req", required: false, description: "utilisé pour faire une filtre", example: "filtre"})
         @ApiOkResponse({description: "Ok", type: [PrestataireSwaggerDto]})
-    findAllPrestataires() {
-        return this.prestataireService.findAll();
-    }
-
-        /**
-         * LISTE DES PRESTATAIRES FILTRE PAR Nom, Prenom et Nom d'Entreprise
-         * @param nom 
-         * @param prenom 
-         * @param nomEntreprise 
-         * @returns Liste des prestataires filtrés
-        */
-    @Get('/filterBy')
-        @UserTypes(TypeUtilisateur.TempoOne)
-        @ApiOperation({summary: "Filtré les prestataires par nom de l'entreprise"})
-        @ApiOkResponse({description: "Ok", type: [PrestataireSwaggerDto]})
-        filterPrestataireUsersBy(
-            //@Query('nom') nom?:string, 
-            //@Query('prenom') prenom?:string,
-            @Query('nomEntreprise') nomEntreprise?:string
-        ): Promise<Prestataire[]> {
+        @ApiQuery({name: "nomEntreprise", required: false})
+    findAllPrestataires(@Query('req') req?:string, @Query('nomEntreprise') nomEntreprise?:string): Promise<Prestataire[]> {
+        if(req && req === "filtre"){
             return this.prestataireService.filterBy(undefined, undefined, nomEntreprise);
+        } else if(!req){
+            return this.prestataireService.findAll();
         }
+        throw new BadRequestException("Paramètre 'req' invalide, Réessayé");
+    }
         
         /**
          * MODIFICATION D'UN PRESTATAIRE
@@ -179,8 +161,21 @@ export class PrestataireController {
         @ApiOperation({summary: "Modifié un prestataire"})
         @ApiCreatedResponse({description: "Prestataire modifié avec succés", type: PrestataireSwaggerDto})
         @ApiBadRequestResponse({description: "Données invalides, Réessayé"})
-    updatePrestataire(@Param("id", ParseIntPipe) id: number, @Body() data: PrestataireUpdateDto){
-        return this.prestataireService.update(id, data)
+        @ApiQuery({
+            name: "req", required: false, 
+            description: "utilisé pour activer le compte d'un prestataire", 
+            example: "active-account"
+        })
+    updatePrestataire(@Param("id", ParseIntPipe) id: number, @Body() data?: PrestataireUpdateDto, @Query('req') req?:string){
+        if(req && req === "active-account"){
+            return this.prestataireService.activate(id);
+        } 
+        else if(!req && data){
+            return this.prestataireService.update(id, data)
+        }
+        else if(!data) throw new BadRequestException("Données invalides, Réessayé");
+        throw new BadRequestException("Paramètre 'req' invalide, Réessayé");
+
     }
 
 
@@ -197,21 +192,6 @@ export class PrestataireController {
         @ApiNotFoundResponse({description: "Prestataire Introuvable"})
     desactivatePrestataireAccount(@Param('id') id:number) {
         return this.prestataireService.desactivate(id);
-    }
-
-        /**
-         * ACTIVATION COMPTE PRESTATAIRE
-         * @param id ID du prestataire
-         * @returns MESSAGE de confirmation
-        */
-    @Put("/:id/activate")
-        @UserTypes(TypeUtilisateur.TempoOne)
-        @ApiParam({name: "id", description: "L'ID du prestataire qu'on veut activé le compte."})
-        @ApiOperation({summary: "Activé le compte d'un prestataire donné."})
-        @ApiCreatedResponse({description: "Compte desactivé avec succés!", type: "Compte prestataire activé"})
-        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
-    activatePrestataireAccount(@Param('id') id:number){
-        return this.prestataireService.activate(id);
     }
 
     /**
@@ -307,15 +287,15 @@ export class PrestataireController {
      * @param id_prestataire ID du prestataire
      * @returns Liste des utilisateurs responsables exploitation d'un prestataire
      */
-    @Get("/:id/responsable-exploitation")
-    @UseGuards(SamePrestataireGuard)
-        @ApiParam({name: "id", description: "L'ID du prestataire"})
-        @ApiOperation({summary: "Lister les utilisateurs de type Responsable Exploitation d'un prestataire"})
-        @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
-        @ApiNotFoundResponse({description: "Prestataire Introuvable"})
-    findResponsableExploitationByIdPrestataire(@Param("id") id_prestataire: number){
-        return this.prestataireService.findReponsableExploitation(id_prestataire);
-    }
+    // @Get("/:id/responsable-exploitation")
+    // @UseGuards(SamePrestataireGuard)
+    //     @ApiParam({name: "id", description: "L'ID du prestataire"})
+    //     @ApiOperation({summary: "Lister les utilisateurs de type Responsable Exploitation d'un prestataire"})
+    //     @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
+    //     @ApiNotFoundResponse({description: "Prestataire Introuvable"})
+    // findResponsableExploitationByIdPrestataire(@Param("id") id_prestataire: number){
+    //     return this.prestataireService.findReponsableExploitation(id_prestataire);
+    // }
     /* ---- ---- ---- --- --- -- */
 
 
@@ -382,7 +362,7 @@ export class PrestataireController {
         @UseGuards(SamePrestataireGuard)
         @ApiOperation({ summary: 'Créer un ordre livraison' })
         @ApiBody({type: OrdreLivraisonCreateDto})
-        @ApiTags("Tournée de livraison")
+        @ApiTags("Ordre de Livraison")
     async saveOrdreLivraison(@Param("id", ParseIntPipe) id: number, @Body() dto: OrdreLivraisonCreateDto){
         const mapped: OrdreLivraisonDto[] = await this.ordreLivraisonService.mapToOrdreLivraisonCreateDTo(id, dto);
         return this.ordreLivraisonService.batchSave(mapped);
@@ -399,7 +379,7 @@ export class PrestataireController {
         @ApiQuery({name: "idClient", description: "", required: false})
         @ApiQuery({name: "dateTournee", description: "La date du tournéé", required: false})
         @ApiQuery({name: "zoneGeographique", description: "code postal ou ville", required: false})
-    async getOrdreLivraison(@Param("id") idPrestataire:string, 
+    async getOrdreLivraison(@Param("idPrestataire") idPrestataire:string, 
         @Query("idClient") idClient: string|undefined,
         @Query("dateTournee") dateLivraison: string|undefined,   
         @Query("zoneGeographique") zoneGeographique: string|undefined, 
