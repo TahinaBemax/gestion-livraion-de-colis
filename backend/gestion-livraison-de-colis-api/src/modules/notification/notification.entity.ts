@@ -27,7 +27,7 @@ export class NotificationEntity {
     @JoinTable({
         name: 'notifications_recus',
         joinColumn: { name: 'id_notification', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'id_utilisateur'},
+        inverseJoinColumn: { name: 'id_receveur'},
     }) 
     receveurs: User[];
 }

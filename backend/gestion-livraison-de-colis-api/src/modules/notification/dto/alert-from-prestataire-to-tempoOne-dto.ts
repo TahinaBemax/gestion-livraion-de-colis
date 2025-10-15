@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty } from "class-validator";
+import { IsNotEmpty } from "class-validator";
 
 export class AlertFromPrestataireToTempoOneDto {
     @IsNotEmpty()
@@ -10,6 +10,6 @@ export class AlertFromPrestataireToTempoOneDto {
     @IsNotEmpty()
     idPrestataire: number; // ID du prestataire à notifier
 
-    @IsInt()
-    idUtilisateur: number; // ID de l'utilisateur Tempo One concerné
+    @IsNotEmpty()
+    idUser: number; // ID de l'utilisateur qui envoie l'alerte
 }

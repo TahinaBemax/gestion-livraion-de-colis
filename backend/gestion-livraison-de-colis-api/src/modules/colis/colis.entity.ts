@@ -43,5 +43,5 @@ export class ColisEntity{
 
     @ManyToOne(() => LivraisonEntity, (l) => l.colis)
     @JoinColumn({name: "id_livraison", referencedColumnName: "id"})
-    livraisons: LivraisonEntity[];
+    livraisons: LivraisonEntity;
 }

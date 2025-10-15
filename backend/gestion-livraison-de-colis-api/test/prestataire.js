@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 const socket = io("http://localhost:3000", {
-  query: { userId: 5 }
+  query: { userId: 1 }
 });
 
 socket.on("connect", () => {
@@ -8,7 +8,7 @@ socket.on("connect", () => {
 });
 
 socket.on("receive_notification", (data) => {
-  console.log("Notification:", data);
+  console.log("Notification réçu:", data);
 });
 
 function sendNotification() {

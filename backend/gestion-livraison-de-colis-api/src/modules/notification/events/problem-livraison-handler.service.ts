@@ -1,9 +1,9 @@
-import { AlertProblemeLivraisonDto } from './../dto/alert-probleme-livraison-dto';
-import { UserService } from './../../user/user.service';
-import { NotificationCreateDto } from './../dto/notification-create-dto';
-import { NotificationService } from './../notification.service';
+import { AlertProblemeLivraisonDto } from '../dto/alert-probleme-livraison-dto';
+import { UserService } from '../../user/user.service';
+import { NotificationCreateDto } from '../dto/notification-create-dto';
+import { NotificationService } from '../notification.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConnectedUserDto } from './../../../common/dto/notification/notification-user-connected-dto';
+import { ConnectedUserDto } from '../../../common/dto/notification/notification-user-connected-dto';
 import { Server } from 'socket.io';
 import { User } from '../../user/user.entity';
 import { DataSource } from 'typeorm';
@@ -22,8 +22,15 @@ export class ProblemLivraisonHandler {
 
     async handle(data: AlertProblemeLivraisonDto, server: Server, users: ConnectedUserDto[]) {
         console.log("Handling problem livraison event...");
+        const estLeLiveur = this.livraisonService.estLivreurDuLivraison(data.idLivreur, data.idLivraison);
+
+        if(!estLeLiveur) {
+            throw new BadRequestException("Le livreur n'est pas associé à cette livraison");
+        }
+
         const prestataireUsers:User[] = await this.userService.findPrestataireUsers(data.idPrestataire);
         if(prestataireUsers.length === 0) throw new BadRequestException("Aucun utilisateur trouvé pour ce prestataire");
+        
         const livraison = await this.livraisonService.findById(data.idLivraison);
         livraison.ordre_livraison.estimation_retard = data.estimationRestard;
 

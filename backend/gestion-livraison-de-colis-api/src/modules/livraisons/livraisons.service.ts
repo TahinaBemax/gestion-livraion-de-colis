@@ -128,6 +128,26 @@ export class LivraisonsService {
             .orderBy("l.date_livraison", "DESC")
             .getMany();
     }
+    /**
+     * 
+     * @param idLivreur 
+     * @param idLivraison 
+     * @returns 
+     */
+    async estLivreurDuLivraison(idLivreur:number, idLivraison:number): Promise<boolean> {
+        if(!idLivreur || !idLivraison) throw new Error(`ID Livreur ou ID Livraison invalide!`);
+
+        const count = await this.livraisonRep
+            .createQueryBuilder("l")
+            .leftJoinAndSelect("l.ordre_livraison", "ordre")
+            .leftJoinAndSelect("ordre.tournee_livraison", "tournee")
+            .leftJoinAndSelect("tournee.livreur", "livreur")
+            .where("livreur.id =:idLivreur", { idLivreur: idLivreur })
+            .andWhere("l.id =:idLivraison", { idLivraison: idLivraison })
+            .getCount();
+
+        return count > 0;
+    }
         
     async findByDateTourneeAndPointLivraison(idPL: number, dateTournee: string, heure_debut: string, heure_fin: string): Promise<LivraisonEntity[]> {
         return this.livraisonRep

@@ -134,7 +134,7 @@ export class NotificationService {
         if(!dto) throw new BadRequestException("Donnée de création de notification est null");
         if(!idEnvoyeur) throw new BadRequestException("ID Utilisateur est null");
 
-        const receveurs: User[] = await this.userRep.findBy({id_utilisateur: In(dto.id_receveurs)});
+        const receveurs: User[] = await this.userRep.findBy({id_utilisateur: In(dto.receveurs)});
         const envoyeur: User|null = await this.userRep.findOneBy({id_utilisateur: idEnvoyeur});
 
         if(!receveurs || receveurs.length === 0) throw new NotFoundException("Utilisateurs introuvables!");
