@@ -13,6 +13,12 @@ import { ConnectedUserDto } from 'src/common/dto/notification/notification-user-
 import { User } from '../user/user.entity';
 import { AlertProblemeColisDto } from './dto/alert-probleme-colis-dto';
 import { AlertProblemeLivraisonDto } from './dto/alert-probleme-livraison-dto';
+import { ProblemColisHandler } from './events/problem-colis-handler.service';
+import { ProblemLivraisonHandler } from './events/problem-livraison-handler.service';
+import { UserNotificationHandler } from './events/user-notification-handler.service';
+import { UserService } from '../user/user.service';
+import { AlertFromPrestataireToTempoOneDto } from './dto/alert-from-prestataire-to-tempoOne-dto';
+import { AlertFromTempoOneToPrestataireDto } from './dto/alert-from-tempoOne-to-prestataire-dto';
 
 @WebSocketGateway(
     {
@@ -20,9 +26,6 @@ import { AlertProblemeLivraisonDto } from './dto/alert-probleme-livraison-dto';
         {
             origin: (origin, callback) => {
             const allowedOrigin = `${process.env.CLIENT_DOMAINE_NAME}:${process.env.CLIENT_PORT}`;
-
-            console.log("Accepted origin: " + allowedOrigin);
-            console.log("Incoming origin: " + origin);
             
             if(! origin){
               callback(null, true);
@@ -40,16 +43,18 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
   constructor(
     private readonly problemeColisHandler: ProblemColisHandler,
     private readonly problemeLivraisonHandler: ProblemLivraisonHandler,
+    private readonly userNotificationHandler: UserNotificationHandler,
+    private readonly userService: UserService,
+
   ){}
 
   @WebSocketServer()
-  server: Server;
-  // store connected users
-  private users: ConnectedUserDto[] = []; 
+  private server: Server;
+  private users: ConnectedUserDto[] = []; // store connected users
 
   async handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
     const userId = client.handshake.query.userId as string; // ID de l'utilisateur connecté
+    console.log(`ID USER: ${userId} rattaché au socket ID: ${client.id}`);
 
     if(userId) {
         try {
@@ -58,10 +63,6 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
             connectedUser.userID = matchedUser.id_utilisateur;  //ID de l'utilisateur
             connectedUser.socketID = client.id; //ID Socket de l'utilisateur
-            connectedUser.typeUtilisateur = matchedUser.type_utilisateur.id_type_utilisateur; // Type de l'utilisateur (Tempo One, Prestataire, Livreur)
-            connectedUser.prestataireID = (matchedUser.prestataire === undefined || matchedUser.prestataire === null) 
-                ? undefined : (await matchedUser.prestataire).id_prestataire;
-
             this.users.push(connectedUser);
         } catch (error) {
             console.error(error);
@@ -83,6 +84,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
         this.problemeColisHandler.handle(data, this.server, this.users);
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
+      this.emitError(data.idLivreur, "Erreur lors de l'envoi de l'alerte de problème colis: " + error.message);
     }
   }
 
@@ -91,26 +93,39 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     try {
         this.problemeLivraisonHandler.handle(data, this.server, this.users);
     } catch (error) {
-      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
+      console.error("Erreur lors de l'envoi de l'alerte de problème livraison :", error);
+      this.emitError(data.idLivreur, "Erreur lors de l'envoi de l'alerte de problème livraison.");
     }
   }
 
   @SubscribeMessage('send_alert_from_prestataire_to_tempoOne')
-  async handleAlertFromPrestataireToTempoOne(@MessageBody() data: AlertProblemeColisDto, @ConnectedSocket() client: Socket) {
+  async handleAlertFromPrestataireToTempoOne(@MessageBody() data: AlertFromPrestataireToTempoOneDto) {
     try {
-        this.problemeColisHandler.handle(data, this.server, this.users);
+        this.userNotificationHandler.handleAlertFromPrestataireToTempoOne(data, this.server, this.users);
     } catch (error) {
-      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
+      console.error("Erreur lors de l'envoi de l'alerte vers Tempo One :", error);
+      this.emitError(data.idUser, "Erreur lors de l'envoi de l'alerte");
     }
   }
 
   @SubscribeMessage('send_alert_from_tempoOne_to_prestataire')
-  async handleAlertFromTempoOneToPrestataire(@MessageBody() data: AlertProblemeLivraisonDto, @ConnectedSocket() client: Socket) {
+  async handleAlertFromTempoOneToPrestataire(@MessageBody() data: AlertFromTempoOneToPrestataireDto) {
     try {
-        this.problemeLivraisonHandler.handle(data, this.server, this.users);
+        this.userNotificationHandler.handleAlertFromTempoOneToPrestataire(data, this.server, this.users);
     } catch (error) {
-      console.error("Erreur lors de l'envoi de l'alerte de problème colis :", error);
+      console.error("Erreur lors de l'envoi de l'alerte vers le prestataire :", error);
+      this.emitError(data.idUtilisateur, "Erreur lors de l'envoi de l'alerte");
     }
   }
 
+
+  private async emitError(idEnvoyeur: number, message: string) {
+    this.users.forEach(u => {
+      if(idEnvoyeur === u.userID){
+          this.server
+            .to(u.socketID)
+            .emit('receive_notification', {error: message});
+      }
+    });   
+  }
 }

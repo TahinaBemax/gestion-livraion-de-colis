@@ -1,4 +1,3 @@
-import { ProblemeColisCreateDto } from './../../common/dto/colis/create-probleme-colis-dto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { ColisEntity } from './colis.entity';
@@ -114,13 +113,14 @@ export class ColisService {
      */
     async estRattacheLivreur(idLivreur: number, idColis: number):Promise<boolean> {
         const tourneeRepository:Repository<TourneeLivraisonEntity> = this.datasource.manager.getRepository(TourneeLivraisonEntity);
+        
         const count = await tourneeRepository.createQueryBuilder('tournee')
-        .innerJoin("tournee.ordres_livraison", "ordres")
-        .innerJoin("tournee.livreur", "livreur")
-        .innerJoin("ordres.livraison", "livraison")
-        .innerJoin("livraison.colis", "colis")
-        .where("livreur.id_livreur =: idLivreur", {idLivreur})
-        .andWhere("colis.id = :idColis", {idColis})
+        .leftJoinAndSelect("tournee.ordres_livraison", "ordres")
+        .leftJoinAndSelect("tournee.livreur", "livreur")
+        .leftJoinAndSelect("ordres.livraison", "livraison")
+        .leftJoinAndSelect("livraison.colis", "colis")
+        .where("livreur.id_livreur = :idLivreur", {idLivreur: idLivreur})
+        .andWhere("colis.id = :idColis", {idColis: idColis})
         .getCount();
 
         return count > 0;
@@ -193,7 +193,7 @@ export class ColisService {
         const colis: ColisEntity = plainToInstance(ColisEntity, dto); 
         colis.statut_colis = StatusColis.EN_ATTENTE;
         colis.poids_total = this.getSumWeight(dto.details_colis);
-        colis.livraisons = livraison ? [livraison] : [];
+        colis.livraisons = livraison;
 
         const queryRunner = this.colisRep.manager.connection.createQueryRunner();
         await queryRunner.connect();
@@ -289,16 +289,16 @@ export class ColisService {
         return this.colisRep.save(existing);
     }
     
-    async signalProbleme(id: number, dto: ProblemeColisCreateDto): Promise<ProblemeColisEntity>{
-        if(!id || !dto) throw new BadRequestException("Données Colis invalides!");
+    // async signalProbleme(id: number, dto: ProblemeColisCreateDto): Promise<ProblemeColisEntity>{
+    //     if(!id || !dto) throw new BadRequestException("Données Colis invalides!");
         
-        const existing = await this.findById(id);
-        const probleme = plainToInstance(ProblemeColisEntity, dto);
-        probleme.colis = existing;
+    //     const existing = await this.findById(id);
+    //     const probleme = plainToInstance(ProblemeColisEntity, dto);
+    //     probleme.colis = existing;
 
-        const prepared = this.problemeRep.create(probleme);
-        return this.problemeRep.save(prepared);
-    }
+    //     const prepared = this.problemeRep.create(probleme);
+    //     return this.problemeRep.save(prepared);
+    // }
 
     async delete(id: number):Promise<string>{
         if(!id) throw new BadRequestException("ID colis invalide!");
