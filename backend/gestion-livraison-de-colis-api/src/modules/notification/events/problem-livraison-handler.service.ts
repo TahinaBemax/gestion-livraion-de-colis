@@ -10,6 +10,7 @@ import { DataSource } from 'typeorm';
 import { ProblemeLivraisonEntity } from '../../livraisons/probleme-livraison.entity';
 import { LivraisonsService } from '../../livraisons/livraisons.service';
 import { OrdreLivraisonEntity } from '../../ordre-livraison/ordre-livraison.entity';
+import { NotificationGateway } from '../notification.gateway';
 
 @Injectable()
 export class ProblemLivraisonHandler {
@@ -21,7 +22,6 @@ export class ProblemLivraisonHandler {
     ) {}
 
     async handle(data: AlertProblemeLivraisonDto, server: Server, users: ConnectedUserDto[]) {
-        console.log("Handling problem livraison event...");
         const estLeLiveur = this.livraisonService.estLivreurDuLivraison(data.idLivreur, data.idLivraison);
 
         if(!estLeLiveur) {
@@ -29,6 +29,7 @@ export class ProblemLivraisonHandler {
         }
 
         const prestataireUsers:User[] = await this.userService.findPrestataireUsers(data.idPrestataire);
+        const tempoOneUsers:User[] = await this.userService.findTempoOneUsers();
         if(prestataireUsers.length === 0) throw new BadRequestException("Aucun utilisateur trouvé pour ce prestataire");
         
         const livraison = await this.livraisonService.findById(data.idLivraison);
@@ -55,13 +56,8 @@ export class ProblemLivraisonHandler {
         this.datasource.manager.save(OrdreLivraisonEntity, livraison.ordre_livraison);
         this.datasource.manager.save(ProblemeLivraisonEntity, problemeColis);
 
-        users.forEach(u => {
-            prestataireUsers.forEach(pUser => {
-                if(pUser.id_utilisateur === u.userID){
-                    server.to(u.socketID).emit('receive_notification', {saved});
-                }
-            });
-        });
+        const allUsers = prestataireUsers.concat(tempoOneUsers);
+        NotificationGateway.emitNotificationToUser(server, saved, users, allUsers);
     }
     
 }

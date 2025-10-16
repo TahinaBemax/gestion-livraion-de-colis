@@ -11,6 +11,7 @@ import { User } from '../../user/user.entity';
 import { DataSource } from 'typeorm';
 import { ProblemeColisEntity } from '../../colis/probleme-colis.entity';
 import { ColisEntity } from '../../colis/colis.entity';
+import { NotificationGateway } from '../notification.gateway';
 
 @Injectable()
 export class ProblemColisHandler {
@@ -23,11 +24,11 @@ export class ProblemColisHandler {
 
     async handle(data: AlertProblemeColisDto, server: Server, users: ConnectedUserDto[]) {
         try {
-            console.log("Handling problem colis event...");
             const estRattache = await this.colisService.estRattacheLivreur(data.idLivreur, data.idColis);
             if(!estRattache) throw new BadRequestException("Le livreur n'est pas rattaché à ce colis");
 
             const prestataireUsers:User[] = await this.userService.findPrestataireUsers(data.idPrestataire);
+            const tempoOneUsers:User[] = await this.userService.findTempoOneUsers();
             if(prestataireUsers.length === 0) throw new BadRequestException("Aucun utilisateur trouvé pour ce prestataire");
             const colis = await this.colisService.findById(data.idColis);
             colis.statut_colis = StatusColis.ANOMALIE;
@@ -51,15 +52,8 @@ export class ProblemColisHandler {
             this.datasource.manager.save(ColisEntity, colis);
             this.datasource.manager.save(ProblemeColisEntity, problemeColis);
 
-            users.forEach(u => {
-                prestataireUsers.forEach(pUser => {
-                    if(pUser.id_utilisateur === u.userID){
-                        server.to(u.socketID).emit('receive_notification', {
-                            ...saved});
-                    }
-                });
-            });
-
+            const allUsers = prestataireUsers.concat(tempoOneUsers);
+            NotificationGateway.emitNotificationToUser(server, saved, users, allUsers);
         } catch (error) {
             throw error;
         }

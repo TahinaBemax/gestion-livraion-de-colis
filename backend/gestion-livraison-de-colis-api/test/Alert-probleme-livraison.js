@@ -9,23 +9,26 @@ const socket = io("http://localhost:3000", {
 socket.on("connect", () => {
   console.log("Connected:", socket.id);
 
-  signalerProblemeColis();
+  signalerProblemeLivraison();
 });
 
 // NOTIFICATION RECU
 socket.on("receive_notification", (data) => {
-  console.log("NoReceived notification:", data);
+  console.log("++++ Received notification ++++\n", data);
+  console.log("++++ +++++ ++++\n", data);
 });
 
-function signalerProblemeColis() {
+function signalerProblemeLivraison() {
   console.log("Envoie du notification en cours");
   
-  socket.emit("send_problem_colis_alert", {
-    titreProbleme: "Colis mouillé", 
-    description: "Il y avait la pluie et le colis est mouillé", 
+  socket.emit("send_problem_livraison_alert", {
+    titreProbleme: "Embouitaillage", 
+    description: "Un camion en panne et bloque la rue", 
     idLivreur: 2, 
     idPrestataire: 1, 
-    idColis: 2
+    idColis: 2,
+    idLivraison: 1,
+    estimationRestard: "00:30"
   });
 
   console.log("Envoyé avec succés");
