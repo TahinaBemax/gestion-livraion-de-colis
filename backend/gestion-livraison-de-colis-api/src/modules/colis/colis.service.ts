@@ -42,10 +42,9 @@ export class ColisService {
             throw new BadRequestException("Vous n'avez pas l'accés à cette fonctionnalité!");
         }
         
-        try {
-            if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
-                throw new BadRequestException('Code barre reconnu et colis non rattaché à cette ordre');
-            }
+        if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
+            throw new BadRequestException('Code barre reconnu et colis non rattaché à cette ordre');
+        }
 
             const existingColis = await this.colisRep.createQueryBuilder("colis")
                 .innerJoinAndSelect("colis.livraisons", "livraison")
@@ -54,15 +53,11 @@ export class ColisService {
                 .where("colis.id = :idColis", {idColis})
                 .getOne();
 
-            if(!existingColis) throw new NotFoundException(`Colis avec ID:{${idColis}} est introuvable!`);
+            if(!existingColis) throw new NotFoundException(`Code barre du colis non reconnu!`);
             const livraison = existingColis.livraisons;
             const bl = await livraison.ordre_livraison.bordereau_livraison;
 
-            if(!bl) throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
-
-            if(!bl.date_scan_bordereau){
-                throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
-            }
+            if(!bl || bl.date_scan_bordereau) throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
             
             if(existingColis.statut_colis === StatusColis.LIVRE || existingColis.statut_colis === StatusColis.EN_COURS_LIVRAISON){
                 throw new BadRequestException('Ce colis est déja scanné!');
@@ -72,15 +67,9 @@ export class ColisService {
     
             existingColis.statut_colis = StatusColis.CHARGE_DANS_LA_CAMION;
             existingColis.date_heure_chargement = new Date().toUTCString();
-    
             this.colisRep.save(existingColis);
-    
+
             return message;
-        } catch (error) {
-            console.error(error);
-            
-            throw new BadRequestException('Code barre inconnu');
-        }
     }
 
     /**
