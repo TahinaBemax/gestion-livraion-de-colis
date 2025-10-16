@@ -24,11 +24,11 @@ export class LivreurService {
         const matched = await this.livreurRepo.createQueryBuilder("l")
         .innerJoinAndSelect("l.user", "u")
         .innerJoinAndSelect("l.categorie_livreur", "cl")
-        .innerJoinAndSelect("l.livreurs_temporaire", "lt")
+        .leftJoinAndSelect("l.livreurs_temporaire", "lt")
         .where("u.id_utilisateur = :id", {id})
         .getOne();
 
-        if(!matched) throw new NotFoundException();
+        if(!matched) throw new NotFoundException("Livreur Introuvable");
         const {mot_de_passe, ...withoutPassword } = matched.user
         return matched
     }

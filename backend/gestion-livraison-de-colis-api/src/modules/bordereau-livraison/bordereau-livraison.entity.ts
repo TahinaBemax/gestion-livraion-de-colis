@@ -33,7 +33,7 @@ export class BordereauLivraisonEntity {
     @Column({type: "date"})
     date_livraison: string;
     
-    @OneToOne(() => OrdreLivraisonEntity, (ordre) => ordre.bordereau_livraison, {
+    @ManyToOne(() => OrdreLivraisonEntity, (ordre) => ordre.bordereau_livraison, {
         eager: true
     })
     @JoinColumn({name: "id_ordre_livraison", referencedColumnName: "id"})

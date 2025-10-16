@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ColisEntity } from "../colis/colis.entity";
 import { ProblemeLivraisonEntity } from "./probleme-livraison.entity";
 import { OrdreLivraisonEntity } from "../ordre-livraison/ordre-livraison.entity";
@@ -55,7 +55,7 @@ export class LivraisonEntity {
     })
     problemes_livraison: ProblemeLivraisonEntity[];
 
-    @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.livraison)  
+    @OneToOne(() => OrdreLivraisonEntity, (ordre) => ordre.livraison)  
     ordre_livraison: OrdreLivraisonEntity;
 
     @ManyToOne(() => ClientEntity, (c) => c.livraisons, {
