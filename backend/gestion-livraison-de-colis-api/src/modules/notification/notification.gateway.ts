@@ -19,6 +19,7 @@ import { UserNotificationHandler } from './events/user-notification-handler.serv
 import { UserService } from '../user/user.service';
 import { AlertFromPrestataireToTempoOneDto } from './dto/alert-from-prestataire-to-tempoOne-dto';
 import { AlertFromTempoOneToPrestataireDto } from './dto/alert-from-tempoOne-to-prestataire-dto';
+import { NotificationEntity } from './notification.entity';
 
 @WebSocketGateway(
     {
@@ -73,7 +74,8 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    const userId = client.handshake.query.userId as string; // ID de l'utilisateur connecté
+    console.log(`ID USER: ${userId} rattaché au socket ID: ${client.id} s'est deconnecté`);
     this.users = this.users.filter(user => user.socketID !== client.id);
   }
 
@@ -127,5 +129,26 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
             .emit('receive_notification', {error: message});
       }
     });   
+  }
+
+  static emitNotificationToUser(server: Server, notification: NotificationEntity,connectedUsers: ConnectedUserDto[], users: User[]) {
+    connectedUsers.forEach(u => {
+        users.forEach(pUser => {
+            if(pUser.id_utilisateur === u.userID){
+                const s: any = notification;
+                const payload = {
+                    id: s.id,
+                    titre: s.titre,
+                    message: s.message,
+                    envoyeur: {
+                        id_utilisateur: s.envoyeur?.id_utilisateur,
+                        nom: s.envoyeur?.nom,
+                        prenom: s.envoyeur?.prenom,
+                    }
+                };
+                server.to(u.socketID).emit('receive_notification', payload);
+            }
+        });
+    });
   }
 }

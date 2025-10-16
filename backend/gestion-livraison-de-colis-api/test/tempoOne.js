@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 const socket = io("http://localhost:3000", {
-  query: { userId: 4 }
+  query: { userId: 6 }
 });
 
 socket.on("connect", () => {

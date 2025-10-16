@@ -7,6 +7,7 @@ import { NotificationCreateDto } from "../dto/notification-create-dto";
 import { AlertFromPrestataireToTempoOneDto } from "../dto/alert-from-prestataire-to-tempoOne-dto";
 import { UserService } from "src/modules/user/user.service";
 import { AlertFromTempoOneToPrestataireDto } from "../dto/alert-from-tempoOne-to-prestataire-dto";
+import { NotificationGateway } from "../notification.gateway";
 
 @Injectable()
 export class UserNotificationHandler {
@@ -29,14 +30,7 @@ export class UserNotificationHandler {
         }
 
         const saved = await this.notificationService.save(data.idUser, notification);
-
-        users.forEach(u => {
-            destinataireUser.forEach(pUser => {
-                if(pUser.id_utilisateur === u.userID){
-                    server.to(u.socketID).emit('receive_notification', {saved});
-                }
-            });
-        });
+        NotificationGateway.emitNotificationToUser(server, saved, users, destinataireUser);
     }
     async handleAlertFromTempoOneToPrestataire(data: AlertFromTempoOneToPrestataireDto, server: Server, users: ConnectedUserDto[]) {
         console.log("Handling notification from Tempo One to prestataire event...");
@@ -52,13 +46,6 @@ export class UserNotificationHandler {
         }
 
         const saved = await this.notificationService.save(data.idUtilisateur, notification);
-
-        users.forEach(u => {
-            destinataireUser.forEach(pUser => {
-                if(pUser.id_utilisateur === u.userID){
-                    server.to(u.socketID).emit('receive_notification', {saved});
-                }
-            });
-        });
+        NotificationGateway.emitNotificationToUser(server, saved, users, destinataireUser);
     }
 }
