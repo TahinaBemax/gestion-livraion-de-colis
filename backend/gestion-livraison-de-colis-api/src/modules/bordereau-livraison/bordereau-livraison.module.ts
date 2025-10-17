@@ -8,10 +8,12 @@ import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity'
 import { BordereauLivraisonController } from './bordereau-livraison.controller';
 import { PdfService } from 'src/core/pdf/pdf.service';
 import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module';
+import { TourneeLivraisonModule } from '../tournee-livraison/tournee-livraison.module';
 
 @Module({
   imports: [
     forwardRef(() => OrdreLivraisonModule),
+    forwardRef(() => TourneeLivraisonModule),
     TypeOrmModule.forFeature([
       BordereauLivraisonEntity,
       OrdreLivraisonEntity,

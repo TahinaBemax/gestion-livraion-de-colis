@@ -11,10 +11,8 @@ import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { LivraisonUpdateDto } from 'src/common/dto/livraison/update-livraison-dto';
 import { plainToInstance } from 'class-transformer';
 import { DetailColisEntity } from '../colis/detail-colis.entity';
-import { ClientEntity } from '../client/client.entity';
 import { PointLivraisonService } from '../point-livraison/point-livraison.service';
 import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
-import { ScanColisResponse } from 'src/common/dto/scan-colis/scan-colis-response';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 import { Utils } from 'src/common/utils/utils';
 import { ClientService } from '../client/client.service';
@@ -30,6 +28,40 @@ export class LivraisonsService {
         private readonly clientService: ClientService
     ){}
 
+
+    /**
+     * LISTE DES LIVRAISONS EN ATTENTE DE TRAITEMENT
+     * @returns Liste des livraisons en attente de traitement
+     */
+    async findPendingDeliveries(): Promise<LivraisonEntity[]>{
+        const groupedByPL: LivraisonEntity[] = [];
+        const pointsLivraison: PointLivraisonEntity[] = await this.pointLivraisonService.findAll();
+
+        const livraisons = await this.livraisonRep.createQueryBuilder("livraison")
+        .leftJoinAndSelect("livraison.client", "client")
+        .leftJoinAndSelect("livraison.colis", "colis")
+        .leftJoinAndSelect("client.point_livraison", "pl")
+        .where("livraison.statut_livraison = :statut OR livraison.statut_livraison = :retourExpediteur", {
+            statut: StatusLivraison.EN_ATTENTE, 
+            retourExpediteur: StatusLivraison.RETOUR_EXPEDITEUR
+        })
+        .orderBy("livraison.date_livraison", "DESC")
+        .orderBy("livraison.heure_debut", "ASC")
+        .getMany();
+
+        for(const pl of pointsLivraison){
+            for(const livraison of livraisons){
+                const clientPL = livraison.client.point_livraison;
+                if( clientPL && clientPL.id === pl.id){
+                    groupedByPL.push(livraison);
+                }
+            }
+        }
+
+        return groupedByPL;
+    }
+
+
     /**
      * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 
      * @param statuts 
@@ -44,24 +76,6 @@ export class LivraisonsService {
         });
     }
 
-    /**
-     * Nombre de colis charge et nombre de colis à charger 
-     * @param statuts 
-     * @returns 
-     */
-    // async getLivraisonAndCountColis(idLivraison: number): Promise<ScanColisResponse | null>{
-    //     const livraison = await this.livraisonRep.createQueryBuilder("l")
-    //         .leftJoinAndSelect("l.colis", "c")
-    //         .loadRelationCountAndMap("l.colis_a_charger", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NULL"),)
-    //         .loadRelationCountAndMap("l.colis_charges", "l.colis", "c", (qb) => qb.andWhere("c.date_heure_chargement IS NOT NULL"),)
-    //         .where("l.id = :id", {id: idLivraison})
-    //         .getOne();
-
-    //     if(livraison){
-    //         const dto = new ScanColisResponse();
-    //         dto.heure_debut = livraison.heure_debut?? livraison.client.point_livraison;
-    //     }
-    // }
 
     /**
      * LES LIVRAISON TERMINEES ET EN COURS DE TRAITEMENT 

@@ -11,6 +11,7 @@ import { Utils } from 'src/common/utils/utils';
 import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisEntity } from '../colis/colis.entity';
+import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
 
 
 @Injectable()
@@ -19,6 +20,7 @@ export class BordereauLivraisonService {
         @InjectRepository  (BordereauLivraisonEntity)
         private readonly bordereauRep: Repository<BordereauLivraisonEntity>, 
         private readonly ordreService: OrdreLivraisonService, 
+        private readonly tourneeService: TourneeLivraisonService, 
         private readonly dataSource: DataSource
     ) {}
 
@@ -141,5 +143,36 @@ export class BordereauLivraisonService {
             throw error;
         }
         return false
+    }
+
+    async proofOfDelivery(refBordereau: string): Promise<String>{
+        if(!refBordereau){
+            throw new BadRequestException("Référence du bordereau de livraison manquante");
+        }
+
+        const existingBordereau = await this.findById(refBordereau);
+        const ordreLivraison = existingBordereau.ordre_livraison;
+        const tourneeLivraison = await ordreLivraison.tournee_livraison;
+        const livraison = ordreLivraison.livraison;
+        const colis = await this.tourneeService.getListColisByIDLivraison(tourneeLivraison.id, ordreLivraison.id, tourneeLivraison.livreur.user.id_utilisateur);
+        var countColisAnomalie = 0;
+
+        colis.forEach(c => {
+            if(c.statut_colis == StatusColis.ANOMALIE){
+                countColisAnomalie += 1;
+                c.statut_colis = StatusColis.RETOUR_EXPEDITEUR;
+                c.date_heure_retour_expediteur = new Date().toISOString();
+            }
+
+            if(c.statut_colis == StatusColis.DECHARGE_DE_LA_CAMION){
+                c.statut_colis = StatusColis.LIVRE;
+                c.date_heure_accuse_reception = new Date().toISOString();
+            }
+        });
+
+        livraison.statut_livraison = (countColisAnomalie > 0) ? StatusLivraison.LIVRAISON_PARTIELLE : StatusLivraison.LIVRE;
+        ordreLivraison.statut = StatutOrdreLivraison.EFFECTUE;
+
+        return "Preuve de livraison enregistrée avec succès.";
     }
 }

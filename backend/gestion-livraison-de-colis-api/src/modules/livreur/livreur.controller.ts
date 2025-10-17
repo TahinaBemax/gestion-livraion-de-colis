@@ -1,5 +1,5 @@
 import { ColisService } from 'src/modules/colis/colis.service';
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get,Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LivreurTemporaireService } from './livreur-temporaire/livreur-temporaire.service';
 import { LivreurTemporaireDto } from 'src/common/dto/livreur/livreur-temporaire-dto';
@@ -12,7 +12,6 @@ import { Livreur } from './livreur.entity';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
-import { ProblemeLivraisonCreateDto } from 'src/common/dto/livraison/create-probleme-livraison-dto';
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { NotificationService } from '../notification/notification.service';
 import { SameUserGuard } from 'src/common/guards/same-user.guard';
@@ -38,7 +37,7 @@ export class LivreurController {
          * LISTE DES LIVREURS
          * @returns Liste des livreurs
         */
-   @Get("")
+   @Get()
         @Roles(UserRole.User, UserRole.ResponsableExploitation, UserRole.Admin)
         @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
         @ApiOperation({summary: "Lister tous les livreurs"})
@@ -113,7 +112,7 @@ export class LivreurController {
          * @param id ID du livreur temporaire
          * @returns Livreur temporaire
          */
-    @Get("/temporaire/:idTemp")
+    @Get("/:id/temporaire/:idTemp")
         @ApiTags("Livreur Temporaraire")
         @ApiNotFoundResponse()
     async getByIdTemporaryDeliveryID(@Param("id", ParseIntPipe) id: number){
@@ -170,17 +169,17 @@ export class LivreurController {
     }
 
     /* ===== LIVRAISON ====== */
-    @Post("/:id/livraisons/:idLivraison/problemes")
-        @ApiTags("Livraison")
-        @ApiOperation({summary: "Signaler un problemes lors de livraison"})
-        @UseGuards(SameUserGuard)
-        @HttpCode(HttpStatus.CREATED)
-        @ApiBody({type: ProblemeLivraisonCreateDto})
-        @ApiCreatedResponse()
-        @ApiBadRequestResponse()
-    async signalProbleme(@Param("id", ParseIntPipe) idLivraison: number, @Body() dto: ProblemeLivraisonCreateDto){
-        return this.livraisonService.signalProbleme(idLivraison, dto);
-    }
+    // @Post("/:id/livraisons/:idLivraison/problemes")
+    //     @ApiTags("Livraison")
+    //     @ApiOperation({summary: "Signaler un problemes lors de livraison"})
+    //     @UseGuards(SameUserGuard)
+    //     @HttpCode(HttpStatus.CREATED)
+    //     @ApiBody({type: ProblemeLivraisonCreateDto})
+    //     @ApiCreatedResponse()
+    //     @ApiBadRequestResponse()
+    // async signalProbleme(@Param("id", ParseIntPipe) idLivraison: number, @Body() dto: ProblemeLivraisonCreateDto){
+    //     return this.livraisonService.signalProbleme(idLivraison, dto);
+    // }
 
     /* ===== NOTIFICATION ====== */
         /**
@@ -196,21 +195,21 @@ export class LivreurController {
     }
 
     @Post("/:id/colis/:idColis")
-    @UseGuards(SameUserGuard)
+        @UseGuards(SameUserGuard)
         @ApiTags("Chargement et Dechargement Camion")
         @ApiOperation({summary: "Scan du colis au moment du chargement du Camion"})
         @ApiParam({name: "id", description: "ID Utilisateur mais non pas l'ID du livreur"})
         @ApiParam({name: "idColis", description: "ID du colis"})
         @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement ou dechargement"})
-    async scanColis(
-        @Param("id", ParseIntPipe) id: number, 
+    async scann(
+        @Param("id", ParseIntPipe) id: number,
         @Param("idColis", ParseIntPipe) idColis: number,
         @Query("etape") etape:string
     ){
         if(etape === "chargement"){
             return this.colisService.scanColisAuChargementCamion(id, idColis);        
         } else if(etape === "dechargement") {
-            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+            return this.colisService.scanColisAuDechargementCamion(id, idColis);
         } else {
             throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
         }

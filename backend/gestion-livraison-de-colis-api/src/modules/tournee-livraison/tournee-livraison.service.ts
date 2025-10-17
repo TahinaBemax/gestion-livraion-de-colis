@@ -8,12 +8,10 @@ import { Livreur } from '../livreur/livreur.entity';
 import { StatutTourneeLivaison } from 'src/common/enum/status-tournee-livraison';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivraisonTournee } from 'src/common/dto/tournee-livraison/liste-livraison-tournee-dto';
-import { Utils } from 'src/common/utils/utils';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livraison.entity';
 import { TourneeLivraisonUpdateDto } from 'src/common/dto/tournee-livraison/update-tournee-livraison-dto';
 import { LivraisonsService } from '../livraisons/livraisons.service';
-import { stat } from 'fs';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 
 @Injectable()
@@ -34,11 +32,12 @@ export class TourneeLivraisonService {
         const tournee = await this.findById(idTournee);
         if(tournee.livreur.user.id_utilisateur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
         const ordreLivraison: OrdreLivraisonEntity|undefined = await tournee.ordres_livraison.find(ol => ol.id === idOrdreLivraison);
+        
         if(!ordreLivraison) throw new NotFoundException(`Ordre de livraison avec ID:{${idOrdreLivraison}} est introuvable dans cette tournée!`);
         const livraisonIncomplet = await this.livraisonService.findLivraisonIncompleteByIdClient(ordreLivraison.livraison.client.id);
 
         livraisonIncomplet.forEach(livraison => livraison.colis.forEach(colis => {
-            if(colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR){
+            if(colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR || colis.statut_colis === StatusColis.RELIQUAT){
                 colis.statut_colis = StatusColis.RELIQUAT;
             }
         }));
@@ -109,6 +108,7 @@ export class TourneeLivraisonService {
                 nomPointLivraison.add(nomPL);
             }
         });
+        
         //Groupe les livraison par point de livraison
         return listLivraison.reduce((acc, livraison) => {
             if(!acc[livraison.nomPointLivraison]){

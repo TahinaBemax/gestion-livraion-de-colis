@@ -2,7 +2,7 @@ import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { BordereauLivraisonService } from './bordereau-livraison.service';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Roles, UserTypes } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enum/user-role.enum';
 import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
@@ -26,8 +26,22 @@ export class BordereauLivraisonController {
     @Post()
         @ApiOperation({summary: "Créer un bordereau de livraison"})
         @ApiBody({type: BordereauLivraisonCreateDto})
-    save(@Body() dto: BordereauLivraisonCreateDto){
-        return this.bordereauService.create(dto);
+    async save(@Body() dto: BordereauLivraisonCreateDto){
+        return await this.bordereauService.create(dto);
+    }
+
+        /**
+     * CREATION D'UN BORDEREAU DE LIVRAISON
+     * @param dto Données bordereau de livraison
+     * @returns Bordereau de livraison enregistré
+     */
+    @Post("/:refBordereau/proof-of-delivery")
+        @Roles(UserRole.User, UserRole.Admin)
+        @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Preuve de livraison"})
+        @ApiParam({name: "refBordereau", description: "Référence du bordereau de livraison"})
+    async proofOfDelivery(@Param("refBordereau") refBordereau: string){
+        return await this.bordereauService.proofOfDelivery(refBordereau);
     }
 
     /**
@@ -56,8 +70,8 @@ export class BordereauLivraisonController {
          * @returns Liste des bordereaux de livraison
          */
     @Get()
-    getAll(){
-        return this.bordereauService.findAll()
+    async getAll(){
+        return await this.bordereauService.findAll()
     }
         
     /**
@@ -65,8 +79,8 @@ export class BordereauLivraisonController {
      * @returns Un bordereaux de livraison
     */
     @Get("/:id")
-    getById(@Param("id") id: string){
-        return this.bordereauService.findById(id);
+    async getById(@Param("id") id: string){
+        return await this.bordereauService.findById(id);
     }
 
 
