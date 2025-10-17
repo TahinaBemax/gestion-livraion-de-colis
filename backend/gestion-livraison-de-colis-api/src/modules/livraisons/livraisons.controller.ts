@@ -68,6 +68,10 @@ export class LivraisonsController {
         throw new BadRequestException("Requette inconnue");
     }
 
+    @Get("/en-attente")
+    async getLivraisonEnAttente(){
+        return await this.livraisonService.findPendingDeliveries();
+    }
     
     @Get("/:id")
     @Roles(UserRole.Admin, UserRole.ResponsableExploitation, UserRole.User)

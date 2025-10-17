@@ -209,7 +209,7 @@ export class LivreurController {
         if(etape === "chargement"){
             return this.colisService.scanColisAuChargementCamion(id, idColis);        
         } else if(etape === "dechargement") {
-            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+            return this.colisService.scanColisAuDechargementCamion(id, idColis);
         } else {
             throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
         }

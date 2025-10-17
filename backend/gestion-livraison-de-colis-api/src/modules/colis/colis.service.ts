@@ -72,6 +72,43 @@ export class ColisService {
             return message;
     }
 
+        /**
+     * SCAN DU COLIS AU MOMENT DE CHARGEMENT DU CAMION
+     * @param idLivreur 
+     * @param idColis
+     * @returns message
+     */
+
+    async scanColisAuDechargementCamion(idLivreur: number, idColis:number): Promise<string> {
+        if(!idColis || !idLivreur) throw new BadRequestException("ID Colis ou ID Livreur invalid!");
+
+        var message = "Code Barre Reconnu Et Colis Déchargé Du Camion";
+        const livreur: Livreur = await this.livreurService.findByUserID(idLivreur);
+        
+        if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
+            throw new BadRequestException(`Code Barre Reconnu mais Colis Non Rattaché à Cette Ordre de Livraison`);
+        }
+        const existingColis = await this.colisRep.createQueryBuilder("colis")
+            .innerJoinAndSelect("colis.livraisons", "livraison")
+            .leftJoinAndSelect("livraison.ordre_livraison", "ordre")
+            .leftJoinAndSelect("ordre.bordereau_livraison", "bl")
+            .where("colis.id = :idColis", {idColis})
+            .getOne();
+
+        if(!existingColis) throw new NotFoundException(`Code barre du colis non reconnu!`);
+
+        if(existingColis.statut_colis !== StatusColis.CHARGE_DANS_LA_CAMION){
+            throw new BadRequestException(`Ce colis n'est pas encore indiqué comme chargé dans le camion! Veuilez vérifier s'il vous plait.`);
+        }
+    
+        existingColis.statut_colis = StatusColis.DECHARGE_DE_LA_CAMION;
+        existingColis.date_heure_dechargement = new Date().toUTCString();
+        this.colisRep.save(existingColis);
+
+        return message;
+    }
+
+
     /**
      * CHANGER LA STATU D'UN COLIS 
      * @param idColis
