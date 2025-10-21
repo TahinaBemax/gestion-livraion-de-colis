@@ -41,10 +41,10 @@ LIVREUR
         tournée en fonction des contraintes temporelles de livraisons définie) [X]
     2- Chargement au Camion:
         * Lister les ordres de livraison d'un tournee en ordre inverse [X]
-        * Résumé du livraison (Nom point de livraion, nbr colis à charger, nbr colis charger, statut)
-        * Lister les colis à charger avec statut de cette ordre de livraison
+        * Résumé du livraison (Nom point de livraion, nbr colis à charger, nbr colis charger, statut) [X]
+        * Lister les colis à charger avec statut de cette ordre de livraison [X]
     3- Scanner les colis d'un livraison:
-        * Les colis manquant sont remontés en tête de liste
+        * Les colis manquant sont remontés en tête de liste [X]
     4- Trajet:
         * présenter l’ordre des livraisons et les créneaux temporels à respecter.
         * Un code couleur est utilisé afin d’indiquer un niveau de confiance quand au respect des créneaux de
