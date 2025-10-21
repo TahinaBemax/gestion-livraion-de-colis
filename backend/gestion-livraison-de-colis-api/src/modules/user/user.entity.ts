@@ -56,9 +56,11 @@ export class User {
     prestataire?: Promise<Prestataire>|Prestataire;
 
     @OneToOne(() => Livreur, (l) => l.user, {
-        cascade: false
+        cascade: false,
+        lazy: true,
+        nullable: true
     })
-    livreur?: Livreur;
+    livreur?: Promise<Livreur>|Livreur;
 
     @OneToMany(() => NotificationEntity, (notif) => notif.envoyeur)
     notifications_envoye?: NotificationEntity[];

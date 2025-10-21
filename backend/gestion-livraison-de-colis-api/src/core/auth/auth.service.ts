@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginResponse } from 'src/common/dto/auth/login-response-dto';
 import { User } from 'src/modules/user/user.entity';
+import { TypeEvenementEnum } from 'src/common/enum/type-evenement.enum';
+import { TypeUtilisateur } from 'src/common/enum/type-utilisateur.enum';
 @Injectable()
 export class AuthService {
     constructor
@@ -25,13 +27,28 @@ export class AuthService {
 
     async login(user: User): Promise<LoginResponse> {
         const prest = await user.prestataire;
-        const payload = {
-            username: user.adresse_email, 
-            sub: user.id_utilisateur, 
-            role: user.role?.id,
-            type_utilisateur: user.type_utilisateur.id_type_utilisateur,
-            prestataire: prest?.id_prestataire
-        };
+        const livreur = await user.livreur;
+        var payload;
+
+        if(user.type_utilisateur.id_type_utilisateur === TypeUtilisateur.Livreur){
+            payload = {
+                username: user.adresse_email, 
+                sub: user.id_utilisateur, 
+                role: user.role?.id,
+                idLivreur: livreur?.id_livreur,
+                type_utilisateur: user.type_utilisateur.id_type_utilisateur,
+                prestataire: prest?.id_prestataire
+            };
+        } else {
+            payload = {
+                username: user.adresse_email, 
+                sub: user.id_utilisateur, 
+                role: user.role?.id,
+                idLivreur: undefined,
+                type_utilisateur: user.type_utilisateur.id_type_utilisateur,
+                prestataire: prest?.id_prestataire
+            };
+        }
 
         const access_token = this.jwtService.sign(payload);
         const loginReponse: LoginResponse = new LoginResponse();
