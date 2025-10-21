@@ -27,8 +27,6 @@ export class OrdreLivraisonService {
         private readonly ordreRepo: Repository<OrdreLivraisonEntity>,
         @InjectRepository(TourneeLivraisonEntity)
         private readonly tourneeRepo: Repository<TourneeLivraisonEntity>,
-        @InjectRepository(PointLivraisonEntity)
-        private readonly plRepo: Repository<PointLivraisonEntity>,
         private readonly livraisonService: LivraisonsService,
         private readonly colisService: ColisService,
         private readonly notificationService: NotificationService,

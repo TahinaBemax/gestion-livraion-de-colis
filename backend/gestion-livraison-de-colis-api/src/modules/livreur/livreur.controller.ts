@@ -31,6 +31,23 @@ export class LivreurController {
         private readonly tourneeService: TourneeLivraisonService,
     ){}
 
+        /* LIVREUR */
+    
+        /**
+         * LISTE DES LIVREURS
+         * @returns Liste des livreurs
+        */
+   @Get("/:id/statisitque")
+        @Roles(UserRole.User, UserRole.ResponsableExploitation, UserRole.Admin)
+        @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Lister tous les livreurs"})
+        @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
+    async livreurScoringClassement(@Param("id", ParseIntPipe) idLiveur: number, @Query("date_tournee") date_tournee?:string){
+        if(!date_tournee){
+            date_tournee = new Date().toISOString().split('T')[0];
+        }
+        return await this.livreurService.getLivreurStatistique(idLiveur, date_tournee);
+    }
     /* LIVREUR */
     
         /**

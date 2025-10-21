@@ -1,3 +1,4 @@
+import { LivreurScoringClassement } from './../../common/dto/livreur/scroring-classement-dto';
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Livreur } from './livreur.entity';
@@ -7,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LiveurMapper } from './livreur.mapper';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivreurUpdateDto } from 'src/common/dto/livreur/update-livreur-dto';
+import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
 
 @Injectable()
 export class LivreurService {
@@ -20,6 +22,106 @@ export class LivreurService {
         private readonly livreurMapper: LiveurMapper,
     ){}
 
+    /**
+     * Total livraison rattacher à un Livreur
+     */
+
+    async getLivraisonStatistique(idLivreur?: number, date_debut?: string, date_fin?: string, statut?: string): Promise<any>{
+        const query = this.livreurRepo.createQueryBuilder("livreur")
+        .leftJoinAndSelect("livreur.tournees_livraison", "tournee")
+        .leftJoinAndSelect("tournee.ordres_livraison", "ordre")
+        .leftJoinAndSelect("ordre.livraison", "livraison")
+        .select("COUNT(livraison.id)", 'total')
+        .addSelect("livreur.id", 'idLivreur')
+        
+        if(idLivreur){
+            query.where("livreur.id = :idLivreur", {idLivreur: idLivreur})
+        }
+
+        if(date_debut && !date_fin){
+            query.where("tournee.date_tournee = :date", {date: date_debut});
+        } else if(date_debut && !date_fin){
+            query.where("tournee.date_tournee >= :debut AND tournee.date_tournee <= :fin", {debut: date_debut, fin: date_fin});
+        }
+
+        if(statut){
+            switch (statut) {
+                case 'livre':
+                    query.where("llivraison.statut = :statut", {idLivreur: idLivreur, statut: StatusLivraison.LIVRE})
+                    break;
+                case 'echec':
+                    query.where("livraison.statut = :echec OR livraison.statut = :partielle OR livraison.statut = :retourne", {
+                        idLivreur: idLivreur, 
+                        echec: StatusLivraison.ECHEC_LIVRAISON,
+                        retourne: StatusLivraison.RETOUR_EXPEDITEUR,
+                        partielle: StatusLivraison.LIVRAISON_PARTIELLE
+                    })
+                    break;
+                default:
+                    break;
+            }
+        }
+        query.groupBy("livreur.id");
+        return await query.getRawOne();
+    }
+    /**
+     * Total livraison rattacher à un Livreur
+     */
+
+    async getLivreurStatistique(idLivreur: number, date_tournee: string): Promise<LivreurScoringClassement>{
+        const totalLivraisonGlobal: any = await this.getLivraisonStatistique(idLivreur);
+
+        const totalLivraisonJournalier: any = await this.getLivraisonStatistique(idLivreur, date_tournee);
+        const totalLivraisonJournalierEffectue: any = await this.getLivraisonStatistique(idLivreur, date_tournee, undefined,'livre');
+
+        const date_debut = new Date(date_tournee);
+        const date_fin = new Date(date_tournee);
+        date_debut.setDate(date_debut.getDate() - 7);
+
+        const totalLivraisonGlobalSemaine: any = await this.getLivraisonStatistique(
+            idLivreur, 
+            date_debut.toISOString().split('T')[0], 
+            date_fin.toISOString().split('T')[0], 
+            'livre'
+        );
+        const totalLivraisonGlobalSemaineEffectue: any = await this.getLivraisonStatistique(
+            idLivreur, 
+            date_debut.toISOString().split('T')[0], 
+            date_fin.toISOString().split('T')[0], 
+            'livre'
+        );
+
+        const statistique = new LivreurScoringClassement();
+
+        statistique.idLivreur = idLivreur;
+        statistique.totalLivraisonGlobal = totalLivraisonGlobal.total;
+        statistique.nbrLivraisonJour = totalLivraisonJournalier.total;
+        statistique.totalLivraisonEffectueJour = totalLivraisonJournalierEffectue.total;
+        statistique.nbrLivraisonSemaine = totalLivraisonGlobalSemaine.total;
+        statistique.totalLivraisonEffectueSemaine = totalLivraisonGlobalSemaineEffectue.total;
+
+        return statistique;
+    }
+    
+    async getTotalLivraisonEchec(idLivreur: number): Promise<any[]>{
+        const query = this.livreurRepo.createQueryBuilder("livreur")
+        .leftJoinAndSelect("livreur.tournees_livraison", "tournee")
+        .leftJoinAndSelect("tournee.ordres_livraison", "ordre")
+        .leftJoinAndSelect("ordre.livraison", "livraison")
+        .select("COUNT(livraison.id)", 'total')
+        .addSelect("livreur.id", 'idLivreur')
+
+        if(idLivreur){
+            query.andWhere("livreur.id = :idLivreur", {idLivreur: idLivreur})
+        }
+        query.groupBy("livreur.id");
+        return await query.getRawMany();
+    }
+    /**
+     * 
+     * @param id 
+     * @returns 
+     */
     async findByUserID(id: number): Promise<Livreur>{
         const matched = await this.livreurRepo.createQueryBuilder("l")
         .innerJoinAndSelect("l.user", "u")
