@@ -38,7 +38,11 @@ async function bootstrap() {
   const globalJwtGuard = app.get(GlobalJwtGuard);
   const rolesGuard = app.get(RolesGuard);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe(
+    {
+      transform: true, // active class-transformer
+    }
+  ));
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalGuards(globalJwtGuard, rolesGuard);

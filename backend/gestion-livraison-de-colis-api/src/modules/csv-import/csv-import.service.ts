@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
-import { ContrainteJourLivraisonCsvDto } from "src/common/dto/csv-import/contrainte-jour-livraison-csv-dto";
 import { ContrainteLivraisonCsvDto } from "src/common/dto/csv-import/contrainte-livraison-csv-dto";
 import { PointLivraisonCsvDto } from "src/common/dto/csv-import/point-livraison-csv-dto";
 import { CsvParser, ParsedCsv } from "./parser/csv.parser";
@@ -51,6 +50,7 @@ export class CsvImportService {
       //points de livraison
       var existings_points_livraison: PointLivraisonEntity[] = await this.plRepo.find();
       const points_livraison_from_csv = this.mapToPointLivraisonEntity(parsedPLs.success);
+
       const existingMagasins = new Set(existings_points_livraison.map(pl => pl.numero_magasin));
       const newPoints = points_livraison_from_csv.filter(pl => !existingMagasins.has(pl.numero_magasin));
 
@@ -58,7 +58,9 @@ export class CsvImportService {
 
       existings_points_livraison.forEach(pl => {
         const matchedConstrainte = this.prepareConstraintDeliveryInstance(parsedCKs.success, pl);
-        this.assignConstraintToPL(pl, matchedConstrainte);
+        if(matchedConstrainte.length > 0){
+          this.assignConstraintToPL(pl, matchedConstrainte);
+        }
       });
 
       //persist dans la base de données
@@ -85,6 +87,7 @@ export class CsvImportService {
           return pointL;
       });
   }
+
   private hasErrors
   (
     parsedPLs: ParsedCsv<PointLivraisonCsvDto>, 
@@ -169,7 +172,12 @@ export class CsvImportService {
     constraints: ContrainteLivraisonEntity[]
   ) 
   {
-    const existingConstraints: ContrainteLivraisonEntity[] = await this.contraintLivraisonRepo.find({ relations: ["point_livraison"]});
+    const existingConstraints: ContrainteLivraisonEntity[] = await this.contraintLivraisonRepo
+      .createQueryBuilder("contrainte")
+      .innerJoinAndSelect("contrainte.point_livraison", 'pl')
+      .where("pl.id = :id", {id: pl.id})
+      .getMany();
+
     const allConstraints = this.concatExistingAndNewConstraintDelivery(existingConstraints, constraints);
 
     (pl.id && pl.contraintes_livraison && pl.contraintes_livraison.length > 0) ? pl.contraintes_livraison = pl.contraintes_livraison.concat(allConstraints)

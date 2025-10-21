@@ -49,7 +49,7 @@ export class PointLivraisonEntity {
 
     @OneToMany(() => ContrainteLivraisonEntity, (c) => c.point_livraison, {
         eager: true, 
-        cascade: ["insert"], 
+        cascade: ["insert", "update"], 
         onUpdate: "CASCADE",
         nullable: true
     })

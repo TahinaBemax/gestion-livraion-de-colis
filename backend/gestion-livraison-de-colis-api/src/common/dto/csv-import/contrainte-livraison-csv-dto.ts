@@ -10,10 +10,10 @@ export class ContrainteLivraisonCsvDto {
     date_contrainte: string;
 
     @IsTime()
-    heure_debut: string;
+    heure_debut_livrable: string;
 
     @IsTime()
-    heure_fin: string;
+    heure_fin_livrable: string;
 
     @IsNotEmpty()
     nom_point_livraison:string
