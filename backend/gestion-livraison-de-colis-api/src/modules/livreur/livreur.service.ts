@@ -32,10 +32,10 @@ export class LivreurService {
         .leftJoinAndSelect("tournee.ordres_livraison", "ordre")
         .leftJoinAndSelect("ordre.livraison", "livraison")
         .select("COUNT(livraison.id)", 'total')
-        .addSelect("livreur.id", 'idLivreur')
+        .addSelect("livreur.id_livreur", 'idLivreur')
         
         if(idLivreur){
-            query.where("livreur.id = :idLivreur", {idLivreur: idLivreur})
+            query.where("livreur.id_livreur = :idLivreur", {idLivreur: idLivreur})
         }
 
         if(date_debut && !date_fin){
@@ -47,21 +47,23 @@ export class LivreurService {
         if(statut){
             switch (statut) {
                 case 'livre':
-                    query.where("llivraison.statut = :statut", {idLivreur: idLivreur, statut: StatusLivraison.LIVRE})
+                    query.where("livraison.statut_livraison = :statut OR livraison.statut_livraison = :partielle", {
+                        idLivreur: idLivreur, statut: StatusLivraison.LIVRE,
+                        partielle: StatusLivraison.LIVRAISON_PARTIELLE
+                    })
                     break;
                 case 'echec':
-                    query.where("livraison.statut = :echec OR livraison.statut = :partielle OR livraison.statut = :retourne", {
+                    query.where("livraison.statut_livraison = :echec OR livraison.statut_livraison = :retourne ", {
                         idLivreur: idLivreur, 
                         echec: StatusLivraison.ECHEC_LIVRAISON,
                         retourne: StatusLivraison.RETOUR_EXPEDITEUR,
-                        partielle: StatusLivraison.LIVRAISON_PARTIELLE
                     })
                     break;
                 default:
                     break;
             }
         }
-        query.groupBy("livreur.id");
+        query.groupBy("livreur.id_livreur");
         return await query.getRawOne();
     }
     /**

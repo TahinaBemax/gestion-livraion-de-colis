@@ -159,7 +159,7 @@ export class OrdreLivraisonService {
         fiche.date_scan_bordereau = bordereau.date_scan_bordereau;
         fiche.date_scan_dernier_colis = await this.colisService.getDateLastColisDechargmentForTournee(tournee.id);
         fiche.date_scan_premier_colis = await this.colisService.getDateFirstColisLoadedForTournee(tournee.id);
-        fiche.date_scan_PoD = "";
+        //fiche.date_scan_PoD = "";
 
         return fiche;
     }

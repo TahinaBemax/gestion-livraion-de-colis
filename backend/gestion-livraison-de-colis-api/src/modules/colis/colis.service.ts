@@ -348,7 +348,7 @@ export class ColisService {
         const result = await this.datasource.query(`
             SELECT pcc.date_heure_chargement 
             FROM premier_colis_au_chargement pcc 
-            WHERE pcc.id_tournee = $1
+            WHERE pcc.id_tournee = $1 AND date_heure_chargement IS NOT NULL
             ORDER BY pcc.date_heure_chargement DESC LIMIT 1`, [idTournee]
         );
 
@@ -359,8 +359,8 @@ export class ColisService {
         const result = await this.datasource.query(`
             SELECT pcc.date_heure_dechargement 
             FROM dernier_colis_au_dechargement pcc 
-            WHERE pcc.id_tournee = $1
-            ORDER BY pcc.date_heure_dechargement DESC LIMIT 1`, [idTournee]
+            WHERE pcc.id_tournee = $1 AND date_heure_dechargement IS NOT NULL
+            ORDER BY pcc.date_heure_dechargement DESC LIMIT 1;`, [idTournee]
         );
 
         return (result) ? result[0].date_heure_dechargement : '';
