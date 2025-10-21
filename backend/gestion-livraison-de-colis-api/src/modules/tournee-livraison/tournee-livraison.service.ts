@@ -32,7 +32,7 @@ export class TourneeLivraisonService {
 
         const tournee = await this.findById(idTournee);
         if(tournee.livreur.user.id_utilisateur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
-        const ordreLivraison: OrdreLivraisonEntity|undefined = await tournee.ordres_livraison.find(ol => ol.id === idOrdreLivraison);
+        const ordreLivraison: OrdreLivraisonEntity|undefined = tournee.ordres_livraison.find(ol => ol.id === idOrdreLivraison);
         
         if(!ordreLivraison) throw new NotFoundException(`Ordre de livraison avec ID:{${idOrdreLivraison}} est introuvable dans cette tournée!`);
         const livraisonIncomplet = await this.livraisonService.findLivraisonIncompleteByIdClient(ordreLivraison.livraison.client.id);
@@ -123,7 +123,6 @@ export class TourneeLivraisonService {
             acc[livraison.nomPointLivraison].push(livraison);
             return acc;
         }, {} as Record<string, LivraisonTournee[]>);
-
     }
 
     async invertedOrdreLivraison(idTournee:number){
@@ -142,7 +141,7 @@ export class TourneeLivraisonService {
     async ordreLivraisonOrderByPointLivraison(idTournee:number){
         const groupByPointLivraison:Record<string, LivraisonTournee[]> = await this.getOrdreLivraisonGroupedByPointLivraison(idTournee);
         const orderedByPointLivraison: LivraisonTournee[] = [];
-
+        
         // trier les livraison par ordre décroissante pour chaque point de livraison
         for(const pl in groupByPointLivraison) {
             groupByPointLivraison[pl].sort((a, b) => {
@@ -151,8 +150,61 @@ export class TourneeLivraisonService {
 
             orderedByPointLivraison.push(...groupByPointLivraison[pl]);
         }
-
+        
         return orderedByPointLivraison;
+    }
+    async tranjet(idTournee: number){
+        const groupByPointLivraison:Record<string, LivraisonTournee[]> = await this.getOrdreLivraisonGroupedByPointLivraison(idTournee);
+        const orderedByPointLivraison: LivraisonTournee[] = [];
+
+        for (const pl in groupByPointLivraison) {
+            orderedByPointLivraison.push(...groupByPointLivraison[pl]);
+        }
+
+        return this.trierLivraisons(orderedByPointLivraison);
+        
+    }
+    private trierLivraisons(livraisons: LivraisonTournee[]): LivraisonTournee[] {
+        // 1️⃣ Grouper les livraisons par nomPointLivraison
+        const groupes = this.grouperParPointLivraison(livraisons);
+
+        // 2️⃣ Trier chaque groupe par heureDebut (puis heureFin)
+        for (const point in groupes) {
+        groupes[point].sort((a, b) => {
+            const debutA = this.convertirHeure(a.heureDebut);
+            const debutB = this.convertirHeure(b.heureDebut);
+            if (debutA !== debutB) return debutA - debutB;
+
+            const finA = this.convertirHeure(a.heureFin);
+            const finB = this.convertirHeure(b.heureFin);
+            return finA - finB;
+        });
+        }
+
+        // 3️⃣ Trier les groupes par leur plus petite heure de début
+        const groupesTries = Object.entries(groupes).sort(([_, livraisonsA], [__, livraisonsB]) => {
+        const debutMinA = this.convertirHeure(livraisonsA[0].heureDebut);
+        const debutMinB = this.convertirHeure(livraisonsB[0].heureDebut);
+        return debutMinA - debutMinB;
+        });
+
+        // 4️⃣ Reconstituer la liste triée finale
+        return groupesTries.flatMap(([_, livraisons]) => livraisons);
+    }
+
+    private grouperParPointLivraison(livraisons: LivraisonTournee[]): Record<string, LivraisonTournee[]> {
+        return livraisons.reduce((acc, livraison) => {
+        const key = livraison.nomPointLivraison;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(livraison);
+        return acc;
+        }, {} as Record<string, LivraisonTournee[]>);
+    }
+
+    private convertirHeure(heure: string): number {
+        if (!heure) return 0;
+        const [h, m = '0', s = '0'] = heure.split(':');
+        return parseInt(h) * 3600 + parseInt(m) * 60 + parseInt(s);
     }
 
     async findAll(): Promise<TourneeLivraisonEntity[]> {

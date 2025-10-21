@@ -16,6 +16,7 @@ import { DetailColisDto } from 'src/common/dto/colis/detail-colis-dto';
 import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity';
 import { Utils } from 'src/common/utils/utils';
 import { ClientService } from '../client/client.service';
+import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
 
 @Injectable()
 export class LivraisonsService {
@@ -28,6 +29,38 @@ export class LivraisonsService {
         private readonly clientService: ClientService
     ){}
 
+    /**
+     * Clôturer un livraison
+     * 
+     */
+    async cloturerLivraison(idLivreur: number, idLivraison: number){
+        if(!idLivreur || !idLivraison) throw new BadRequestException("ID du Livreur ou ID du livraison invalide");
+
+        const existingLivraison: LivraisonEntity = await this.findById(idLivraison);
+        const ordreLivraison: OrdreLivraisonEntity = await existingLivraison.ordre_livraison;
+        const incomplete: LivraisonEntity[] = await this.findLivraisonIncompleteByIdClient(existingLivraison.client.id);
+        
+        let countColisLivre = 0;
+        existingLivraison.colis.forEach(c => {
+            if(c.statut_colis === StatusColis.LIVRE || c.statut_colis === StatusColis.DECHARGE_DE_LA_CAMION){
+                countColisLivre++;
+            }
+        });
+
+        if(countColisLivre === 0){
+            existingLivraison.statut_livraison = StatusLivraison.RETOUR_EXPEDITEUR;
+        }
+        else if(ordreLivraison.nbr_colis_prevu > ordreLivraison.nbr_colis_reel ||
+             (ordreLivraison.nbr_colis_prevu <= ordreLivraison.nbr_colis_reel && 
+                countColisLivre < ordreLivraison.nbr_colis_reel)){
+            existingLivraison.statut_livraison = StatusLivraison.LIVRAISON_PARTIELLE;
+        }
+        else if(countColisLivre === ordreLivraison.nbr_colis_reel){
+            existingLivraison.statut_livraison = StatusLivraison.LIVRE;
+        } 
+
+        return this.livraisonRep.save(existingLivraison);
+    }
 
     /**
      * LISTE DES LIVRAISONS EN ATTENTE DE TRAITEMENT

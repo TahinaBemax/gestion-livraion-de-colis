@@ -169,17 +169,13 @@ export class LivreurController {
     }
 
     /* ===== LIVRAISON ====== */
-    // @Post("/:id/livraisons/:idLivraison/problemes")
-    //     @ApiTags("Livraison")
-    //     @ApiOperation({summary: "Signaler un problemes lors de livraison"})
-    //     @UseGuards(SameUserGuard)
-    //     @HttpCode(HttpStatus.CREATED)
-    //     @ApiBody({type: ProblemeLivraisonCreateDto})
-    //     @ApiCreatedResponse()
-    //     @ApiBadRequestResponse()
-    // async signalProbleme(@Param("id", ParseIntPipe) idLivraison: number, @Body() dto: ProblemeLivraisonCreateDto){
-    //     return this.livraisonService.signalProbleme(idLivraison, dto);
-    // }
+    @Post("/:id/livraisons/:idLivraison/cloture")
+        @ApiTags("Livraison")
+        @ApiOperation({summary: "Clôturer un livraison"})
+        @UseGuards(SameUserGuard)
+    async clotureLivraison(@Param("id", ParseIntPipe) id: number, @Param("idLivraison", ParseIntPipe) idLivraison: number){
+        return this.livraisonService.cloturerLivraison(id, idLivraison);
+    }
 
     /* ===== NOTIFICATION ====== */
         /**
@@ -223,8 +219,8 @@ export class LivreurController {
          */
     @Get("/:id/tournees/:idTournee/livraisons")
     @ApiTags("Chargement et Dechargement Camion")
-    @ApiOperation({summary: "Liste des livraison à charger/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
-    @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement ou dechargement"})
+    @ApiOperation({summary: "Liste des livraison à charger/trajet/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
+    @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement, trajet ou dechargement"})
     @ApiParam({name: "idTournee", description: "ID De l'utilisateur"})
     async getLivraisons(
         @Query("etape") etape:string,
@@ -232,8 +228,8 @@ export class LivreurController {
     {
         if(etape === "chargement"){
             return this.tourneeService.invertedOrdreLivraison(id);
-        } else if(etape === "dechargement") {
-            return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
+        } else if(etape === "trajet") {
+            return this.tourneeService.tranjet(id);
         } else {
             throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
         }
