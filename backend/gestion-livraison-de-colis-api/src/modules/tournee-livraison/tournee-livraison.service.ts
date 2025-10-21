@@ -13,6 +13,7 @@ import { BordereauLivraisonEntity } from '../bordereau-livraison/bordereau-livra
 import { TourneeLivraisonUpdateDto } from 'src/common/dto/tournee-livraison/update-tournee-livraison-dto';
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
+import { Utils } from 'src/common/utils/utils';
 
 @Injectable()
 export class TourneeLivraisonService {
@@ -42,7 +43,10 @@ export class TourneeLivraisonService {
             }
         }));
 
-        return ordreLivraison.livraison.colis.concat(livraisonIncomplet.flatMap(livraison => livraison.colis));
+        const all = ordreLivraison.livraison.colis.concat(livraisonIncomplet.flatMap(livraison => livraison.colis));
+        const colisAnomalie = all.filter(c => c.statut_colis === StatusColis.ANOMALIE || c.statut_colis === StatusColis.RELIQUAT);
+        const colisNormale = all.filter(c => c.statut_colis !== StatusColis.ANOMALIE && c.statut_colis !== StatusColis.RELIQUAT);
+        return colisAnomalie.concat(colisNormale);
     }
 
     private async getLivraisonsByTournee(tournee: TourneeLivraisonEntity): Promise<LivraisonTournee[]> {
@@ -73,6 +77,7 @@ export class TourneeLivraisonService {
         
                     livraison.idLivraison = ordre.livraison.id;
                     livraison.nombreColis = ordre.nbr_colis_reel;
+                    livraison.nombreColisCharge = Utils.countColisCharger(ordre.livraison);
                     livraison.heureDebut = ordre.livraison.heure_debut;
                     livraison.heureFin = ordre.livraison.heure_fin;
                     livraison.nomPointLivraison = `${pointLivraison.numero_magasin}`;

@@ -14,6 +14,7 @@ import { ContrainteLivraisonModule } from '../contrainte-livraison/contrainte-li
 import { OrdreLivraisonModule } from '../ordre-livraison/ordre-livraison.module';
 import { NotificationModule } from '../notification/notification.module';
 import { TourneeLivraisonModule } from '../tournee-livraison/tournee-livraison.module';
+import { LivraisonsModule } from '../livraisons/livraisons.module';
 
 @Module({
   providers: [
@@ -29,6 +30,7 @@ import { TourneeLivraisonModule } from '../tournee-livraison/tournee-livraison.m
     forwardRef(() => UserModule),
     forwardRef(() => LivreurModule),
     forwardRef(() => TourneeLivraisonModule),
+    forwardRef(() => LivraisonsModule),
     TypeOrmModule.forFeature([
       Prestataire, 
       User, 

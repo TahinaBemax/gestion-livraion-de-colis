@@ -123,7 +123,6 @@ export class BordereauLivraisonService {
                     try {
                         bordereau.date_scan_bordereau = new Date().toISOString();
                         await this.bordereauRep.save(bordereau);
-    
                         matched.livraison.colis.forEach(c => c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION);
     
                         query.manager.save(BordereauLivraisonEntity, bordereau);

@@ -6,5 +6,6 @@ export class LivraisonTournee {
     nomPointLivraison: string;
     adresse: string;
     nombreColis: number;
+    nombreColisCharge: number;
     statut: string;
 }

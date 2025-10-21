@@ -57,9 +57,12 @@ export class ColisService {
             const livraison = existingColis.livraisons;
             const bl = await livraison.ordre_livraison.bordereau_livraison;
 
-            if(!bl || bl.date_scan_bordereau) throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
+            if(!bl || !bl.date_scan_bordereau) throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
             
-            if(existingColis.statut_colis === StatusColis.LIVRE || existingColis.statut_colis === StatusColis.EN_COURS_LIVRAISON){
+            if(existingColis.statut_colis === StatusColis.LIVRE || 
+                existingColis.statut_colis === StatusColis.EN_COURS_LIVRAISON ||
+                existingColis.statut_colis === StatusColis.CHARGE_DANS_LA_CAMION
+            ){
                 throw new BadRequestException('Ce colis est déja scanné!');
             }else if(existingColis.statut_colis === StatusColis.RELIQUAT){
                 message = "code barre reconnu et colis en reliquat";

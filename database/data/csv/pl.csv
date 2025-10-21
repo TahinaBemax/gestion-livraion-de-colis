@@ -1,2 +1,3 @@
 nom_point_livraison,nom_rue,numero_rue,departement,ville,pays,latitude,longitude,code_postal,complement_adresse,nom_prestataire
 M125,5 Avenue des Champs,75,,Paris,France,48.8708,2.3073,75008,Near Arc de Triomphe,Quick Service
+PL 101,boulvard,12,,Antananarivo,Madagascar,,,101,,Livraison Rapide

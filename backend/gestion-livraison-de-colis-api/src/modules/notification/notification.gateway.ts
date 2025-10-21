@@ -26,7 +26,7 @@ import { NotificationEntity } from './notification.entity';
         cors: 
         {
             origin: (origin, callback) => {
-            const allowedOrigin = `${process.env.CLIENT_DOMAINE_NAME}:${process.env.CLIENT_PORT}`;
+            const allowedOrigin = `${process.env.CLIENT_DOMAINE_NAME}:${process.env.SOCKET_PORT}`;
             
             if(! origin){
               callback(null, true);

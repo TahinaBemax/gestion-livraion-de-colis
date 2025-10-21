@@ -2,6 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from "typeo
 import { User } from "../user/user.entity";
 import { IsBoolean, IsEmail, IsNotEmpty, IsNumberString, IsOptional, IsPhoneNumber } from "class-validator";
 import { TourneeLivraisonEntity } from "../tournee-livraison/tournee-livraison.entity";
+import { PointLivraisonEntity } from "../point-livraison/point-livraison.entity";
 
 @Entity("prestataires")
 @Unique(["nom_entreprise", "nif", "stat", "adresse_email", "numero_telephone", "nom_image_logo"])
@@ -72,11 +73,17 @@ export class Prestataire {
         lazy: true,
         cascade: ['insert']
     })
-    users: User[];
+    users: Promise<User[]>|User[];
 
     @OneToMany(() => TourneeLivraisonEntity, (t) => t.prestataire, {
         lazy: true,
         cascade: false
     })
-    tournees_livraison: TourneeLivraisonEntity[];
+    tournees_livraison: Promise<TourneeLivraisonEntity[]>|TourneeLivraisonEntity[];
+
+    @OneToMany(() => PointLivraisonEntity, (pl) => pl.prestataire, {
+        lazy: true,
+        cascade: false
+    })
+    points_livraison: Promise<PointLivraisonEntity[]>|PointLivraisonEntity[];
 }

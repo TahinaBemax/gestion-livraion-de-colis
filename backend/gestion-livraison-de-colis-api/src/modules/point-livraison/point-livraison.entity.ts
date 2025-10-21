@@ -43,13 +43,15 @@ export class PointLivraisonEntity {
     @Column({nullable : true})
     complement_adresse?: string;
 
-    @ManyToOne(() => Prestataire, {nullable: true})
-    @JoinColumn({name: "id_prestataire", referencedColumnName: "id_prestataire"})
+    @ManyToOne(() => Prestataire, (p) => p.points_livraison, {
+        nullable: true
+    })
+    @JoinColumn({name: "id_prestataire"})
     prestataire?: Prestataire;
 
     @OneToMany(() => ContrainteLivraisonEntity, (c) => c.point_livraison, {
         eager: true, 
-        cascade: ["insert"], 
+        cascade: ["insert", "update"], 
         onUpdate: "CASCADE",
         nullable: true
     })
@@ -73,8 +75,10 @@ export class PointLivraisonEntity {
     })
     clients: Promise<ClientEntity[]>|ClientEntity[];
 
-    @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.point_livraison)
-    ordres_livraison: OrdreLivraisonEntity[];
+    @OneToMany(() => OrdreLivraisonEntity, (ordre) => ordre.point_livraison, {
+        lazy: true
+    })
+    ordres_livraison: Promise<OrdreLivraisonEntity[]>|OrdreLivraisonEntity[];
 
     @OneToMany(() => CreneauLivraisonEntity, (creneau) => creneau.point_livraison, {
         eager: true

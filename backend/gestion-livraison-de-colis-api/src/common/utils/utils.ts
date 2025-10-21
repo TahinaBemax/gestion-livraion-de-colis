@@ -2,8 +2,21 @@ import { BadRequestException, InternalServerErrorException } from "@nestjs/commo
 import { isValid, parse, parseISO } from "date-fns";
 import * as bcrypt from "bcrypt";
 import * as QRCode from 'qrcode';
+import { LivraisonEntity } from "src/modules/livraisons/livraison.entity";
+import { StatusColis } from "../enum/status-colis.enum";
 
 export class Utils {
+
+    static countColisCharger(livraison: LivraisonEntity): number{
+        let nombreColisCharge = 0;
+        livraison.colis.forEach(c => {
+            if(c.statut_colis === StatusColis.CHARGE_DANS_LA_CAMION){
+                nombreColisCharge++;
+            }
+        });
+
+        return nombreColisCharge;
+    }
     static currencyFormat(nombre: number){
         return Number(nombre).toLocaleString("en-US", {
             minimumFractionDigits: 2,
@@ -108,6 +121,7 @@ export class Utils {
         const [h2, m2] = heure2.split(":").map(Number);
         const minutes2 = h2 * 60 + m2;
         
+        //console.log("Minute1: " + minutes1 + " Minutes2: " + minutes2);
         return minutes1 - minutes2;
     }
 }

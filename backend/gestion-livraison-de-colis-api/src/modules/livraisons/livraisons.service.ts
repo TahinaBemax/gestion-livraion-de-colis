@@ -33,21 +33,37 @@ export class LivraisonsService {
      * LISTE DES LIVRAISONS EN ATTENTE DE TRAITEMENT
      * @returns Liste des livraisons en attente de traitement
      */
-    async findPendingDeliveries(): Promise<LivraisonEntity[]>{
+    async findPendingDeliveries(idPrestataire?: number): Promise<LivraisonEntity[]>{
         const groupedByPL: LivraisonEntity[] = [];
-        const pointsLivraison: PointLivraisonEntity[] = await this.pointLivraisonService.findAll();
+        var pointsLivraison: PointLivraisonEntity[] = [];
 
-        const livraisons = await this.livraisonRep.createQueryBuilder("livraison")
+        const query = this.livraisonRep.createQueryBuilder("livraison")
         .leftJoinAndSelect("livraison.client", "client")
-        .leftJoinAndSelect("livraison.colis", "colis")
         .leftJoinAndSelect("client.point_livraison", "pl")
-        .where("livraison.statut_livraison = :statut OR livraison.statut_livraison = :retourExpediteur", {
-            statut: StatusLivraison.EN_ATTENTE, 
-            retourExpediteur: StatusLivraison.RETOUR_EXPEDITEUR
-        })
-        .orderBy("livraison.date_livraison", "DESC")
+        .leftJoin("pl.prestataire", "prestataire")
+        .leftJoinAndSelect("livraison.colis", "colis");
+        
+        if(idPrestataire){
+            pointsLivraison = await this.pointLivraisonService.findByPrestataire(idPrestataire);
+            
+            query.where("prestataire.id_prestataire = :idPrestataire AND (livraison.statut_livraison = :statut OR livraison.statut_livraison = :retourExpediteur)",
+                 {
+                    idPrestataire: idPrestataire,
+                    statut: StatusLivraison.EN_ATTENTE, 
+                    retourExpediteur: StatusLivraison.RETOUR_EXPEDITEUR
+                 });
+        } else {
+            pointsLivraison = await this.pointLivraisonService.findAll();
+            query.where("livraison.statut_livraison = :statut OR livraison.statut_livraison = :retourExpediteur", {
+                statut: StatusLivraison.EN_ATTENTE, 
+                retourExpediteur: StatusLivraison.RETOUR_EXPEDITEUR
+            });
+        }
+        
+        query.orderBy("livraison.date_livraison", "DESC")
         .orderBy("livraison.heure_debut", "ASC")
-        .getMany();
+
+        const livraisons = await query.getMany()
 
         for(const pl of pointsLivraison){
             for(const livraison of livraisons){

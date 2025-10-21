@@ -1,0 +1,57 @@
+ADMIN TEMPO ONE
+    1- Gestion de point de livraison:
+        * Import CSV (X)
+        * Gestion des contraintes
+        * Creneaux de livraison
+        * Evenement local
+    2- Gestion des clients:
+        * Rattaché des clients à un point de livraison
+    2- Création d'un prestataire:
+        * Rattacher des points de livraion à un prestataire
+    4- Gestion de livraison:
+        * CRUD
+    5- Bordereau de livraison:
+        * CRUD [X]
+        * Export pdf [X]
+
+ADMIN PRESTATAIRE
+    1- Gestion des livreurs
+        * CRUD
+        * Activé/Desactivé le fonction scan au chargement du camion
+    2- Gestion des tournnées:
+        * CRUD tournee [X]
+        * Rattaché des livraisons à un tournee (Création d'un ordre de livraison) [X]
+        * Valider l'ordre de livraison [X]
+        * Liste des ordres de livraison d'un tournee
+            --- BORDEREAU DE LIVRAISON ---
+            * Fiche contenant les detailles d'un ordre de livraison
+    
+    3- Situation de Livraison
+        * Fiche de l'ordre de livraison [X]
+        * Liste de leur propre livraison en attente [X]
+        * Liste des livreurs qui sont en tournnées aujourd'huit [X]
+        * Liste des livraisons qui sont en cours de traitement ou qui sont déja effectué [X]
+    4- Notification
+        * Envoyer un notification vers Tempo One ou un livreur
+        * Recevoir les notifications envoyés par les livreurs
+
+
+LIVREUR 
+    1- Scan Bordereau de Livraison pour précharger les livraisons (Le scan des bordereaux permet également de définir l’ordre des points de livraison dans la
+        tournée en fonction des contraintes temporelles de livraisons définie) [X]
+    2- Chargement au Camion:
+        * Lister les ordres de livraison d'un tournee en ordre inverse [X]
+        * Résumé du livraison (Nom point de livraion, nbr colis à charger, nbr colis charger, statut)
+        * Lister les colis à charger avec statut de cette ordre de livraison
+    3- Scanner les colis d'un livraison:
+        * Les colis manquant sont remontés en tête de liste
+    4- Trajet:
+        * présenter l’ordre des livraisons et les créneaux temporels à respecter.
+        * Un code couleur est utilisé afin d’indiquer un niveau de confiance quand au respect des créneaux de
+            livraison prévus. Ce niveau de confiance s’appuiera essentiellement sur le temps restant entre la fin du
+            créneau et l’heure actuelle.
+    5- Livraison:
+        * Lister les ordres de livraison d'un tournee
+        * Liste les colis à décharger de cette ordre de livraison
+        * scanner les colis pour valider l'ensemble des colis prévus se trouve bien sur place.
+        * Cloture un livraison

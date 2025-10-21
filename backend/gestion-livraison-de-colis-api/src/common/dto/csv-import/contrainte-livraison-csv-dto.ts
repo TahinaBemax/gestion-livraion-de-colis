@@ -1,5 +1,4 @@
-import { IsDate, IsDateString, IsNotEmpty, IsNumber } from "class-validator";
-import { ConvertEmptyToUndefined } from "src/common/decorators/convert-empty-to-undefined.decorator";
+import { IsNotEmpty } from "class-validator";
 import { IsFRDate } from "src/common/validators/is-fr-date";
 import { IsTime } from "src/common/validators/is-time.validator";
 
@@ -8,13 +7,13 @@ export class ContrainteLivraisonCsvDto {
     intitule_contrainte: string;
 
     @IsFRDate()
-    date_debut: string;
+    date_contrainte: string;
 
-    @IsFRDate()
-    date_fin: string;
+    @IsTime()
+    heure_debut_livrable: string;
 
-    @IsNotEmpty()
-    priorite_contrainte?: number;
+    @IsTime()
+    heure_fin_livrable: string;
 
     @IsNotEmpty()
     nom_point_livraison:string

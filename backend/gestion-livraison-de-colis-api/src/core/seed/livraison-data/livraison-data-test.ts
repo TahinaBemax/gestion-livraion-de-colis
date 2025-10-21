@@ -2,13 +2,32 @@ import { DetailColisDto } from "src/common/dto/colis/detail-colis-dto";
 import { LivraisonCreateDto } from "src/common/dto/livraison/create-livraison-dto";
 
 export class LivraisonDataTest {
+    static livraison2(idClient: number): LivraisonCreateDto[] {
+        // POINT DE LIVRAISON 1
+        // ++++++ DEUXIME LIVRAISON ++++++
+        const livraison2 = new LivraisonCreateDto();
+        livraison2.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
+        livraison2.heure_debut = "07:45:00";
+        livraison2.heure_fin = "07:50:00";
+        livraison2.id_client = idClient;
+
+        const livraison2Produit1 = new DetailColisDto();
+        livraison2Produit1.description_produit = "Telephone";
+        livraison2Produit1.poids_produit = 0.8;
+        livraison2Produit1.valeur_produit = 2500000;
+
+        livraison2.colis = [livraison2Produit1];
+
+        return [livraison2];
+    }
+
     static getListLivraisonPointLivraion1(idClient: number): LivraisonCreateDto[]{
         // POINT DE LIVRAISON 1
         // ++++++ PREMIERE LIVRAISON ++++++
         const livraison1 = new LivraisonCreateDto();
         livraison1.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
-        livraison1.heure_debut = "08:30:00";
-        livraison1.heure_fin = "09:00:00";
+        livraison1.heure_debut = "07:15:00";
+        livraison1.heure_fin = "07:30:00";
         livraison1.id_client = idClient;
         
         const livraison1Produit1 = new DetailColisDto();
@@ -23,21 +42,7 @@ export class LivraisonDataTest {
 
         livraison1.colis = [livraison1Produit1, livraison1Produit2];
 
-        // ++++++ DEUXIME LIVRAISON ++++++
-        const livraison2 = new LivraisonCreateDto();
-        livraison2.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
-        livraison2.heure_debut = "09:15:00";
-        livraison2.heure_fin = "10:00:00";
-        livraison2.id_client = idClient;
-
-        const livraison2Produit1 = new DetailColisDto();
-        livraison2Produit1.description_produit = "Telephone";
-        livraison2Produit1.poids_produit = 0.8;
-        livraison2Produit1.valeur_produit = 2500000;
-
-        livraison2.colis = [livraison2Produit1];
-
-        return [livraison1, livraison2];
+        return [livraison1];
     }
 
     static getListLivraisonPointLivraion2(idClient: number): LivraisonCreateDto[]{
@@ -45,8 +50,8 @@ export class LivraisonDataTest {
         // ++++++ PREMIERE LIVRAISON ++++++
         const livraison1 = new LivraisonCreateDto();
         livraison1.date_livraison = new Date().toISOString().split('T')[0]; // Date du jour
-        livraison1.heure_debut = "08:00:00";
-        livraison1.heure_fin = "08:30:00";
+        livraison1.heure_debut = "10:15:00";
+        livraison1.heure_fin = "11:00:00";
         livraison1.id_client = idClient;
         
         const livraison1Produit1 = new DetailColisDto();

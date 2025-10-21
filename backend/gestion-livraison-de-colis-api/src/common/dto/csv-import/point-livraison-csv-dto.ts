@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer";
 import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
 
 export class PointLivraisonCsvDto {
@@ -19,12 +20,14 @@ export class PointLivraisonCsvDto {
     @IsOptional()
     pays?: string;
 
-    @IsNumberString()
     @IsOptional()
+    @IsNumberString()
+    @Transform(({ value }) => value === "" ? undefined : value)
     latitude?: number;
     
-    @IsNumberString()
     @IsOptional()
+    @IsNumberString()
+    @Transform(({ value }) => value === "" ? undefined : value)
     longitude?: number;
 
     @IsNumberString()
