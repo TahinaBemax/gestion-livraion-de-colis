@@ -1,2 +1,3 @@
-intitule_contrainte,date_debut,date_fin,priorite_contrainte,nom_point_livraison
-No Deliveries on Sundays,19/09/2025,30/09/2025,2,M125
+intitule_contrainte,date_contrainte,heure_fin,heure_fin,nom_point_livraison
+Grevy contrainte,21/10/2025,13:00:00,23:00:00,M125
+Bouchon contrainte,21/10/2025,08:00:00,11:00:00,M125

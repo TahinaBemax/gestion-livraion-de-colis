@@ -125,16 +125,31 @@ export class SeedService {
         // Sauvegarde des points de livraison
         const savedPointLivraison:PointLivraisonEntity[] = [];
         const pointsLivraison = PointLivraisonDataTest.getListPointLivraison();
-        const saveCreneauLivraison = async (pl: PointLivraisonEntity) => {
-            const creneaux: CreneauLivraisonEntity[] = PointLivraisonDataTest.getDefaultCreneauLivraison(pl);  
-            await this.dataSource.manager.save(creneaux); 
-        }
+        // const saveCreneauLivraison = async (pl: PointLivraisonEntity) => {
+        //     const creneaux: CreneauLivraisonEntity[] = PointLivraisonDataTest.getDefaultCreneauLivraison(pl);  
+        //     await this.dataSource.manager.save(creneaux); 
+        // }
 
-        for (let i = 0; i < pointsLivraison.length; i++) {
-            const savedPL = await this.plService.create(pointsLivraison[i]);
-            saveCreneauLivraison(savedPL);
-            savedPointLivraison.push(savedPL);
-        }
+        //for (let i = 0; i < pointsLivraison.length; i++) {
+        //PL 1
+            const savedPL1 = await this.plService.create(pointsLivraison[0]);
+            const creneauxPL1: CreneauLivraisonEntity[] = PointLivraisonDataTest.getDefaultCreneauLivraison(savedPL1);  
+            await this.dataSource.manager.save(creneauxPL1); 
+            savedPointLivraison.push(savedPL1);
+
+        //PL 2
+            const savedPL2 = await this.plService.create(pointsLivraison[1]);
+            const creneauxPL2: CreneauLivraisonEntity[] = PointLivraisonDataTest.getDefaultCreneauLivraison2(savedPL2);  
+            await this.dataSource.manager.save(creneauxPL2); 
+            savedPointLivraison.push(savedPL2);
+        //}
+
+        //PL 3
+            const savedPL3 = await this.plService.create(pointsLivraison[2]);
+            const creneauxPL3: CreneauLivraisonEntity[] = PointLivraisonDataTest.getDefaultCreneauLivraison3(savedPL3);  
+            await this.dataSource.manager.save(creneauxPL3);
+            savedPointLivraison.push(savedPL3);
+        //}
 
         return savedPointLivraison
     }
@@ -146,7 +161,7 @@ export class SeedService {
         let indicePL = 0;
 
         for (let i = 0; i < clients.length; i++) {
-            if(i % 3 === 0 && i !== 0){
+            if(i % 2 === 0 && i !== 0){
                 indicePL++;
             }
 
@@ -162,13 +177,10 @@ export class SeedService {
     private async saveLivraison(clients: ClientEntity[]){
         // Sauvegarde des points de livraison
         const livraisons1: LivraisonCreateDto[] = LivraisonDataTest.getListLivraisonPointLivraion1(clients[0].id);
-        const livraisons2: LivraisonCreateDto[] = LivraisonDataTest.getListLivraisonPointLivraion2(clients[3].id);
-
-        for (const livraison of livraisons1) {
-            await this.livraisonService.save(livraison);
-        }
-
-        for (const livraison of livraisons2) {
+        const livraisons3: LivraisonCreateDto[] = LivraisonDataTest.livraison2(clients[1].id);
+        const livraisons2: LivraisonCreateDto[] = LivraisonDataTest.getListLivraisonPointLivraion2(clients[2].id);
+        const all = livraisons1.concat(livraisons2, livraisons3);
+        for (const livraison of all) {
             await this.livraisonService.save(livraison);
         }
     }

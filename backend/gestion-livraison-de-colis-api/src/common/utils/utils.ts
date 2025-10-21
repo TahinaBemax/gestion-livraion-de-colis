@@ -108,6 +108,7 @@ export class Utils {
         const [h2, m2] = heure2.split(":").map(Number);
         const minutes2 = h2 * 60 + m2;
         
+        //console.log("Minute1: " + minutes1 + " Minutes2: " + minutes2);
         return minutes1 - minutes2;
     }
 }

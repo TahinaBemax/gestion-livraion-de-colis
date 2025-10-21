@@ -11,14 +11,12 @@ export class ImportCsvResponseDto {
     errors: {
         points_livraison: any[],
         contraintes_livraison: any[],
-        contraintes_jour_livraison: any[]
     };
 
     @ApiProperty()
     success_rows: {
         points_livraison: PointLivraisonCsvDto[],
-        contraintes_livraison: ContrainteLivraisonCsvDto[],
-        contraintes_jour_livraison: ContrainteJourLivraisonCsvDto[]
+        contraintes_livraison: ContrainteLivraisonCsvDto[]
     };
 
     @ApiProperty()

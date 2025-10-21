@@ -26,10 +26,9 @@ export class CsvImportService {
 
   async importCsv(
     plPath: string,
-    ckPath?: string | null,
-    ckDailyPath?: string | null,
+    ckPath?: string | null
   ) {
-    const filePaths = [plPath, ckPath, ckDailyPath];
+    const filePaths = [plPath, ckPath];
     
     //points de livraison
     try {
@@ -43,12 +42,10 @@ export class CsvImportService {
       const parsedPLs = await this.parse<PointLivraisonCsvDto>(plPath, PointLivraisonCsvDto);
       //contraintes de livraison
       const parsedCKs = ckPath ? await this.parse<ContrainteLivraisonCsvDto>(ckPath, ContrainteLivraisonCsvDto) : { success: [], errors: [] };
-      //contraintes jour livraison
-      const parsedDailyCKs = ckDailyPath ? await this.parse<ContrainteJourLivraisonCsvDto>(ckDailyPath, ContrainteJourLivraisonCsvDto) : { success: [], errors: [] };
 
-      if(this.hasErrors(parsedPLs, parsedCKs, parsedDailyCKs)){
+      if(this.hasErrors(parsedPLs, parsedCKs)){
           this.logger.warn('CSV import completed with errors');
-          return this.csvImportResult(false, "Erreur de données", parsedPLs, parsedCKs, parsedDailyCKs);
+          return this.csvImportResult(false, "Erreur de données", parsedPLs, parsedCKs);
       }
       
       //points de livraison
@@ -61,14 +58,14 @@ export class CsvImportService {
 
       existings_points_livraison.forEach(pl => {
         const matchedConstrainte = this.prepareConstraintDeliveryInstance(parsedCKs.success, pl);
-        this.assignConstraintToPL(pl, matchedConstrainte, parsedDailyCKs.success);
+        this.assignConstraintToPL(pl, matchedConstrainte);
       });
 
       //persist dans la base de données
       await this.save(existings_points_livraison);
       this.logger.log('CSV import completed successfully');
 
-      return this.csvImportResult(is_success, message, parsedPLs, parsedCKs, parsedDailyCKs);
+      return this.csvImportResult(is_success, message, parsedPLs, parsedCKs);
     } catch (error) {
       is_success = false;
       message = error;
@@ -79,7 +76,6 @@ export class CsvImportService {
       await this.fileCleanupService.cleanupCsvFiles(filePaths as (string | null)[]);
       this.logger.log('CSV temporary files cleaned up');
     }
-
   }
 
   private mapToPointLivraisonEntity(liste: PointLivraisonCsvDto[]){
@@ -92,11 +88,10 @@ export class CsvImportService {
   private hasErrors
   (
     parsedPLs: ParsedCsv<PointLivraisonCsvDto>, 
-    parsedCKs: ParsedCsv<ContrainteLivraisonCsvDto>, 
-    parsedDailyCKs: ParsedCsv<ContrainteJourLivraisonCsvDto>
+    parsedCKs: ParsedCsv<ContrainteLivraisonCsvDto>
   )
   {
-      return (parsedPLs.errors.length > 0 || parsedCKs.errors.length > 0 || parsedDailyCKs.errors.length > 0);
+      return (parsedPLs.errors.length > 0 || parsedCKs.errors.length > 0);
   }
 
   private async save(pls: PointLivraisonEntity[]){
@@ -125,20 +120,17 @@ export class CsvImportService {
     is_success:boolean,
     message:string,
     parsedPLs: ParsedCsv<PointLivraisonCsvDto>,
-    parsedCKs: ParsedCsv<ContrainteLivraisonCsvDto>,
-    parsedDailyCKs: ParsedCsv<ContrainteJourLivraisonCsvDto>): ImportCsvResponseDto
-  {
+    parsedCKs: ParsedCsv<ContrainteLivraisonCsvDto>
+  ){
     const result: ImportCsvResponseDto = {
       is_success,
       errors: {
         points_livraison: parsedPLs.errors,
-        contraintes_livraison: parsedCKs.errors,
-        contraintes_jour_livraison: parsedDailyCKs.errors
+        contraintes_livraison: parsedCKs.errors
       },
       success_rows: {
         points_livraison: parsedPLs.success,
-        contraintes_livraison: parsedCKs.success,
-        contraintes_jour_livraison: parsedDailyCKs.success
+        contraintes_livraison: parsedCKs.success
       },
       message
     };
@@ -174,19 +166,11 @@ export class CsvImportService {
 
   private async assignConstraintToPL(
     pl: PointLivraisonEntity,
-    constraints: ContrainteLivraisonEntity[],
-    dailyConstraints: ContrainteJourLivraisonCsvDto[],
+    constraints: ContrainteLivraisonEntity[]
   ) 
   {
     const existingConstraints: ContrainteLivraisonEntity[] = await this.contraintLivraisonRepo.find({ relations: ["point_livraison"]});
     const allConstraints = this.concatExistingAndNewConstraintDelivery(existingConstraints, constraints);
-
-    allConstraints.map(ck => {
-      const matched = dailyConstraints
-        .filter(dc => dc.intitule_contrainte === ck.intitule_contrainte)
-        
-        return ck;
-    });
 
     (pl.id && pl.contraintes_livraison && pl.contraintes_livraison.length > 0) ? pl.contraintes_livraison = pl.contraintes_livraison.concat(allConstraints)
       : pl.contraintes_livraison = allConstraints;
