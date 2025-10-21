@@ -12,6 +12,7 @@ import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { ColisEntity } from '../colis/colis.entity';
 import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
+import { LivraisonEntity } from '../livraisons/livraison.entity';
 
 
 @Injectable()
@@ -150,11 +151,14 @@ export class BordereauLivraisonService {
         }
 
         const existingBordereau = await this.findById(refBordereau);
+        if(!existingBordereau.date_scan_bordereau) throw new BadRequestException("Le bordereau de livraison n'a pas encore été scanné.");
+
         const ordreLivraison = existingBordereau.ordre_livraison;
         const tourneeLivraison = await ordreLivraison.tournee_livraison;
         const livraison = ordreLivraison.livraison;
         const colis = await this.tourneeService.getListColisByIDLivraison(tourneeLivraison.id, ordreLivraison.id, tourneeLivraison.livreur.user.id_utilisateur);
         var countColisAnomalie = 0;
+        var countColisLivres = 0;
 
         colis.forEach(c => {
             if(c.statut_colis == StatusColis.ANOMALIE){
@@ -166,12 +170,28 @@ export class BordereauLivraisonService {
             if(c.statut_colis == StatusColis.DECHARGE_DE_LA_CAMION){
                 c.statut_colis = StatusColis.LIVRE;
                 c.date_heure_accuse_reception = new Date().toISOString();
+                countColisLivres += 1;
             }
         });
 
+        if(countColisLivres === 0){
+            throw new BadRequestException("Aucun colis livré. Veuillez décharger les colis du camion et les scanner d'abord. Preuve de livraison non enregistrée.");
+        }
+
         livraison.statut_livraison = (countColisAnomalie > 0) ? StatusLivraison.LIVRAISON_PARTIELLE : StatusLivraison.LIVRE;
         ordreLivraison.statut = StatutOrdreLivraison.EFFECTUE;
+        
+        try {
+            await this.dataSource.transaction(async manager => {
+                await manager.save(ColisEntity, colis);
+                await manager.save(LivraisonEntity, livraison);
+                await manager.save(OrdreLivraisonEntity, ordreLivraison);
+            });
+        
+            return "Preuve de livraison enregistrée avec succès.";
+        } catch (error) {
+            throw new BadRequestException("Erreur lors de l'enregistrement de la preuve de livraison.");
+        }
 
-        return "Preuve de livraison enregistrée avec succès.";
     }
 }

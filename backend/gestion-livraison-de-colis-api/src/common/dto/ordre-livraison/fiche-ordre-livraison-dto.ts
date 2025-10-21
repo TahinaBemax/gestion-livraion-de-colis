@@ -9,7 +9,7 @@ export class FicheOrdreLivraisonDto {
     date_scan_bordereau: string;
     date_scan_premier_colis: string; // au chargement
     date_scan_dernier_colis: string; // à la livraison
-    date_scan_PoD: string;
+    //date_scan_PoD: string;
     notifications: NotificationEntity[];
     point_livraison: PointLivraisonEntity;
     livraisons: LivraisonEntity[];
