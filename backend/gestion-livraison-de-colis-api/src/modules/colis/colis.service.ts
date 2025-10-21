@@ -36,7 +36,7 @@ export class ColisService {
         if(!idColis || !idLivreur) throw new BadRequestException("ID Colis ou ID Livreur invalid!");
 
         var message = "Code Barre Reconnu Et Colis Valide";
-        const livreur: Livreur = await this.livreurService.findByUserID(idLivreur);
+        const livreur: Livreur = await this.livreurService.findById(idLivreur);
         
         if(!livreur.peut_faire_chargement_colis){
             throw new BadRequestException("Vous n'avez pas l'accés à cette fonctionnalité!");
@@ -86,7 +86,7 @@ export class ColisService {
         if(!idColis || !idLivreur) throw new BadRequestException("ID Colis ou ID Livreur invalid!");
 
         var message = "Code Barre Reconnu Et Colis Déchargé Du Camion";
-        const livreur: Livreur = await this.livreurService.findByUserID(idLivreur);
+        const livreur: Livreur = await this.livreurService.findById(idLivreur);
         
         if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
             throw new BadRequestException(`Code Barre Reconnu mais Colis Non Rattaché à Cette Ordre de Livraison`);

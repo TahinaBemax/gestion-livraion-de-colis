@@ -16,6 +16,7 @@ import { LivraisonsService } from '../livraisons/livraisons.service';
 import { NotificationService } from '../notification/notification.service';
 import { SameUserGuard } from 'src/common/guards/same-user.guard';
 import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
+import { SameLivreurGuard } from 'src/common/guards/same-livreur.guard';
 
 @Controller('livreurs')
 @Roles(UserRole.User, UserRole.ResponsableExploitation)
@@ -37,12 +38,13 @@ export class LivreurController {
          * LISTE DES LIVREURS
          * @returns Liste des livreurs
         */
-   @Get("/:id/statisitque")
+   @Get("/:idLivreur/statisitque")
+   @UseGuards(SameLivreurGuard)
         @Roles(UserRole.User, UserRole.ResponsableExploitation, UserRole.Admin)
         @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
         @ApiOperation({summary: "Lister tous les livreurs"})
         @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
-    async livreurScoringClassement(@Param("id", ParseIntPipe) idLiveur: number, @Query("date_tournee") date_tournee?:string){
+    async livreurScoringClassement(@Param("idLivreur", ParseIntPipe) idLiveur: number, @Query("date_tournee") date_tournee?:string){
         if(!date_tournee){
             date_tournee = new Date().toISOString().split('T')[0];
         }
@@ -96,14 +98,14 @@ export class LivreurController {
          * @param data 
          * @returns 
          */
-    @Put("/:id")
-    @UseGuards(SameUserGuard)
-        @Roles(UserRole.Admin, UserRole.User)
+    @Put("/:idLivreur")
+    @UseGuards(SameLivreurGuard)
+        @Roles(UserRole.User)
         @ApiBody({type: LivreurUpdateDto})
         @ApiOperation({summary: "modification d'un livreur"})
         @ApiCreatedResponse({description: "Livreur modifié avec succés!", type: LivreurSwaggerDto})
         @ApiBadRequestResponse({description: "Données invalides"})
-    async updateLivreur(@Param("id") idLivreur: number, @Body() data: LivreurUpdateDto): Promise<Livreur>{
+    async updateLivreur(@Param("idLivreur") idLivreur: number, @Body() data: LivreurUpdateDto): Promise<Livreur>{
         return this.livreurService.update(idLivreur, data);
     }
     /* -------------------------------- */
@@ -116,12 +118,12 @@ export class LivreurController {
          * @param id ID du livreur parent
          * @returns 
          */
-    @Get("/:id/temporaire")
+    @Get("/:idLivreur/temporaire")
     @UseGuards(SameUserGuard)
         @ApiTags("Livreur Temporaraire")
         @ApiOperation({summary: "Lister les livreurs temporaraires d'un Livreur Ponctuel"})
         @ApiParam({name: "id", description: "ID Utilisateur mais non ID livreur!" })
-    async getAllByDeliveryID(@Param("id", ParseIntPipe) id: number): Promise<LivreurTemporaireEntity[]>{
+    async getAllByDeliveryID(@Param("idLivreur", ParseIntPipe) id: number): Promise<LivreurTemporaireEntity[]>{
         return this.livreurTempService.findByLivreurID(id);
     }
         /**
@@ -129,10 +131,10 @@ export class LivreurController {
          * @param id ID du livreur temporaire
          * @returns Livreur temporaire
          */
-    @Get("/:id/temporaire/:idTemp")
+    @Get("/:idLivreur/temporaire/:idTemp")
         @ApiTags("Livreur Temporaraire")
         @ApiNotFoundResponse()
-    async getByIdTemporaryDeliveryID(@Param("id", ParseIntPipe) id: number){
+    async getByIdTemporaryDeliveryID(@Param("idLivreur", ParseIntPipe) id: number){
         return this.livreurTempService.findById(id);
     }
 
@@ -142,14 +144,14 @@ export class LivreurController {
      * @param dto Données du livreur temporaire
      * @returns Livreur temporaire créé
      */
-    @Post('/:id/temporaire')
-    @UseGuards(SameUserGuard)
+    @Post('/:idLivreur/temporaire')
+    @UseGuards(SameLivreurGuard)
         @ApiCreatedResponse()
         @ApiBody({type: LivreurTemporaireDto})
         @ApiTags("Livreur Temporaraire")
         @ApiOperation({summary: "Créer un livreur temporaraire"})
-        @ApiParam({name: "id", description: "ID Utilisateur mais non ID Livreur"})
-    async save(@Param("id", ParseIntPipe) id: number, @Body() dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
+        @ApiParam({name: "idLivreur", description: "ID Utilisateur mais non ID Livreur"})
+    async save(@Param("idLivreur", ParseIntPipe) id: number, @Body() dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
         return this.livreurTempService.save(id, dto);
     }
 
@@ -161,7 +163,7 @@ export class LivreurController {
          * @returns Livreur temporaire modifié
          */
     @Put('/:idLiveur/temporaire/:idLivreurTemp')
-    @UseGuards(SameUserGuard)
+    @UseGuards(SameLivreurGuard)
         @ApiBody({type: LivreurTemporaireUpdateDto})
         @ApiTags("Livreur Temporaraire")
         @ApiOperation({summary: "Modifier un Livreur temporaraire"})
@@ -186,11 +188,11 @@ export class LivreurController {
     }
 
     /* ===== LIVRAISON ====== */
-    @Post("/:id/livraisons/:idLivraison/cloture")
+    @Post("/:idLivreur/livraisons/:idLivraison/cloture")
         @ApiTags("Livraison")
         @ApiOperation({summary: "Clôturer un livraison"})
-        @UseGuards(SameUserGuard)
-    async clotureLivraison(@Param("id", ParseIntPipe) id: number, @Param("idLivraison", ParseIntPipe) idLivraison: number){
+        @UseGuards(SameLivreurGuard)
+    async clotureLivraison(@Param("idLivreur", ParseIntPipe) id: number, @Param("idLivraison", ParseIntPipe) idLivraison: number){
         return this.livraisonService.cloturerLivraison(id, idLivraison);
     }
 
@@ -200,15 +202,15 @@ export class LivreurController {
          * LISTE DES NOTIFICATION D'UN LIVREUR
          * @returns Liste Notifications
         */
-    @Get("/:id/notifications")
-        @UseGuards(SameUserGuard)
+    @Get("/:idLivreur/notifications")
+        @UseGuards(SameLivreurGuard)
         @ApiTags("Notification")
-    async getNotifications(@Param("id", ParseIntPipe) id: number){
+    async getNotifications(@Param("idLivreur", ParseIntPipe) id: number){
         return this.notifService.findLivreurNotifications(id);
     }
 
-    @Post("/:id/colis/:idColis")
-        @UseGuards(SameUserGuard)
+    @Post("/:idLivreur/colis/:idColis")
+        @UseGuards(SameLivreurGuard)
         @ApiTags("Chargement et Dechargement Camion")
         @ApiOperation({summary: "Scan du colis au moment du chargement du Camion"})
         @ApiParam({name: "id", description: "ID Utilisateur mais non pas l'ID du livreur"})
@@ -251,6 +253,7 @@ export class LivreurController {
             throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
         }
     }
+
 
             /**
          * LISTE DES COLIS D'UNE LIVRAISON

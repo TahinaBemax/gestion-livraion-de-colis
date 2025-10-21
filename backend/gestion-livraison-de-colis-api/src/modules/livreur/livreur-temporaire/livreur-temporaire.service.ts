@@ -48,10 +48,10 @@ export class LivreurTemporaireService {
         return matched;
     }
 
-    async save(idUtilisateur: number, dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
+    async save(idLivreur: number, dto: LivreurTemporaireDto): Promise<LivreurTemporaireEntity>{
         if(!dto) throw new BadRequestException("Données livreur tempraire Invalides");
 
-        const existingLiveur = await this.livreurService.findByUserID(idUtilisateur);
+        const existingLiveur = await this.livreurService.findByUserID(idLivreur);
 
         //Verification du Categorie du livreur
         this.estLivreurPonctuel(existingLiveur);

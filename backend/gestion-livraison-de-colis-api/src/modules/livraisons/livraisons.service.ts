@@ -17,6 +17,7 @@ import { PointLivraisonEntity } from '../point-livraison/point-livraison.entity'
 import { Utils } from 'src/common/utils/utils';
 import { ClientService } from '../client/client.service';
 import { OrdreLivraisonEntity } from '../ordre-livraison/ordre-livraison.entity';
+import { StatutOrdreLivraison } from 'src/common/enum/statut-ordre-livraison.enum';
 
 @Injectable()
 export class LivraisonsService {
@@ -38,7 +39,6 @@ export class LivraisonsService {
 
         const existingLivraison: LivraisonEntity = await this.findById(idLivraison);
         const ordreLivraison: OrdreLivraisonEntity = await existingLivraison.ordre_livraison;
-        const incomplete: LivraisonEntity[] = await this.findLivraisonIncompleteByIdClient(existingLivraison.client.id);
         
         let countColisLivre = 0;
         existingLivraison.colis.forEach(c => {
