@@ -59,7 +59,7 @@ export class PointLivraisonService {
             .leftJoinAndSelect("pl.evenements", "event")
             .leftJoinAndSelect("pl.contraintes_livraison", "cl")
             .leftJoinAndSelect("pl.creneaux_livraison", "creneaux")
-            .where("p.id_prestataire = :id", {id: `${id}`})
+            .where("p.id_prestataire = :id", {id: id})
             .getMany();
     }
 

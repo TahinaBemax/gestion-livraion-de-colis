@@ -147,9 +147,10 @@ export class LivreurService {
      */
     async findLivreurEncoursLivraison(idPrestataire?: number): Promise<Livreur[]> {
         const query = this.livreurRepo.createQueryBuilder("l")
-            .innerJoinAndSelect("l.tournees_livraison", "tl") 
             .innerJoinAndSelect("l.user", "user") 
-            .innerJoinAndSelect("l.bordereaux_livraison", "bl") 
+            .innerJoin("l.tournees_livraison", "tl") 
+            .leftJoin("tl.ordres_livraison", "ordre")
+            .leftJoin("ordre.bordereau_livraison", "bl")
 
         if(idPrestataire){
             query.innerJoinAndSelect("user.prestataire", "prestataire") 

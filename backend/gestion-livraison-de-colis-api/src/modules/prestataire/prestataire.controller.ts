@@ -25,6 +25,7 @@ import { Livreur } from '../livreur/livreur.entity';
 import { SamePrestataireGuard } from 'src/common/guards/same-prestataire.guard';
 import { OrdreLivraisonCreateDto } from 'src/common/dto/ordre-livraison/ordre-livraison-create-dto';
 import { OrdreLivraisonDto } from 'src/common/dto/ordre-livraison/ordre-livraison-dto';
+import { LivraisonsService } from '../livraisons/livraisons.service';
 
 
 @Controller('prestataires')
@@ -39,6 +40,7 @@ export class PrestataireController {
         private readonly ordreLivraisonService: OrdreLivraisonService,
         private readonly notificationService: NotificationService,
         private readonly tourneeService: TourneeLivraisonService,
+        private readonly livraisonService: LivraisonsService,
     ){}
 
     /* UTILISATEUR PRESTATAIRE */
@@ -369,6 +371,27 @@ export class PrestataireController {
     }
 
     /* +++++ +++ ORDRE DE LIVRAISON +++ +++++ */
+    /**
+     * Liste des livraisons en attente pour un prestataire
+     * @param idPrestataire ID du prestataire
+     * @returns Liste des livraisons en attente
+     */
+    @Get("/:idPrestataire/livraisons/en-attente")
+    @UseGuards(SamePrestataireGuard)
+        @ApiTags("Livraison")
+        @ApiOperation({ 
+            summary: "Liste des Livraisons d'un prestataire",
+        })
+        @ApiParam({name: "idPrestataire", description: "", required: true})
+    async getPrestataireLivraisons(@Param("idPrestataire") idPrestataire:number)   
+    {
+        if(!idPrestataire) throw new BadRequestException("ID Prestataire est obligatoire.");
+
+        return this.livraisonService.findPendingDeliveries(idPrestataire);
+    }
+
+
+    
     @Get("/:idPrestataire/ordres-livraison/historique")
     @UseGuards(SamePrestataireGuard)
     @ApiTags("Ordre de Livraison")

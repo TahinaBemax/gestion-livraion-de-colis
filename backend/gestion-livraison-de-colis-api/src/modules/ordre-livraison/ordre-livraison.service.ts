@@ -148,6 +148,7 @@ export class OrdreLivraisonService {
 
         if(!bordereau) throw new BadRequestException("Aucun bordereau de livraison n'a été trouvé pour cet ordre de livraison");
         const fiche = new FicheOrdreLivraisonDto();
+        fiche.livraisons = [];
 
         fiche.livraisons.push(matchedOrderLivraison.livraison);
         fiche.livraisons.concat(incompleteLivraison);
@@ -297,7 +298,13 @@ export class OrdreLivraisonService {
 
         
         dto.id_livraisons.map(async (idLivraison) => {
-            const livraison = await this.livraisonService.findById(idLivraison)
+            const livraison = await this.livraisonService.findById(idLivraison);
+            if(livraison.statut_livraison !== StatusLivraison.EN_ATTENTE &&
+                livraison.statut_livraison !== StatusLivraison.RETOUR_EXPEDITEUR &&
+                livraison.statut_livraison !== StatusLivraison.ECHEC_LIVRAISON
+            ){
+                throw new BadRequestException(`Impossible de rattacher la livraison avec ID:{${idLivraison}} car son statut est ${livraison.statut_livraison}`);
+            }
 
             const ordre_livraison = new OrdreLivraisonDto();
             ordre_livraison.tournee = existingTournee;
