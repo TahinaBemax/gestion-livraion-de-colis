@@ -213,11 +213,11 @@ export class LivreurController {
         @UseGuards(SameLivreurGuard)
         @ApiTags("Chargement et Dechargement Camion")
         @ApiOperation({summary: "Scan du colis au moment du chargement du Camion"})
-        @ApiParam({name: "id", description: "ID Utilisateur mais non pas l'ID du livreur"})
+        @ApiParam({name: "idLivreur", description: "ID Utilisateur mais non pas l'ID du livreur"})
         @ApiParam({name: "idColis", description: "ID du colis"})
         @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement ou dechargement"})
     async scann(
-        @Param("id", ParseIntPipe) id: number,
+        @Param("idLivreur", ParseIntPipe) id: number,
         @Param("idColis", ParseIntPipe) idColis: number,
         @Query("etape") etape:string
     ){
@@ -228,6 +228,25 @@ export class LivreurController {
         } else {
             throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
         }
+    }
+
+    /**
+     * Voir le detail d'un colis pour verifier si le colis est bien livré à la bonne personne
+     * @param ididLivreur 
+     * @param idColis 
+     * @returns 
+     */
+    @Get("/:idLivreur/colis/:idColis/fiche-colis")
+        @UseGuards(SameLivreurGuard)
+        @ApiTags("Chargement et Dechargement Camion")
+        @ApiOperation({summary: "Voir le detail d'un colis pour verifier si le colis est bien livré à la bonne personne"})
+        @ApiParam({name: "idLivreur", description: "ID Utilisateur mais non pas l'ID du livreur"})
+        @ApiParam({name: "idColis", description: "ID du colis"})
+    async ficheDetail(
+        @Param("idLivreur", ParseIntPipe) idLivreur: number,
+        @Param("idColis", ParseIntPipe) idColis: number
+    ){
+        return this.colisService.getFicheColis(idLivreur, idColis);        
     }
 
 
