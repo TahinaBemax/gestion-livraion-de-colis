@@ -70,31 +70,46 @@ export class LivreurService {
      * Total livraison rattacher à un Livreur
      */
 
-    async getLivreurStatistique(idLivreur: number, date_tournee: string): Promise<LivreurScoringClassement>{
+    async getLivreurStatistique(idLivreur: number, date_tournee: string): Promise<LivreurScoringClassement> {
+        // Stat global
         const totalLivraisonGlobal: any = await this.getLivraisonStatistique(idLivreur);
 
+        // Stat jour
         const totalLivraisonJournalier: any = await this.getLivraisonStatistique(idLivreur, date_tournee);
-        const totalLivraisonJournalierEffectue: any = await this.getLivraisonStatistique(idLivreur, date_tournee, undefined,'livre');
+        const totalLivraisonJournalierEffectue: any = await this.getLivraisonStatistique(idLivreur, date_tournee, undefined, 'livre');
 
-        const date_debut = new Date(date_tournee);
-        const date_fin = new Date(date_tournee);
-        date_debut.setDate(date_debut.getDate() - 7);
+        // Convertir la date_tournee en objet Date
+        const date = new Date(date_tournee);
 
+        // Trouver le lundi de la semaine (0 = dimanche, 1 = lundi, ...)
+        const day = date.getDay();
+        const diffToMonday = (day === 0 ? -6 : 1) - day; // Si dimanche, reculer de 6 jours
+        const lundi = new Date(date);
+        lundi.setDate(date.getDate() + diffToMonday);
+
+        // Trouver le dimanche (lundi + 6 jours)
+        const dimanche = new Date(lundi);
+        dimanche.setDate(lundi.getDate() + 6);
+
+        const dateDebut = lundi.toISOString().split('T')[0];
+        const dateFin = dimanche.toISOString().split('T')[0];
+
+        // Stat semaine
         const totalLivraisonGlobalSemaine: any = await this.getLivraisonStatistique(
-            idLivreur, 
-            date_debut.toISOString().split('T')[0], 
-            date_fin.toISOString().split('T')[0], 
-            'livre'
+            idLivreur,
+            dateDebut,
+            dateFin
         );
+
         const totalLivraisonGlobalSemaineEffectue: any = await this.getLivraisonStatistique(
-            idLivreur, 
-            date_debut.toISOString().split('T')[0], 
-            date_fin.toISOString().split('T')[0], 
+            idLivreur,
+            dateDebut,
+            dateFin,
             'livre'
         );
 
+        // Préparer le résultat
         const statistique = new LivreurScoringClassement();
-
         statistique.idLivreur = idLivreur;
         statistique.totalLivraisonGlobal = totalLivraisonGlobal.total;
         statistique.nbrLivraisonJour = totalLivraisonJournalier.total;
@@ -104,6 +119,7 @@ export class LivreurService {
 
         return statistique;
     }
+
     
     async getTotalLivraisonEchec(idLivreur: number): Promise<any[]>{
         const query = this.livreurRepo.createQueryBuilder("livreur")

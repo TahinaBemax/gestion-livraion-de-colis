@@ -14,6 +14,7 @@ import { LivreurService } from '../livreur/livreur.service';
 import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { LivraisonEntity } from '../livraisons/livraison.entity';
+import { FicheColisDto } from 'src/common/dto/colis/fiche-colis-dto';
 
 @Injectable()
 export class ColisService {
@@ -24,6 +25,52 @@ export class ColisService {
         private readonly livreurService: LivreurService,
         private readonly livraisonService: LivraisonsService
     ){}
+
+    /**
+     * FICHE TECHNQUE DU COLIS
+     * @param idColis 
+     * @returns FicheColisDto
+     */
+    async getFicheColis(idLivreur: number, idColis:number): Promise<FicheColisDto> {
+        if(!idColis || !idLivreur) throw new BadRequestException("ID Colis ou ID Livreur invalid!");
+
+        var message = "Code Barre Reconnu Et Colis Valide";
+        const livreur: Livreur = await this.livreurService.findById(idLivreur);
+        
+        if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
+            throw new BadRequestException('Vous n\'êtes pas rattaché à ce colis!');
+        }
+
+        const existingColis = await this.colisRep.createQueryBuilder("colis")
+            .innerJoinAndSelect("colis.livraisons", "livraison")
+            .leftJoinAndSelect("livraison.client", "client")
+            .leftJoinAndSelect("colis.details_colis", "details_colis")
+            .where("colis.id = :idColis", {idColis})
+            .getOne();
+
+        if(!existingColis) throw new NotFoundException(`Colis non reconnu!`);
+
+        const livraison = existingColis.livraisons;
+        const client = livraison.client;
+
+        const ficheColis: FicheColisDto = {
+            idColis: existingColis.id,
+            nom_client: client.nom_client,
+            prenom_client: client.prenom_client,
+            numero_telephone: client.numero_telephone,
+            adresse_mail: client.adresse_mail,
+            adresse_principale: livraison.adresse_principale,
+            complement_adresse: livraison.complement_adresse,
+            ville: livraison.ville,
+            pays: livraison.pays,
+            code_postal: livraison.code_postal,
+            poids_total: existingColis.poids_total,
+            details_colis: existingColis.details_colis
+        }
+
+        return ficheColis;
+    }
+
 
     /**
      * SCAN DU COLIS AU MOMENT DE CHARGEMENT DU CAMION
