@@ -354,6 +354,19 @@ export class PrestataireController {
         return this.tourneeService.batchSave(idPrestataire, data);
     }
 
+
+    @Get("/:idPrestataire/tournees")
+    @UseGuards(SamePrestataireGuard)
+    @ApiTags("Tournée de livraison")
+        @ApiOperation({ summary: 'Liste des tournées de livraison d\'un prestataire'})
+        @ApiBody({type: [TourneeLivraisonCreateDto]})
+    async findAllTournee(@Param("idPrestataire") idPrestataire:number)   
+    {
+        if(!idPrestataire) throw new BadRequestException("ID Prestataire est obligatoir.");
+
+        return this.tourneeService.findAllByIDPrestataire(idPrestataire);
+    }
+
         /**
          * CREATION D'UN OU PLUSIEURS ORDRES DE LIVRAISON
          * @param id Identifiant de la tournée de livraison

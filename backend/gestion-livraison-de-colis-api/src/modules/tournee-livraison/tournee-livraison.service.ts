@@ -211,10 +211,13 @@ export class TourneeLivraisonService {
         return this.tourneeRep.find({relations: ["ordres_livraison"] });
     }
 
-    async findAllByPlanning(idPlanning: number): Promise<TourneeLivraisonEntity[]> {
+    async findAllByIDPrestataire(idPrestataire: number): Promise<TourneeLivraisonEntity[]> {
         return this.tourneeRep.createQueryBuilder("t")
-        .innerJoinAndSelect("t.planning_livraison", "pl")
-        .where("pl.id = :id", {id: idPlanning})
+        .innerJoinAndSelect("t.prestataire", "prestataire")
+        .leftJoinAndSelect("t.ordres_livraison", "ordres_livraison")
+        .where("prestataire.id = :id", {id: idPrestataire})
+        .orderBy("t.date_tournee", "DESC")
+        .orderBy("t.heure_debut", "DESC")
         .getMany();
     }
     

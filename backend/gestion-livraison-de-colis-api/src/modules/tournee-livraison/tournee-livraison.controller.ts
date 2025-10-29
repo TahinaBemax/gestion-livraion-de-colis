@@ -1,7 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { TourneeLivraisonService } from './tournee-livraison.service';
-import { TourneeLivraisonCreateDto } from 'src/common/dto/tournee-livraison/create-tournee-livraison-dto';
 import { OrdreLivraisonService } from '../ordre-livraison/ordre-livraison.service';
 import { TourneeLivraisonUpdateDto } from 'src/common/dto/tournee-livraison/update-tournee-livraison-dto';
 

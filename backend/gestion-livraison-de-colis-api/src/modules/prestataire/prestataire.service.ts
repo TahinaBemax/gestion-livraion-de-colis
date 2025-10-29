@@ -3,7 +3,6 @@ import { Repository } from 'typeorm';
 import { Prestataire } from './prestataire.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PrestataireCreateDto } from 'src/common/dto/prestataire/create-prestataire-dto';
-import { plainToInstance } from 'class-transformer';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { TypeUtilisateur } from '../user/type-utilisateur/type-utilisateur.entity';
@@ -22,7 +21,17 @@ export class PrestataireService {
     async create(prestataireCreateDto: PrestataireCreateDto): Promise<Prestataire>{
         const prestatire: Prestataire = this.mapDtoToPrestataire(prestataireCreateDto);
         const prepared = this.prestataireRepo.create(prestatire);
-        return await this.prestataireRepo.save(prepared);
+        const savedPrestataire =  await this.prestataireRepo.save(prepared);
+
+        if (savedPrestataire.users) {
+            savedPrestataire.users = (await savedPrestataire.users).map(user => {
+                user.mot_de_passe = '';
+                return user;
+            });
+        }
+
+        // Retourner le prestataire sans les mots de passe des utilisateurs
+        return savedPrestataire;
     }
 
     async findAll():Promise<Prestataire[]> {
