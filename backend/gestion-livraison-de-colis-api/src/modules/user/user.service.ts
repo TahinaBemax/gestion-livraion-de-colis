@@ -90,13 +90,13 @@ export class UserService {
      * @param create_user 
      * @returns Utilisateur crée
      */
-    async saveInterneUser(create_user: CreateUserDto): Promise<User>{
+    async saveInterneUser(create_user: CreateUserDto): Promise<any>{
         const user: User = await this.userMapper.fromDtoToUser(create_user);
         const temp_user = this.userRepo.create(user);
         const saved = await this.userRepo.save(temp_user);
         const {mot_de_passe, ...withoutPassword} = saved;
 
-        return saved;
+        return withoutPassword;
     }
 
     async updateUser(id: number, dto: UpdateUserDto): Promise<User>{
