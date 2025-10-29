@@ -215,7 +215,7 @@ export class TourneeLivraisonService {
         return this.tourneeRep.createQueryBuilder("t")
         .innerJoinAndSelect("t.prestataire", "prestataire")
         .leftJoinAndSelect("t.ordres_livraison", "ordres_livraison")
-        .where("prestataire.id = :id_prestataire", {id: idPrestataire})
+        .where("prestataire.id_prestataire = :id_prestataire", {id_prestataire: idPrestataire})
         .orderBy("t.date_tournee", "DESC")
         .orderBy("t.heure_debut", "DESC")
         .getMany();
