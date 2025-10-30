@@ -109,7 +109,7 @@ export class PrestataireController {
         @ApiOperation({summary: "Lister les utilisateurs actives d'un specifique prestataire et peut être filtré par nom, prenom, role"})
         @ApiOkResponse({description: "Ok", type: [UserSwaggerDto]})
         @ApiInternalServerErrorResponse({description: "Internal server error"})
-    findAllUsers(@Param("id", ParseIntPipe) id: number, @Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('role') role?:string): Promise<User[]> {
+    findAllUsers(@Param("idPrestataire", ParseIntPipe) id: number, @Query('nom') nom?:string, @Query('prenom') prenom?:string, @Query('role') role?:string): Promise<User[]> {
         if(!id) throw new BadRequestException("ID Prestataire est obligatoire");
         return this.userService.prestataireUsersfilterBy(id, nom, prenom, role);
     }
