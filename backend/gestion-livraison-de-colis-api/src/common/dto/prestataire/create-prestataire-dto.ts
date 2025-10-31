@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, Matches } from "class-validator";
+import { IsEmail, IsNotEmpty, IsPhoneNumber } from "class-validator";
 import { DefaulPrestataireAdminUserDto } from "./default-user-prestataire-dto";
 
 export class PrestataireCreateDto {

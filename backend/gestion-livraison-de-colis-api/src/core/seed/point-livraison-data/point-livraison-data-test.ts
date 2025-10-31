@@ -20,7 +20,7 @@ export class PointLivraisonDataTest {
 
         const now = new Date()
         //contrainte1.date_contrainte = `${now.getDate()}/${now.getMonth()}/${now.getFullYear()}`;
-        contrainte1.date_contrainte = `${now.getDate()}/11/${now.getFullYear()}`;
+        contrainte1.date_contrainte = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
         
         contrainte1.intitule_contrainte = "Fermeture de la boutique";
         contrainte1.heure_debut_livrrable = "10:00:00";

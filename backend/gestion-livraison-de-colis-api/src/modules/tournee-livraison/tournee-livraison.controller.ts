@@ -73,26 +73,4 @@ export class TourneeLivraisonController {
     async getOrdresLivraison(@Param("id", ParseIntPipe) id: number){
         return this.ordreLivraisonService.findAllByTournee(id);
     }
-
-    //     /**
-    //      * LISTE DES LIVRAISONs D'UNE TOURNEE DE LIVRAISON
-    //      * @param id Identifiant de la tournée de livraison
-    //      * @return Liste des ordres de livraison 
-    //      */
-    // @Get("/:id/livraisons")
-    // @ApiTags("Livraison")
-    // @ApiOperation({summary: "Liste des livraison à charger/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
-    // @ApiQuery({description: "Etape de livraison", example: "chargement ou dechargement"})
-    // async getLivraisons(
-    //     @Query("etape") etape:string,
-    //     @Param("id", ParseIntPipe) id: number)
-    // {
-    //     if(etape === "chargement"){
-    //         return this.tourneeService.invertedOrdreLivraison(id);
-    //     } else if(etape === "dechargement") {
-    //         return this.tourneeService.ordreLivraisonOrderByPointLivraison(id);
-    //     } else {
-    //         throw new BadRequestException("Valeur du variable etape inconnu! Valeur accepté: chargement ou dechargement");
-    //     }
-    // }
 }

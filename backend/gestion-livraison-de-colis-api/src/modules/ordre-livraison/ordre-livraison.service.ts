@@ -304,6 +304,8 @@ export class OrdreLivraisonService {
                 throw new BadRequestException(`Impossible de rattacher la livraison avec ID:{${idLivraison}} car son statut est ${livraison.statut_livraison}`);
             }
 
+            if(livraison.ordre_livraison ) throw new BadRequestException(`La livraison avec ID:{${idLivraison}} est déjà rattachée à un tournée de livraison`);
+
             const ordre_livraison = new OrdreLivraisonDto();
             ordre_livraison.tournee = existingTournee;
             ordre_livraison.pointLivraion = livraison.client.point_livraison;

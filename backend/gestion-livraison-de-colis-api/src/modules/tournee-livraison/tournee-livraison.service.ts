@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { TourneeLivraisonEntity } from './tournee-livraison.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
@@ -14,24 +14,39 @@ import { TourneeLivraisonUpdateDto } from 'src/common/dto/tournee-livraison/upda
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { Utils } from 'src/common/utils/utils';
+import { LivreurService } from '../livreur/livreur.service';
 
 @Injectable()
 export class TourneeLivraisonService {
     constructor(
         @InjectRepository(TourneeLivraisonEntity)
         private readonly tourneeRep: Repository<TourneeLivraisonEntity>,
-        @InjectRepository(Livreur)
-        private readonly livreurRep: Repository<Livreur>,
         @InjectRepository(Prestataire)
         private readonly prestataireRep: Repository<Prestataire>,
+        @Inject(forwardRef(() => LivreurService))
+        private readonly livreurService: LivreurService,
         private readonly livraisonService: LivraisonsService
     ){}
+
+    async getTourneeByDateTournee(dateTournee: string, idPrestataire?: number){
+        if(!dateTournee) throw new BadRequestException("Date tournée est null!");
+
+        const query = await this.tourneeRep.createQueryBuilder("t")
+        .where("t.date_tournee = :date_tournee", {date_tournee: dateTournee})
+        .leftJoinAndSelect("t.livreur", "livreur")
+        .leftJoinAndSelect("t.prestataire", "prestataire")
+        .leftJoinAndSelect("t.ordres_livraison", "ordres_livraison");
+        if(idPrestataire){
+            query.andWhere("prestataire.id_prestataire = :id_prestataire", {id_prestataire: idPrestataire});
+        }
+        return query.getMany();
+    }
 
     async getListColisByIDLivraison(idTournee: number, idOrdreLivraison: number, idUser: number){
         if(!idTournee || !idOrdreLivraison || !idUser) throw new BadRequestException("Données invalides!");
 
         const tournee = await this.findById(idTournee);
-        if(tournee.livreur.user.id_utilisateur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
+        if(tournee.livreur.id_livreur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
         const ordreLivraison: OrdreLivraisonEntity|undefined = tournee.ordres_livraison.find(ol => ol.id === idOrdreLivraison);
         
         if(!ordreLivraison) throw new NotFoundException(`Ordre de livraison avec ID:{${idOrdreLivraison}} est introuvable dans cette tournée!`);
@@ -283,7 +298,7 @@ export class TourneeLivraisonService {
         }
 
         if(dto.id_livreur){
-            const livreur: Livreur = await this.getLivreur(dto.id_livreur);
+            const livreur: Livreur = await this.livreurService.findById(dto.id_livreur);
             existing.livreur = livreur;
         }
 
@@ -306,20 +321,17 @@ export class TourneeLivraisonService {
         return this.tourneeRep.delete(existing.id);
     }  
 
-    private async getLivreur(id: number): Promise<Livreur>{
-        const livreur: Livreur|null = await this.livreurRep.findOne({where: {id_livreur: id}});
-        if(!livreur) throw new NotFoundException(`Livreur avec ID:{${id} est introuvable!}`);
-
-        return livreur;
-    }
-
     private async getTourneeLivraisonInstance(id_prestatiare: number, dto: TourneeLivraisonCreateDto){
         if(!dto) throw new BadRequestException("Données tournée livraison invalides");
 
         const tournee = plainToInstance(TourneeLivraisonEntity, dto);
 
         if(dto.id_livreur){
-            const livreur: Livreur = await this.getLivreur(dto.id_livreur);
+            const isLivreurDisponible = await this.livreurService.isLivreurDisponible(dto.id_livreur, dto.date_tournee);
+
+            if(!isLivreurDisponible) throw new BadRequestException("Livreur non disponible pour cette date de tournée!");
+            const livreur: Livreur = await this.livreurService.findById(dto.id_livreur);
+
             tournee.livreur = livreur;
         }
         

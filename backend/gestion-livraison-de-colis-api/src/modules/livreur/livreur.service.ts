@@ -1,5 +1,5 @@
 import { LivreurScoringClassement } from './../../common/dto/livreur/scroring-classement-dto';
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Livreur } from './livreur.entity';
 import { CreateLivreurDto } from 'src/common/dto/livreur/create-livreur-dto';
@@ -9,6 +9,8 @@ import { LiveurMapper } from './livreur.mapper';
 import { Prestataire } from '../prestataire/prestataire.entity';
 import { LivreurUpdateDto } from 'src/common/dto/livreur/update-livreur-dto';
 import { StatusLivraison } from 'src/common/enum/status-livraison.enum';
+import { TourneeLivraisonService } from '../tournee-livraison/tournee-livraison.service';
+import { TourneeLivraisonEntity } from '../tournee-livraison/tournee-livraison.entity';
 
 @Injectable()
 export class LivreurService {
@@ -19,9 +21,58 @@ export class LivreurService {
         private readonly userRepo: Repository<User>,
         @InjectRepository(Prestataire)
         private readonly prestataireRep: Repository<Prestataire>,
+        @Inject(forwardRef(() => TourneeLivraisonService))
+        private readonly tourneeService: TourneeLivraisonService,
         private readonly livreurMapper: LiveurMapper,
     ){}
 
+    /**
+     * Verifie si un livreur est libre pour un tournée
+     */
+    async isLivreurDisponible(idLivreur: number, date_tournee?: string): Promise<boolean>{
+        if(!date_tournee){
+            date_tournee = new Date().toISOString().split('T')[0];
+        }
+
+        const matched =  await this.livreurRepo.createQueryBuilder("livreur")
+        .leftJoinAndSelect("livreur.tournees_livraison", "tournee")
+        .where("livreur.id_livreur = :idLivreur", {idLivreur})
+        .andWhere("tournee.date_tournee = :date_tournee", {date_tournee})
+        .getOne();
+
+        return matched ? false : true;  
+    }
+
+    /**
+     * Verifie si un livreur est libre pour un tournée
+     */
+    async findAllLivreurDisponible(idPrestataire?: number, date_tournee?: string): Promise<Livreur[]>{
+        if(!date_tournee){
+            date_tournee = new Date().toISOString().split('T')[0];
+        }
+
+        const tournee: TourneeLivraisonEntity[] = await this.tourneeService.getTourneeByDateTournee(date_tournee, idPrestataire);
+
+        const query = this.livreurRepo.createQueryBuilder("livreur")
+        .leftJoin("livreur.tournees_livraison", "tournee")
+        .innerJoinAndSelect("livreur.user", "user");
+
+        if(idPrestataire){
+            query.innerJoin(Prestataire, 'p', 'p.id_prestataire = user.id_prestataire')
+            .andWhere('p.id_prestataire = :idPrestataire', {idPrestataire});
+        }
+        
+        const matched =  query.andWhere("user.est_active = :est_active", {est_active: true})
+        const livreurs = await query.getMany();
+
+        const livreurDisponible = livreurs.filter( (l) => {
+            const isLivreurDansTournee = tournee.find( (t) => t.livreur.id_livreur === l.id_livreur);
+            return !isLivreurDansTournee;
+        });
+        
+        return livreurDisponible;  
+    }
+    
     /**
      * Total livraison rattacher à un Livreur
      */

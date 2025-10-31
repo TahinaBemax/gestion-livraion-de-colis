@@ -50,6 +50,18 @@ export class LivreurController {
         }
         return await this.livreurService.getLivreurStatistique(idLiveur, date_tournee);
     }
+        /**
+         * LISTE DES LIVREURS DISPONIBLES POUR AFFECTATION
+         * @returns Liste des livreurs
+        */
+   @Get("/disponible")
+        @Roles(UserRole.ResponsableExploitation, UserRole.Admin)
+        @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Lister tous les livreurs disponibles pour affectation d'un tournee"})
+        @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
+    async getLivreurDisponible(@Query("idPrestataire", ParseIntPipe) idPrestataire?: number, @Query("date_tournee") date_tournee?:string){
+        return await this.livreurService.findAllLivreurDisponible(idPrestataire, date_tournee);
+    }
     /* LIVREUR */
     
         /**
@@ -86,8 +98,8 @@ export class LivreurController {
         */
     @Get("/en-trajet")
         @ApiOperation({summary: "Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui"})
-        @Roles(UserRole.ResponsableExploitation, UserRole.User, UserRole.Admin)
-        @UserTypes(TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
+        @Roles(UserRole.User, UserRole.User, UserRole.Admin)
+        @UserTypes(TypeUtilisateur.TempoOne)
     async getLivreurEncoursLivraison(): Promise<Livreur[]>{
         return this.livreurService.findLivreurEncoursLivraison();
     }
@@ -255,7 +267,8 @@ export class LivreurController {
          * @param id Identifiant de la tournée de livraison
          * @return Liste des ordres de livraison 
          */
-    @Get("/:id/tournees/:idTournee/livraisons")
+    @Get("/:idLivreur/tournees/:idTournee/livraisons")
+    @UseGuards(SameLivreurGuard)
     @ApiTags("Chargement et Dechargement Camion")
     @ApiOperation({summary: "Liste des livraison à charger/trajet/decharger dans le camion", description: "Liste des ordres de livraison en ordre inverse"})
     @ApiQuery({name: "etape", description: "Etape de livraison", example: "chargement, trajet ou dechargement"})
@@ -279,7 +292,7 @@ export class LivreurController {
          * @param id Identifiant de la tournée de livraison
          * @return Liste des ordres de livraison 
          */
-    @Get("/:id/tournees/:idTournee/livraisons/:idLivraison/colis")
+    @Get("/:idLivreur/tournees/:idTournee/livraisons/:idLivraison/colis")
         @ApiTags("Chargement et Dechargement Camion")
         @ApiOperation({summary: "Liste des colis d'un livraison à charger dans le camion"})
         @ApiParam({name: "id", description: "ID De l'utilisateur"})
@@ -287,7 +300,7 @@ export class LivreurController {
         @ApiParam({name: "idLivraison", description: "ID De l'ordre de livraison"})
     async getColisByIdLivraison(
         @Param("idTournee", ParseIntPipe) idTournee: number,
-        @Param("id", ParseIntPipe) idUser: number,
+        @Param("idLivreur", ParseIntPipe) idUser: number,
         @Param("idLivraison", ParseIntPipe) idLivraison: number)
     {
         return this.tourneeService.getListColisByIDLivraison(idTournee, idLivraison, idUser);

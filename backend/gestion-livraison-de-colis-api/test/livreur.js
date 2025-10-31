@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:4000", {
+const socket = io("http://localhost:3001", {
   //ID SENDER OR THE CONNECTED USER
   query: { userId: 13} // ID Utilisateur: Livreur, Prestataire, Tempo One
 });

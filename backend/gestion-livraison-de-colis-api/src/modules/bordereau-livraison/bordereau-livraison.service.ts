@@ -156,7 +156,7 @@ export class BordereauLivraisonService {
         const ordreLivraison = existingBordereau.ordre_livraison;
         const tourneeLivraison = await ordreLivraison.tournee_livraison;
         const livraison = ordreLivraison.livraison;
-        const colis = await this.tourneeService.getListColisByIDLivraison(tourneeLivraison.id, ordreLivraison.id, tourneeLivraison.livreur.user.id_utilisateur);
+        const colis = await this.tourneeService.getListColisByIDLivraison(tourneeLivraison.id, ordreLivraison.id, tourneeLivraison.livreur.id_livreur);
         var countColisAnomalie = 0;
         var countColisLivres = 0;
 
