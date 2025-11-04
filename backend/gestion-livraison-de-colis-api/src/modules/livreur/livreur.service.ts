@@ -62,7 +62,7 @@ export class LivreurService {
             .andWhere('p.id_prestataire = :idPrestataire', {idPrestataire});
         }
         
-        const matched =  query.andWhere("user.est_active = :est_active", {est_active: true})
+        query.andWhere("user.est_active = :est_active", {est_active: true})
         const livreurs = await query.getMany();
 
         const livreurDisponible = livreurs.filter( (l) => {
@@ -70,7 +70,10 @@ export class LivreurService {
             return !isLivreurDansTournee;
         });
         
-        return livreurDisponible;  
+        return livreurDisponible.map( (l) => {
+            l.user.mot_de_passe = "";
+            return l;
+        });
     }
     
     /**

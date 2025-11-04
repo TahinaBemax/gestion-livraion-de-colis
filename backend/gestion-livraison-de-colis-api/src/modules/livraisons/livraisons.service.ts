@@ -116,14 +116,26 @@ export class LivraisonsService {
      * @param statuts 
      * @returns 
      */
-    async findByStatuts(statuts: StatusLivraison[]): Promise<LivraisonEntity[]>{
-        if(statuts.length === 0) throw new BadRequestException("Liste des statuts est vide");
+    async findByStatuts(statuts: StatusLivraison[]): Promise<LivraisonEntity[]> {
+    if (statuts.length === 0)
+        throw new BadRequestException("Liste des statuts est vide");
 
-        return await this.livraisonRep.find({
-            where: {statut_livraison: In(statuts)},
-            relations: ["client", "colis"]
-        });
+    return await this.livraisonRep
+        .createQueryBuilder("livraison")
+        .leftJoinAndSelect("livraison.client", "client")
+        .leftJoinAndSelect("livraison.colis", "colis")
+        .where("livraison.statut_livraison IN (:...statuts)", { statuts })
+        .orderBy(`
+        CASE 
+            WHEN livraison.statut_livraison = 'En cours de livraison' THEN 1
+            WHEN livraison.statut_livraison = 'livré' THEN 2
+            ELSE 3
+        END
+        `)
+        .addOrderBy("livraison.date_livraison", "DESC")
+        .getMany();
     }
+
 
 
     /**
@@ -131,23 +143,53 @@ export class LivraisonsService {
      * @param statuts 
      * @returns 
      */
-    async filterBy(idPrestataire?: string, idClient?: string, date?: string, zoneGeographique?: string): Promise<LivraisonEntity[]>{
-        const query = this.livraisonRep.createQueryBuilder("l")
-            .innerJoinAndSelect("l.client", "c")
-            .leftJoinAndSelect("c.point_livraison", "pl")
-            .leftJoinAndSelect("pl.prestataire", "p")
-        
-        if(date) query.where("l.date_livraison = :date", {date: date});
-        
-        if(zoneGeographique) query.andWhere("l.code_postal = :code OR l.ville = :ville", {code: zoneGeographique, ville: zoneGeographique});
+    async filterBy(
+        idPrestataire?: string,
+        idClient?: string,
+        date?: string,
+        zoneGeographique?: string
+    ): Promise<LivraisonEntity[]> {
+    const query = this.livraisonRep.createQueryBuilder("l")
+        .innerJoinAndSelect("l.client", "c")
+        .leftJoinAndSelect("c.point_livraison", "pl")
+        .leftJoinAndSelect("pl.prestataire", "p");
 
-        if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: parseInt(idPrestataire)});
-
-        if(idClient) query.andWhere("c.id = :idClient", {idClient: parseInt(idClient)});
-
-        query.orderBy("l.date_livraison", "DESC");
-        return query.getMany();
+    // Filtre sur la date
+    if (date) {
+        query.where("l.date_livraison = :date", { date });
     }
+
+    // Filtre sur zone géographique
+    if (zoneGeographique) {
+        query.andWhere("(l.code_postal = :zone OR l.ville = :zone)", { zone: zoneGeographique });
+    }
+
+    // Filtre sur le prestataire
+    if (idPrestataire) {
+        query.andWhere("p.id_prestataire = :idPrestataire", { idPrestataire: parseInt(idPrestataire) });
+    }
+
+    // Filtre sur le client
+    if (idClient) {
+        query.andWhere("c.id_client = :idClient", { idClient: parseInt(idClient) });
+    }
+
+    // Tri personnalisé : statut logique + date
+    query
+    .orderBy("l.date_livraison", "DESC")
+    .addOrderBy(`
+        CASE 
+            WHEN l.statut_livraison = 'en attente' THEN 1
+            WHEN l.statut_livraison = 'En cours de livraison' THEN 2
+            WHEN l.statut_livraison = 'Livraison partielle' THEN 3
+            WHEN l.statut_livraison = 'livré' THEN 4
+            ELSE 5
+        END
+    `);
+
+    return query.getMany();
+    }
+
 
     /**
      * 

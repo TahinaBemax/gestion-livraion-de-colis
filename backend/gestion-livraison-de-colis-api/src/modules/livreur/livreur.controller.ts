@@ -98,7 +98,7 @@ export class LivreurController {
         */
     @Get("/en-trajet")
         @ApiOperation({summary: "Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui"})
-        @Roles(UserRole.User, UserRole.User, UserRole.Admin)
+        @Roles(UserRole.User, UserRole.Admin)
         @UserTypes(TypeUtilisateur.TempoOne)
     async getLivreurEncoursLivraison(): Promise<Livreur[]>{
         return this.livreurService.findLivreurEncoursLivraison();

@@ -1,3 +1,4 @@
+import { Utils } from 'src/common/utils/utils';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrdreLivraisonEntity } from './ordre-livraison.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -107,7 +108,7 @@ export class OrdreLivraisonService {
             .innerJoinAndSelect("ol.point_livraison", "pl")
             .innerJoinAndSelect("ol.tournee_livraison", "tournee")
             .innerJoinAndSelect("tournee.prestataire", "p")
-            .innerJoinAndSelect("ol.livraisons", "livraison")
+            .innerJoinAndSelect("ol.livraison", "livraison")
             .innerJoinAndSelect("livraison.client", "client")
         
         if(date) query.where("tournee.date_tournee = :date", {date: date});
@@ -117,6 +118,8 @@ export class OrdreLivraisonService {
         if(idPrestataire) query.andWhere("p.id_prestataire = :idPrestataire", {idPrestataire: parseInt(idPrestataire)});
 
         if(idClient) query.andWhere("client.id = :idClient", {idClient: parseInt(idClient)});
+
+        query.orderBy("tournee.date_tournee", "DESC");
 
         return query.getMany();
     }
@@ -156,9 +159,9 @@ export class OrdreLivraisonService {
         fiche.nbr_colis_reel = matchedOrderLivraison.nbr_colis_reel;
         fiche.statut = matchedOrderLivraison.statut;
         fiche.notifications = await this.notificationService.findByLivreurAndTournee(tournee.livreur.id_livreur, tournee.date_tournee, tournee.heure_debut, tournee.heure_fin);
-        fiche.date_scan_bordereau = bordereau.date_scan_bordereau;
-        fiche.date_scan_dernier_colis = await this.colisService.getDateLastColisDechargmentForTournee(tournee.id);
-        fiche.date_scan_premier_colis = await this.colisService.getDateFirstColisLoadedForTournee(tournee.id);
+        fiche.date_scan_bordereau = Utils.formatDateTime(bordereau.date_scan_bordereau);
+        fiche.date_scan_dernier_colis = Utils.formatDateTime(await this.colisService.getDateLastColisDechargmentForTournee(tournee.id));
+        fiche.date_scan_premier_colis = Utils.formatDateTime(await this.colisService.getDateFirstColisLoadedForTournee(tournee.id));
         //fiche.date_scan_PoD = "";
 
         return fiche;

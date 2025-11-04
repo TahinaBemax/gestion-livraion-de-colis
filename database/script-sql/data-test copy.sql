@@ -7,7 +7,7 @@ INSERT INTO livraisons (
   notes, statut_livraison, id_client
 ) VALUES
 (20, 'Rasoanaivo Miora', '12 Avenue, pavillon, Antananarivo', null, 'Antananarivo','Madagascar', '101', '2025-11-03', '08:00', '08:30', null, 'Livraison partielle', 1),
-(21, 'Rakoto Jean', '12 Avenue, pavillon, Antananarivo', null, 'Antananarivo','Madagascar', '101', '2025-11-03', '08:20', '08:50', null, 'Livré', 2),
+(21, 'Rakoto Jean', '12 Avenue, pavillon, Antananarivo', null, 'Antananarivo','Madagascar', '101', '2025-11-03', '08:20', '08:50', null, 'Livré', 2);
 
 /* =======================
    COLIS
@@ -18,8 +18,8 @@ INSERT INTO colis (
   date_heure_retour_expediteur, id_livraison
 ) VALUES
 (20, 'REF-CLIENT-000020', 2.5, 'Livré', '2025-11-03 07:45:00', '2025-11-03 08:03:00', '2025-11-03 08:05:00', NULL, 20),
-(21, 'REF-CLIENT-000021', 4.2, 'Livré', '2025-11-03 07:50:00', '2025-11-03 08:15:00', '2025-11-03 08:20:00', NULL, 21);
-(22, 'REF-CLIENT-000023', 4.2, `Retour à l'expediteur`, '2025-11-03 07:48:00', NULL, NULL , '2025-11-03 07:49:00', 20);
+(21, 'REF-CLIENT-000021', 4.2, 'Livré', '2025-11-03 07:50:00', '2025-11-03 08:15:00', '2025-11-03 08:20:00', NULL, 21),
+(22, 'REF-CLIENT-000023', 4.2, 'Retour à l expediteur', '2025-11-03 07:48:00', NULL, NULL , '2025-11-03 07:49:00', 20);
 
 /* =======================
    PRODUITS
@@ -46,19 +46,19 @@ INSERT INTO tournees_livraison (
 INSERT INTO tournees_livraison (
   id_tournee, date_tournee, heure_debut, heure_fin, statut, id_prestataire, id_livreur
 ) VALUES
-(20, '2025-11-04', '08:00', '18:00', 'Terminé', 1, 2);
+(21, '2025-11-04', '08:00', '18:00', 'Terminé', 1, 2);
 INSERT INTO tournees_livraison (
   id_tournee, date_tournee, heure_debut, heure_fin, statut, id_prestataire, id_livreur
 ) VALUES
-(20, '2025-10-29', '08:00', '18:00', 'Terminé', 1, 2);
+(22, '2025-10-29', '08:00', '18:00', 'Terminé', 1, 2);
 INSERT INTO tournees_livraison (
   id_tournee, date_tournee, heure_debut, heure_fin, statut, id_prestataire, id_livreur
 ) VALUES
-(20, '2025-10-30', '08:00', '18:00', 'Terminé', 1, 2);
+(23, '2025-10-30', '08:00', '18:00', 'Terminé', 1, 2);
 INSERT INTO tournees_livraison (
   id_tournee, date_tournee, heure_debut, heure_fin, statut, id_prestataire, id_livreur
 ) VALUES
-(20, '2025-10-31', '08:00', '18:00', 'Terminé', 1, 2);
+(24, '2025-10-31', '08:00', '18:00', 'Terminé', 1, 2);
 
 
 /* =======================
@@ -97,7 +97,6 @@ INSERT INTO livraisons (
   ville, pays, code_postal, date_livraison, heure_debut, heure_fin,
   notes, statut_livraison, id_client
 ) VALUES
--- Prestataire 1
 (101, 'Rasoanaivo Miora', '12 Avenue, Pavillon, Antananarivo', NULL, 'Antananarivo', 'Madagascar', '101', '2025-10-29', '08:00', '08:20', NULL, 'Livré', 1),
 (102, 'Rakoto Jean', 'Ambanidia, Lot IVC, Antananarivo', NULL, 'Antananarivo', 'Madagascar', '101', '2025-10-30', '09:00', '09:25', NULL, 'Livré', 2),
 
@@ -123,7 +122,7 @@ INSERT INTO colis (
 (203, 'REF-CLIENT-000103', 4.0, 'Livraison partielle', '2025-10-31 08:10:00', '2025-10-31 08:40:00', NULL, NULL, 103),
 (204, 'REF-CLIENT-000104', 1.8, 'Livré', '2025-11-01 09:00:00', '2025-11-01 09:25:00', '2025-11-01 09:30:00', NULL, 104),
 (205, 'REF-CLIENT-000105', 2.2, 'Livré', '2025-10-29 07:50:00', '2025-10-29 08:10:00', '2025-10-29 08:11:00', NULL, 105),
-(206, 'REF-CLIENT-000106', 3.4, `Retour à l\'expéditeur`, '2025-10-30 09:40:00', NULL, NULL, '2025-10-30 09:50:00', 106);
+(206, 'REF-CLIENT-000106', 3.4, 'Retour à l expéditeur', '2025-10-30 09:40:00', NULL, NULL, '2025-10-30 09:50:00', 106);
 
 
 /* =======================
@@ -172,9 +171,9 @@ INSERT INTO ordres_livraison (
 (601, 3, NULL, 1, 1, 'Effectué', 1, 501, 101),
 (602, 3, NULL, 1, 1, 'Effectué', 2, 502, 102),
 (603, 2, NULL, 1, 1, 'Effectué', 3, 503, 103),
-(604, 3, NULL, 1, 1, 'Effectué', 4, 504, 104),
-(605, 3, NULL, 1, 1, 'Effectué', 5, 505, 105),
-(606, 1, NULL, 1, 1, 'Effectué', 6, 506, 106);
+(604, 3, NULL, 1, 1, 'Effectué', 1, 504, 104),
+(605, 3, NULL, 1, 1, 'Effectué', 2, 505, 105),
+(606, 1, NULL, 1, 1, 'Effectué', 3, 506, 106);
 
 
 /* =======================
