@@ -4,6 +4,8 @@ import * as bcrypt from "bcrypt";
 import * as QRCode from 'qrcode';
 import { LivraisonEntity } from "src/modules/livraisons/livraison.entity";
 import { StatusColis } from "../enum/status-colis.enum";
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class Utils {
 
@@ -126,20 +128,30 @@ export class Utils {
     }
 
     static formatDateTime(date: Date | string): string {
-    if (!date) return '';
+        if (!date) return '';
 
-    // S'assurer qu'on travaille avec un objet Date
-    const d = new Date(date);
+        // S'assurer qu'on travaille avec un objet Date
+        const d = new Date(date);
 
-    // Récupérer les composants
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const seconds = String(d.getSeconds()).padStart(2, '0');
+        // Récupérer les composants
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const seconds = String(d.getSeconds()).padStart(2, '0');
 
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 
+    // Fonction pour lire les données de l'expéditeur depuis le fichier JSON
+    static async readExpediteurData(): Promise<any> {
+        const filePath = path.join(__dirname, '../../..', 'config', 'expediteur.json'); 
+        try {
+            const fileContent = await fs.promises.readFile(filePath, 'utf-8');
+            return JSON.parse(fileContent).expediteur;
+        } catch (error) {
+            throw new Error(`Impossible de lire les données de l'expéditeur : ${error.message}`);
+        }
+    }
 }

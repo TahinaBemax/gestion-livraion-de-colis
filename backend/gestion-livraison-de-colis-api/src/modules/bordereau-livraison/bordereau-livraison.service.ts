@@ -68,10 +68,25 @@ export class BordereauLivraisonService {
 
         if(ordres_livraison.length === 0 ) throw new BadRequestException("Aucun ordre de livraison n'a été touvé");
 
+        if(ordres_livraison.length !== dto.id_ordre_livraison.length){
+            const foundIDs = ordres_livraison.map(o => o.id);
+            const notFoundIDs = dto.id_ordre_livraison.filter(id => !foundIDs.includes(id));
+            throw new BadRequestException(`Les ordres de livraison avec les IDs suivants n'existent pas: ${notFoundIDs.join(', ')}`);
+        }
+        // Charger le fichier JSON de l'expéditeur
+        const expediteurData = await Utils.readExpediteurData();
+
         for (const ordre of ordres_livraison) {
             if(ordre.statut === StatutOrdreLivraison.EN_ATTENTE || ordre.statut === StatutOrdreLivraison.ANNULE)
                 throw new BadRequestException(`Impossible de génèrer un bordereau de livraison pour un ordre de livraison avec statut: ${ordre.statut}`);
             
+            if(await ordre.bordereau_livraison) {
+                throw new BadRequestException(`
+                    Un bordereau de livraison existe déjà pour l'ordre de livraison d'ID: ${ordre.id}, 
+                    veuillez le suprimer d'abord avant d'en créer un nouveau.`
+                );
+            }
+
             const sequence = await this.dataSource.query("SELECT nextval('ref_bordereau')");
             const ref = 'BL-' + sequence[0].nextval.toString().padStart(8, '0');
             
@@ -82,9 +97,9 @@ export class BordereauLivraisonService {
             bordereau.date_livraison = (await ordre.tournee_livraison).date_tournee;
             bordereau.ordre_livraison = ordre;
 
-            bordereau.nom_expediteur = "AdriColis";
-            bordereau.adresse_expediteur = "Soavimasoandro, Antananarivo, Madagascar";
-            bordereau.contact_expediteur = "+261 34 00 000 00";
+            bordereau.nom_expediteur = expediteurData.nom;
+            bordereau.adresse_expediteur = expediteurData.adresse;
+            bordereau.contact_expediteur = expediteurData.contact;
 
             bordereau.nom_destinataire = ordre.point_livraison.numero_magasin;
             bordereau.adresse_destinataire =  ordre.point_livraison.numero_rue + ', ' + ordre.point_livraison.nom_rue + ', ' + ordre.point_livraison.ville;  

@@ -282,6 +282,7 @@ CREATE TABLE bordereaux_livraison(
    date_bordereau DATE NOT NULL DEFAULT CURRENT_DATE,
    date_livraison DATE NOT NULL,
    date_scan_bordereau TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   date_preuve_livraison TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    id_ordre_livraison INTEGER NOT NULL,
    PRIMARY KEY(ref_bordereau_livraison),
    FOREIGN KEY(id_ordre_livraison) REFERENCES ordres_livraison(id_ordre_livraison)

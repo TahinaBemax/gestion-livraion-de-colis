@@ -111,7 +111,9 @@ export class OrdreLivraisonService {
             .innerJoinAndSelect("ol.livraison", "livraison")
             .innerJoinAndSelect("livraison.client", "client")
         
-        if(date) query.where("tournee.date_tournee = :date", {date: date});
+        query.where('ol.statut IN (:...statuts)', { statuts: [StatutOrdreLivraison.EFFECTUE, StatutOrdreLivraison.EN_COURS] });
+        
+        if(date) query.andWhere("tournee.date_tournee = :date", {date: date});
         
         if(zoneGeographique) query.andWhere("pl.code_postal = :code OR pl.ville = :ville", {code: zoneGeographique, ville: zoneGeographique});
 
@@ -289,35 +291,37 @@ export class OrdreLivraisonService {
         return total;
     }
 
-    async mapToOrdreLivraisonCreateDTo(idTournee: number, dto: OrdreLivraisonCreateDto): Promise<OrdreLivraisonDto[]>{
-        if(!idTournee || !dto) throw new BadRequestException("Données invalides");
+    async mapToOrdreLivraisonCreateDTo(idTournee: number, dto: OrdreLivraisonCreateDto): Promise<OrdreLivraisonDto[]> {
+        if (!idTournee || !dto) throw new BadRequestException("Données invalides");
         const ordresLivraison: OrdreLivraisonDto[] = [];
 
-        const existingTournee:TourneeLivraisonEntity|null = await this.tourneeRepo.findOneBy({id: idTournee});
-        if(!existingTournee) throw new NotFoundException(`Tournée de livraison avec ID:{${idTournee}} introuvable`);
+        const existingTournee: TourneeLivraisonEntity | null = await this.tourneeRepo.findOneBy({ id: idTournee });
+        if (!existingTournee) throw new NotFoundException(`Tournée de livraison avec ID: {${idTournee}} introuvable`);
         this.checkStatutTourneeLivraison(existingTournee);
 
-        
-        dto.id_livraisons.map(async (idLivraison) => {
+        // Utilisation de Promise.all pour attendre que toutes les promesses se résolvent
+        await Promise.all(dto.id_livraisons.map(async (idLivraison) => {
             const livraison = await this.livraisonService.findById(idLivraison);
-            if(livraison.statut_livraison !== StatusLivraison.EN_ATTENTE &&
+
+            if (livraison.statut_livraison !== StatusLivraison.EN_ATTENTE &&
                 livraison.statut_livraison !== StatusLivraison.RETOUR_EXPEDITEUR &&
                 livraison.statut_livraison !== StatusLivraison.ECHEC_LIVRAISON
-            ){
-                throw new BadRequestException(`Impossible de rattacher la livraison avec ID:{${idLivraison}} car son statut est ${livraison.statut_livraison}`);
+            ) {
+                throw new BadRequestException(`Impossible de rattacher une livraison ID:${livraison.id} avec statut: ${livraison.statut_livraison} à cette tournée de livraison`);
             }
 
-            if(livraison.ordre_livraison ) throw new BadRequestException(`La livraison avec ID:{${idLivraison}} est déjà rattachée à un tournée de livraison`);
+            if (livraison.ordre_livraison) throw new BadRequestException(`La livraison avec ID: {${idLivraison}} est déjà rattachée à un tournée de livraison`);
 
             const ordre_livraison = new OrdreLivraisonDto();
             ordre_livraison.tournee = existingTournee;
             ordre_livraison.pointLivraion = livraison.client.point_livraison;
             ordre_livraison.livraison = livraison;
             ordresLivraison.push(ordre_livraison);
-        });
+        }));
 
-        return ordresLivraison
+        return ordresLivraison;
     }
+
 
     private async filterColisAndHandleStatus(
         incompleteLivraisons: LivraisonEntity[],

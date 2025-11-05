@@ -268,7 +268,12 @@ export class TourneeLivraisonService {
         }));
 
         const prepared = this.tourneeRep.create(tournees);
-        return this.tourneeRep.save(prepared);
+        const saved: TourneeLivraisonEntity[] = await this.tourneeRep.save(prepared);
+
+        saved.forEach(t => {
+            t.livreur.user.mot_de_passe = '';
+        });
+        return saved;
     }
 
     async changeStatuts(id: number, statut:string ){
@@ -327,16 +332,17 @@ export class TourneeLivraisonService {
         const tournee = plainToInstance(TourneeLivraisonEntity, dto);
 
         if(dto.id_livreur){
-            const isLivreurDisponible = await this.livreurService.isLivreurDisponible(dto.id_livreur, dto.date_tournee);
-
-            if(!isLivreurDisponible) throw new BadRequestException("Livreur non disponible pour cette date de tournée!");
             const livreur: Livreur = await this.livreurService.findById(dto.id_livreur);
+            const isLivreurDisponible = await this.livreurService.isLivreurDisponible(livreur.id_livreur, dto.date_tournee);
+
+            if(!isLivreurDisponible) 
+                throw new BadRequestException(`Le livreur [${livreur.user.nom} ${livreur.user.prenom} avec ID: ${livreur.id_livreur}] n'est plus disponible pour cette date de tournée!`);
 
             tournee.livreur = livreur;
         }
         
-        const matchedPrestataire = await this.prestataireRep.findOneBy({id_prestataire: id_prestatiare});
-        if(!matchedPrestataire) throw new BadRequestException("Prestataire inexistant!");
+        const matchedPrestataire = await this.prestataireRep.findOneBy({id_prestataire: id_prestatiare, est_active: true});
+        if(!matchedPrestataire) throw new BadRequestException("Ce Prestataire est introuvable ou Il n'est plus actif!");
 
         tournee.date_tournee = dto.date_tournee;
         tournee.prestataire = matchedPrestataire;

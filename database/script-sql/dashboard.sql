@@ -11,10 +11,8 @@ livraisons_par_livreur AS (
     FROM ordres_livraison o
     INNER JOIN tournees_livraison t ON t.id_tournee = o.id_tournee
     INNER JOIN livreur_information l ON l.id_livreur = t.id_livreur
-    INNER JOIN periode p ON o.id_livraison IS NOT NULL
     INNER JOIN livraisons li ON li.id_livraison = o.id_livraison
-    WHERE li.date_livraison BETWEEN (SELECT date_debut FROM periode) AND (SELECT date_fin FROM periode)
-      AND o.statut = 'Effectué'
+    WHERE o.statut = 'Effectué'
     GROUP BY l.id_livreur
 ),
 
@@ -26,8 +24,8 @@ livraisons_dans_les_temps AS (
     FROM ordres_livraison o
     INNER JOIN tournees_livraison t ON t.id_tournee = o.id_tournee
     INNER JOIN livreur_information l ON l.id_livreur = t.id_livreur
+    INNER JOIN bordereaux_livraison bl ON li.id_livraison = o.id_livraison
     INNER JOIN livraisons li ON li.id_livraison = o.id_livraison
-    INNER JOIN periode p ON li.date_livraison BETWEEN (SELECT date_debut FROM periode) AND (SELECT date_fin FROM periode)
     WHERE o.statut = 'Effectué'
       AND (li.heure_fin <= li.heure_fin OR li.heure_fin IS NOT NULL)  -- Livraison dans les temps
     GROUP BY l.id_livreur

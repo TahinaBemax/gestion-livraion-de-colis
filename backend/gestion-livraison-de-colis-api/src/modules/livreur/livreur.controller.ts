@@ -62,19 +62,25 @@ export class LivreurController {
     async getLivreurDisponible(@Query("idPrestataire", ParseIntPipe) idPrestataire?: number, @Query("date_tournee") date_tournee?:string){
         return await this.livreurService.findAllLivreurDisponible(idPrestataire, date_tournee);
     }
-    /* LIVREUR */
+
+    /* ======= LIVREUR ========= */
     
         /**
-         * LISTE DES LIVREURS
+         * LISTE DES LIVREURS OU LIVREURS EN COURS DE LIVRAISON
          * @returns Liste des livreurs
         */
    @Get()
-        @Roles(UserRole.User, UserRole.ResponsableExploitation, UserRole.Admin)
-        @UserTypes(TypeUtilisateur.Livreur, TypeUtilisateur.Prestataire, TypeUtilisateur.TempoOne)
-        @ApiOperation({summary: "Lister tous les livreurs"})
-        @ApiOkResponse({description: "Ok", type: [LivreurSwaggerDto]})
-    async findLivreurs(){
-        return this.livreurService.findAllLivreurs();
+        @Roles(UserRole.User, UserRole.Admin)
+        @UserTypes(TypeUtilisateur.TempoOne)
+        @ApiOperation({summary: "Liste des livreurs ou des livreurs en cours de livraison"})
+        @ApiQuery({name: "req", description: "Type de requête", example: "all ou en-trajet"})
+    async findLivreurs(@Query("req") req:string){
+        if(req && req === "en-trajet"){
+            return this.livreurService.findLivreurEncoursLivraison();
+        }
+        else if(!req || req === "all"){
+            return this.livreurService.findAllLivreurs();
+        }
     }
 
         /**
@@ -91,18 +97,6 @@ export class LivreurController {
         return this.livreurService.findById(id);
     }
 
-        /**
-         * Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui
-         * @param id ID du livreur
-         * @returns Livreur
-        */
-    @Get("/en-trajet")
-        @ApiOperation({summary: "Lister les livreurs qui ont déjà scanné un bordereau et qui ont une tournée aujourd'hui"})
-        @Roles(UserRole.User, UserRole.Admin)
-        @UserTypes(TypeUtilisateur.TempoOne)
-    async getLivreurEncoursLivraison(): Promise<Livreur[]>{
-        return this.livreurService.findLivreurEncoursLivraison();
-    }
 
         /**
          * MODIFICATION D'UN LIVREUR
