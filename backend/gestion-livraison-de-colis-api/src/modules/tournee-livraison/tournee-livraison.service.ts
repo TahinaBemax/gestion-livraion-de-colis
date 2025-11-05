@@ -42,27 +42,65 @@ export class TourneeLivraisonService {
         return query.getMany();
     }
 
-    async getListColisByIDLivraison(idTournee: number, idOrdreLivraison: number, idUser: number){
-        if(!idTournee || !idOrdreLivraison || !idUser) throw new BadRequestException("Données invalides!");
+    /**
+     * LISTE DES COLIS D'UNE LIVRAISON DANS UNE TOURNEE
+     * @param idTournee 
+     * @param idLivraison 
+     * @param idUser 
+     * @returns 
+     */
+    async getListColisByIDLivraison(idTournee: number, idLivraison: number, idUser: number) {
+        if (!idTournee || !idLivraison || !idUser) throw new BadRequestException("Données invalides!");
 
         const tournee = await this.findById(idTournee);
-        if(tournee.livreur.id_livreur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
-        const ordreLivraison: OrdreLivraisonEntity|undefined = tournee.ordres_livraison.find(ol => ol.id === idOrdreLivraison);
+        if (tournee.livreur.id_livreur !== idUser) throw new BadRequestException("Vous n'êtes pas autorisé à voir cette tournée de livraison!");
         
-        if(!ordreLivraison) throw new NotFoundException(`Ordre de livraison avec ID:{${idOrdreLivraison}} est introuvable dans cette tournée!`);
+        const ordreLivraison: OrdreLivraisonEntity | undefined = tournee.ordres_livraison.find(ol => ol.livraison.id === idLivraison);
+        if (!ordreLivraison) { 
+            throw new NotFoundException(`Livraison avec ID:{${idLivraison}} est introuvable dans cette tournée de livraison!`);
+        }
+
+        const bl = await ordreLivraison.bordereau_livraison;
+        if (!bl) {
+            throw new BadRequestException("Veuillez générer un bordereau de livraison pour cet ordre de livraison avant de continuer!");
+        } else if (!bl.date_scan_bordereau) {
+            throw new BadRequestException("Le bordereau de livraison n'a pas encore été scanné!");
+        }
+
         const livraisonIncomplet = await this.livraisonService.findLivraisonIncompleteByIdClient(ordreLivraison.livraison.client.id);
 
         livraisonIncomplet.forEach(livraison => livraison.colis.forEach(colis => {
-            if(colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR || colis.statut_colis === StatusColis.RELIQUAT){
+            if (colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR || colis.statut_colis === StatusColis.RELIQUAT) {
                 colis.statut_colis = StatusColis.RELIQUAT;
             }
         }));
 
         const all = ordreLivraison.livraison.colis.concat(livraisonIncomplet.flatMap(livraison => livraison.colis));
-        const colisAnomalie = all.filter(c => c.statut_colis === StatusColis.ANOMALIE || c.statut_colis === StatusColis.RELIQUAT);
-        const colisNormale = all.filter(c => c.statut_colis !== StatusColis.ANOMALIE && c.statut_colis !== StatusColis.RELIQUAT);
-        return colisAnomalie.concat(colisNormale);
+        
+        // Séparer les colis avec des statuts d'anomalie et reliquat
+        const colisAnomalie = all.filter((c) => c.statut_colis === StatusColis.ANOMALIE || c.statut_colis === StatusColis.RELIQUAT);
+
+        // Séparer les colis "normaux"
+        const colisNormale = all.filter((c) => c.statut_colis !== StatusColis.ANOMALIE && c.statut_colis !== StatusColis.RELIQUAT);
+
+        // Fusionner les deux listes
+        const colisFinal = colisAnomalie.concat(colisNormale);
+
+        // Fonction de tri personnalisée pour trier les colis par statut dans l'ordre spécifique
+        const orderByStatus = {
+            [StatusColis.RELIQUAT]: 1,
+            [StatusColis.A_CHARGE_DANS_LA_CAMION]: 2,
+            [StatusColis.CHARGE_DANS_LA_CAMION]: 3,
+        };
+
+        colisFinal.sort((a, b) => {
+            // Comparer les colis en fonction de leur statut
+            return (orderByStatus[a.statut_colis] || 0) - (orderByStatus[b.statut_colis] || 0);
+        });
+
+        return colisFinal;
     }
+
 
     private async getLivraisonsByTournee(tournee: TourneeLivraisonEntity): Promise<LivraisonTournee[]> {
         const listLivraison: LivraisonTournee[] = [];

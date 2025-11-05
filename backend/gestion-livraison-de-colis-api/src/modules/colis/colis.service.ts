@@ -136,7 +136,7 @@ export class ColisService {
         const livreur: Livreur = await this.livreurService.findById(idLivreur);
         
         if(!(await this.estRattacheLivreur(livreur.id_livreur, idColis))){
-            throw new BadRequestException(`Code Barre Reconnu mais Colis Non Rattaché à Cette Ordre de Livraison`);
+            throw new BadRequestException(`Code Barre Reconnu mais Colis Non Rattaché à Cette Ordre de Livraison ou à cet Livreur`);
         }
         const existingColis = await this.colisRep.createQueryBuilder("colis")
             .innerJoinAndSelect("colis.livraisons", "livraison")
@@ -147,7 +147,16 @@ export class ColisService {
 
         if(!existingColis) throw new NotFoundException(`Code barre du colis non reconnu!`);
 
-        if(existingColis.statut_colis !== StatusColis.CHARGE_DANS_LA_CAMION){
+        if(existingColis.statut_colis === StatusColis.DECHARGE_DE_LA_CAMION) {
+            throw new BadRequestException('Ce colis est déja déchargé du camion!');
+        }
+        else if(existingColis.statut_colis === StatusColis.LIVRE){
+            throw new BadRequestException('Ce colis est déjà livré!');
+        }
+        else if(existingColis.statut_colis === StatusColis.ANOMALIE){
+            throw new BadRequestException('Impossible de déchargé ce colis car il est en anomalie!');
+        }
+        else if(existingColis.statut_colis !== StatusColis.CHARGE_DANS_LA_CAMION){
             throw new BadRequestException(`Ce colis n'est pas encore indiqué comme chargé dans le camion! Veuilez vérifier s'il vous plait.`);
         }
     

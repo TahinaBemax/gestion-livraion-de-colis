@@ -33,7 +33,11 @@ export class BordereauLivraisonService {
     }
 
     async findAll(): Promise<BordereauLivraisonEntity[]> {
-        return this.bordereauRep.find({relations: ['ordre_livraison']});
+        return this.bordereauRep.find(
+            {
+                relations: ['ordre_livraison'],
+                order: { date_bordereau: 'DESC' }
+            });
     }
 
     async findById(id: string): Promise<BordereauLivraisonEntity> {
@@ -131,6 +135,11 @@ export class BordereauLivraisonService {
                     throw new BadRequestException("Ce n'est pas votre bordereau de livraison!");
                 }
                 const bordereau = await this.findByIdOrdreLivraison(idOrdreLivraison);
+
+                if(bordereau && bordereau.date_scan_bordereau){
+                    throw new BadRequestException("Le bordereau de livraison a déjà été scanné.");
+                }
+
                 const query = this.dataSource.createQueryRunner();
                 await query.connect();
                 await query.startTransaction();
@@ -139,9 +148,11 @@ export class BordereauLivraisonService {
                     try {
                         bordereau.date_scan_bordereau = new Date().toISOString();
                         await this.bordereauRep.save(bordereau);
+                        matched.livraison.statut_livraison = StatusLivraison.EN_COURS_LIVRAISON;
                         matched.livraison.colis.forEach(c => c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION);
     
                         query.manager.save(BordereauLivraisonEntity, bordereau);
+                        query.manager.save(LivraisonEntity, matched.livraison);
                         query.manager.save(ColisEntity, matched.livraison.colis);
                         
                         await query.commitTransaction();
@@ -171,7 +182,7 @@ export class BordereauLivraisonService {
         const ordreLivraison = existingBordereau.ordre_livraison;
         const tourneeLivraison = await ordreLivraison.tournee_livraison;
         const livraison = ordreLivraison.livraison;
-        const colis = await this.tourneeService.getListColisByIDLivraison(tourneeLivraison.id, ordreLivraison.id, tourneeLivraison.livreur.id_livreur);
+        const colis = await this.tourneeService.getListColisByIDLivraison(tourneeLivraison.id, ordreLivraison.livraison.id, tourneeLivraison.livreur.id_livreur);
         var countColisAnomalie = 0;
         var countColisLivres = 0;
 
@@ -197,10 +208,12 @@ export class BordereauLivraisonService {
         ordreLivraison.statut = StatutOrdreLivraison.EFFECTUE;
         
         try {
+            existingBordereau.date_preuve_livraison = new Date().toISOString();
             await this.dataSource.transaction(async manager => {
                 await manager.save(ColisEntity, colis);
                 await manager.save(LivraisonEntity, livraison);
                 await manager.save(OrdreLivraisonEntity, ordreLivraison);
+                await manager.save(BordereauLivraisonEntity, existingBordereau);
             });
         
             return "Preuve de livraison enregistrée avec succès.";
