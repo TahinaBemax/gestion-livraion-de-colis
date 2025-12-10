@@ -82,33 +82,32 @@ export class LivreurService {
 
     async getLivraisonStatistique(idLivreur?: number, date_debut?: string, date_fin?: string, statut?: string): Promise<any>{
         const query = this.livreurRepo.createQueryBuilder("livreur")
-        .leftJoinAndSelect("livreur.tournees_livraison", "tournee")
-        .leftJoinAndSelect("tournee.ordres_livraison", "ordre")
-        .leftJoinAndSelect("ordre.livraison", "livraison")
-        .select("COUNT(livraison.id)", 'total')
+        .leftJoin("livreur.tournees_livraison", "tournee")
+        .leftJoin("tournee.ordres_livraison", "ordre")
+        .innerJoin("ordre.livraison", "livraison")
+        .select("COUNT(DISTINCT livraison.id)", 'total')
         .addSelect("livreur.id_livreur", 'idLivreur')
         
         if(idLivreur){
-            query.where("livreur.id_livreur = :idLivreur", {idLivreur: idLivreur})
+            query.andWhere("livreur.id_livreur = :idLivreur", {idLivreur: idLivreur})
         }
 
         if(date_debut && !date_fin){
-            query.where("tournee.date_tournee = :date", {date: date_debut});
-        } else if(date_debut && !date_fin){
-            query.where("tournee.date_tournee >= :debut AND tournee.date_tournee <= :fin", {debut: date_debut, fin: date_fin});
+            query.andWhere("DATE(tournee.date_tournee) = DATE(:date)", {date: date_debut});
+        } else if(date_debut && date_fin){
+            query.andWhere("DATE(tournee.date_tournee) BETWEEN DATE(:debut) AND DATE(:fin)", {debut: date_debut, fin: date_fin});
         }
 
         if(statut){
             switch (statut) {
                 case 'livre':
-                    query.where("livraison.statut_livraison = :statut OR livraison.statut_livraison = :partielle", {
-                        idLivreur: idLivreur, statut: StatusLivraison.LIVRE,
+                    query.andWhere("(livraison.statut_livraison = :statut OR livraison.statut_livraison = :partielle)", {
+                        statut: StatusLivraison.LIVRE,
                         partielle: StatusLivraison.LIVRAISON_PARTIELLE
                     })
                     break;
                 case 'echec':
-                    query.where("livraison.statut_livraison = :echec OR livraison.statut_livraison = :retourne ", {
-                        idLivreur: idLivreur, 
+                    query.andWhere("(livraison.statut_livraison = :echec OR livraison.statut_livraison = :retourne)", {
                         echec: StatusLivraison.ECHEC_LIVRAISON,
                         retourne: StatusLivraison.RETOUR_EXPEDITEUR,
                     })
@@ -301,7 +300,7 @@ export class LivreurService {
         return `Scan au moment du chargement du camion ${(canScan) ? 'activé' : 'desactivé'} avec succés!`;
     }
 
-    async update(idLivreur: number, data: LivreurUpdateDto):Promise<Livreur> {
+    async update(idLivreur: number, data: LivreurUpdateDto):Promise<any> {
         if(!data) throw new BadRequestException("Données Livreur invalides");
         if(!idLivreur) throw new BadRequestException("L'id du livreur est null");
 
@@ -311,7 +310,7 @@ export class LivreurService {
 
         const updated = await this.livreurRepo.save(matched);
         const {mot_de_passe, ...withoutPassword } = updated.user
-        return updated;
+        return withoutPassword;
     }
 
     /**
@@ -322,22 +321,22 @@ export class LivreurService {
     async findLivreurEncoursLivraison(idPrestataire?: number): Promise<Livreur[]> {
         const query = this.livreurRepo.createQueryBuilder("l")
             .innerJoinAndSelect("l.user", "user") 
-            .innerJoin("l.tournees_livraison", "tl") 
+            .leftJoin("l.tournees_livraison", "tl") 
             .leftJoin("tl.ordres_livraison", "ordre")
             .leftJoin("ordre.bordereau_livraison", "bl")
 
         if(idPrestataire){
             query.innerJoinAndSelect("user.prestataire", "prestataire") 
-                .andWhere("prestataire.id_prestataire = :id", {idPrestataire})
+                .andWhere("prestataire.id_prestataire = :id", {id: idPrestataire})
         }
-
-        const livreurs = await query.where("DATE(tl.date_tournee) = CURRENT_DATE")
-            .andWhere("DATE(bl.date_scan_bordereau) = DATE(tl.date_tournee)")
+        
+        const livreurs = await query
+            .where("DATE(:now) = DATE(bl.date_scan_bordereau) AND bl.date_preuve_livraison IS NULL", {now: new Date().toISOString().split('T')[0]})
             .getMany();
 
         // retirer le mot de passe
         return livreurs.map((l) => {
-            const { mot_de_passe, ...safeUser } = l.user;
+            const { mot_de_passe, prestataire ,...safeUser } = l.user;
             l.user = safeUser as any;
             return l;
         });

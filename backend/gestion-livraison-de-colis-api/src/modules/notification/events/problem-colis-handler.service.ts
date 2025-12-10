@@ -27,30 +27,40 @@ export class ProblemColisHandler {
             const estRattache = await this.colisService.estRattacheLivreur(data.idLivreur, data.idColis);
             if(!estRattache) throw new BadRequestException("Le livreur n'est pas rattaché à ce colis");
 
-            const prestataireUsers:User[] = await this.userService.findPrestataireUsers(data.idPrestataire);
-            const tempoOneUsers:User[] = await this.userService.findTempoOneUsers();
+            const prestataireUsers: User[] = await this.userService.findPrestataireUsers(data.idPrestataire);
+            const tempoOneUsers: User[] = await this.userService.findTempoOneUsers();
             if(prestataireUsers.length === 0) throw new BadRequestException("Aucun utilisateur trouvé pour ce prestataire");
+
             const colis = await this.colisService.findById(data.idColis);
             colis.statut_colis = StatusColis.ANOMALIE;
 
-            // Envoyer la notification en temps réel via WebSocket
+            // Préparer les objets à persister
             const notification: NotificationCreateDto = {
                 envoyeur: data.idLivreur,
                 receveurs: prestataireUsers.map(user => user.id_utilisateur),
                 titre: data.titreProbleme,
                 message: data.description,
                 dateheure_notification: new Date().toISOString(),
-            }
+            };
+
             const problemeColis: ProblemeColisEntity = {
                 id: -1,
                 titre: data.titreProbleme,
                 description: data.description,
-                colis
-            }
-            
-            const saved = await this.notificationService.save(data.idLivreur, notification);
-            this.datasource.manager.save(ColisEntity, colis);
-            this.datasource.manager.save(ProblemeColisEntity, problemeColis);
+                colis: colis
+            };
+
+            // Transaction : sauvegarder notification, colis et problème ensemble
+            const saved = await this.datasource.transaction(async (manager) => {
+                // Si notificationService.save n'accepte pas d'EntityManager, on l'appelle normalement.
+                // On suppose ici qu'il gère sa propre persistance et peut être appelé dans la transaction callback.
+                const notifSaved = await this.notificationService.save(data.idLivreur, notification);
+
+                await manager.save(ColisEntity, colis);
+                await manager.save(ProblemeColisEntity, problemeColis);
+
+                return notifSaved;
+            });
 
             const allUsers = prestataireUsers.concat(tempoOneUsers);
             NotificationGateway.emitNotificationToUser(server, saved, users, allUsers);

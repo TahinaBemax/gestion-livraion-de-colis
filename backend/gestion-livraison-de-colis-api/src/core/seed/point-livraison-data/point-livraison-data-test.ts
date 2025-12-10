@@ -18,13 +18,14 @@ export class PointLivraisonDataTest {
         const pl2 = new CreatePointLivraisonDto();
         const contrainte1 = new ContrainteLivraisonDto();
 
-        const now = new Date()
+        const now = new Date();
+        now.setDate(now.getDate() + 2);
         //contrainte1.date_contrainte = `${now.getDate()}/${now.getMonth()}/${now.getFullYear()}`;
         contrainte1.date_contrainte = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
         
         contrainte1.intitule_contrainte = "Fermeture de la boutique";
-        contrainte1.heure_debut_livrrable = "10:00:00";
-        contrainte1.heure_fin_livrrable = "12:00:00";
+        contrainte1.heure_debut_livrrable = "09:45:00";
+        contrainte1.heure_fin_livrrable = "10:00:00";
 
         pl2.numero_magasin = "Jumbo Scoore";
         pl2.code_postal = "101";

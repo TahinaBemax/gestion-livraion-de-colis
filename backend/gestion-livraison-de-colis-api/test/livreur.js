@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001", {
+const socket = io("http://localhost:3000", {
   //ID SENDER OR THE CONNECTED USER
   query: { userId: 13} // ID Utilisateur: Livreur, Prestataire, Tempo One
 });
@@ -21,11 +21,11 @@ function signalerProblemeColis() {
   console.log("Envoie du notification en cours");
   
   socket.emit("send_problem_colis_alert", {
-    titreProbleme: "Colis manquant", 
-    description: "Colis manquant lors du chargement", 
+    titreProbleme: "Colis ouvert", 
+    description: "Colis ouvert par accident", 
     idLivreur: 2, 
-    idPrestataire: 1, 
-    idColis: 6
+    idPrestataire:1, 
+    idColis:6
   });
 
   console.log("Envoyé avec succés");

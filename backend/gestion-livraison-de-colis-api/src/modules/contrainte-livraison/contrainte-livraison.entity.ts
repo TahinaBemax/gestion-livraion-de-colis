@@ -13,10 +13,11 @@ export class ContrainteLivraisonEntity {
     date_contrainte: string;
 
     @Column({type: "time"})
+    heure_debut_livrable: string;
+    
+    @Column({type: "time"})
     heure_fin_livrable: string;
 
-    @Column({type: "time"})
-    heure_debut_livrable: string;
 
     @ManyToOne(() => PointLivraisonEntity, (pl) => pl.contraintes_livraison)
     @JoinColumn({name: "id_point_livraison", referencedColumnName: "id"})

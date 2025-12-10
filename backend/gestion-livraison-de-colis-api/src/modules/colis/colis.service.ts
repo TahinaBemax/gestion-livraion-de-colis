@@ -104,7 +104,7 @@ export class ColisService {
             const livraison = existingColis.livraisons;
             const bl = await livraison.ordre_livraison.bordereau_livraison;
 
-            if(!bl || !bl.date_scan_bordereau) throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
+            if((!bl || !bl.date_scan_bordereau) && existingColis.statut_colis !== StatusColis.RETOUR_EXPEDITEUR) throw new BadRequestException("Impossible de scaner le colis le bordereau de livraison n'est pas encore scané!");
             
             if(existingColis.statut_colis === StatusColis.LIVRE || 
                 existingColis.statut_colis === StatusColis.EN_COURS_LIVRAISON ||
@@ -116,7 +116,7 @@ export class ColisService {
             }
     
             existingColis.statut_colis = StatusColis.CHARGE_DANS_LA_CAMION;
-            existingColis.date_heure_chargement = new Date().toUTCString();
+            existingColis.date_heure_chargement = new Date();
             this.colisRep.save(existingColis);
 
             return message;
@@ -154,14 +154,14 @@ export class ColisService {
             throw new BadRequestException('Ce colis est déjà livré!');
         }
         else if(existingColis.statut_colis === StatusColis.ANOMALIE){
-            throw new BadRequestException('Impossible de déchargé ce colis car il est en anomalie!');
+            throw new BadRequestException('Ce colis a été signalé avec une anomalie. Merci de vérifier son état avant de le livrer!');
         }
         else if(existingColis.statut_colis !== StatusColis.CHARGE_DANS_LA_CAMION){
             throw new BadRequestException(`Ce colis n'est pas encore indiqué comme chargé dans le camion! Veuilez vérifier s'il vous plait.`);
         }
     
         existingColis.statut_colis = StatusColis.DECHARGE_DE_LA_CAMION;
-        existingColis.date_heure_dechargement = new Date().toUTCString();
+        existingColis.date_heure_dechargement = new Date();
         this.colisRep.save(existingColis);
 
         return message;

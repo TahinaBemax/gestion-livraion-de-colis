@@ -1,5 +1,5 @@
 import { BordereauLivraisonEntity } from './bordereau-livraison.entity';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BordereauLivraisonCreateDto } from 'src/common/dto/bordereau-livraison/create-bordereau-livraison-dto';
 import { Repository, In, DataSource, DeleteResult } from 'typeorm';
@@ -132,7 +132,7 @@ export class BordereauLivraisonService {
                 }
                 
                 if(tournee.livreur.id_livreur != idLivreur){
-                    throw new BadRequestException("Ce n'est pas votre bordereau de livraison!");
+                    throw new UnauthorizedException("Ce n'est pas votre bordereau de livraison!");
                 }
                 const bordereau = await this.findByIdOrdreLivraison(idOrdreLivraison);
 
@@ -146,7 +146,7 @@ export class BordereauLivraisonService {
     
                 if(bordereau){
                     try {
-                        bordereau.date_scan_bordereau = new Date().toISOString();
+                        bordereau.date_scan_bordereau = new Date();
                         await this.bordereauRep.save(bordereau);
                         matched.livraison.statut_livraison = StatusLivraison.EN_COURS_LIVRAISON;
                         matched.livraison.colis.forEach(c => c.statut_colis = StatusColis.A_CHARGE_DANS_LA_CAMION);
@@ -190,12 +190,12 @@ export class BordereauLivraisonService {
             if(c.statut_colis == StatusColis.ANOMALIE){
                 countColisAnomalie += 1;
                 c.statut_colis = StatusColis.RETOUR_EXPEDITEUR;
-                c.date_heure_retour_expediteur = new Date().toISOString();
+                c.date_heure_retour_expediteur = new Date();
             }
 
             if(c.statut_colis == StatusColis.DECHARGE_DE_LA_CAMION){
                 c.statut_colis = StatusColis.LIVRE;
-                c.date_heure_accuse_reception = new Date().toISOString();
+                c.date_heure_accuse_reception = new Date();
                 countColisLivres += 1;
             }
         });
@@ -208,7 +208,7 @@ export class BordereauLivraisonService {
         ordreLivraison.statut = StatutOrdreLivraison.EFFECTUE;
         
         try {
-            existingBordereau.date_preuve_livraison = new Date().toISOString();
+            existingBordereau.date_preuve_livraison = new Date();
             await this.dataSource.transaction(async manager => {
                 await manager.save(ColisEntity, colis);
                 await manager.save(LivraisonEntity, livraison);

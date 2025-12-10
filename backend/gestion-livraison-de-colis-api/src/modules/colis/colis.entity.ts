@@ -15,17 +15,17 @@ export class ColisEntity{
     @Column()
     poids_total: number;
 
-    @Column({"type": "timestamp"})
-    date_heure_chargement: string;
+    @Column({"type": "timestamptz"})
+    date_heure_chargement: Date;
 
-    @Column({"type": "timestamp"})
-    date_heure_dechargement: string;
+    @Column({"type": "timestamptz"})
+    date_heure_dechargement: Date;
 
-    @Column({"type": "timestamp"})
-    date_heure_accuse_reception: string;
+    @Column({"type": "timestamptz"})
+    date_heure_accuse_reception: Date;
 
-    @Column({"type": "timestamp"})
-    date_heure_retour_expediteur: string;
+    @Column({"type": "timestamptz"})
+    date_heure_retour_expediteur: Date;
     
     @Column()
     statut_colis: string;

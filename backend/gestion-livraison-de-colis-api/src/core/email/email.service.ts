@@ -12,7 +12,7 @@ export class EmailService {
 
   private init(){
     (async () => {
-      /*const testAccount = await nodemailer.createTestAccount();
+      const testAccount = await nodemailer.createTestAccount();
 
       this.transporter = nodemailer.createTransport({
         host: testAccount.smtp.host,
@@ -26,7 +26,7 @@ export class EmailService {
             rejectUnauthorized: false, // bypass self-signed cert issue
         }
       });
-      */
+
     })();
   }
 

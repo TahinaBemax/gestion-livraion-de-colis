@@ -420,7 +420,7 @@ export class LivraisonsService {
         livraison.statut_livraison = StatusLivraison.EN_ATTENTE;
         livraison.colis = this.getColis(dto.colis);
         livraison.nom_destinataire = point_livraison.numero_magasin;
-        livraison.adresse_principale = `${point_livraison.numero_rue}, ${point_livraison.nom_rue}, ${point_livraison.ville}`;
+        livraison.adresse_principale = `${point_livraison.numero_rue}, ${point_livraison.nom_rue}, ${point_livraison.ville} - ${point_livraison.numero_magasin}`;
         livraison.complement_adresse = point_livraison.complement_adresse;
         livraison.ville = point_livraison.ville;
         livraison.pays = point_livraison.pays;
@@ -464,23 +464,54 @@ export class LivraisonsService {
     private checkTime(date_livraison: string, heure_debut: string, heure_fin: string, pointLivraison: PointLivraisonEntity){
         const dateLivraison: Date = Utils.parseToFRDate(date_livraison);
         if(!pointLivraison) throw new BadRequestException("Point de livraison est null");
+        if(!pointLivraison.creneaux_livraison || pointLivraison.creneaux_livraison.length === 0){
+            throw new BadRequestException("Aucun créneau de livraison défini pour ce point de livraison");
+        }
 
-        pointLivraison.creneaux_livraison.forEach(horaire => {
-            if(horaire.annee == dateLivraison.getFullYear() && horaire.jour_semaine.toLocaleLowerCase() == Utils.getDayInWord(dateLivraison)){
-                if(heure_debut){    
-                    if(
-                        Utils.compareTwoTimes(horaire.heure_debut, heure_debut) <= 0 && 
-                        Utils.compareTwoTimes(horaire.heure_fin, heure_debut) >= 0 && 
-                        Utils.compareTwoTimes(horaire.heure_fin, heure_fin) >= 0
-                    ){
-                        return true;
-                    }
-                    
-                    throw new BadRequestException(`L'heure de la livraison doit être comprise entre ${horaire.heure_debut} - ${horaire.heure_fin}`)
+        if(pointLivraison.evenements && pointLivraison.evenements.length > 0){
+            pointLivraison.evenements.forEach(event => {
+                const eventDate = Utils.parseToFRDate(event.date_debut);
+                const eventDateFin = Utils.parseToFRDate(event.date_fin);
+
+                if(dateLivraison >= eventDate && dateLivraison <= eventDateFin){
+                    throw new BadRequestException(`La date de livraison choisie coïncide avec un évènement: ${event.nom_evenement}. Veuillez choisir une autre date.`);
                 }
+            });
+        } else if(pointLivraison.contraintes_livraison && pointLivraison.contraintes_livraison.length > 0){ 
+            pointLivraison.contraintes_livraison.forEach(constraint => {
+                const constraintDate = Utils.parseToFRDate(constraint.date_contrainte);
+                if(dateLivraison.getTime() === constraintDate.getTime()){
+                    if(heure_debut){    
+                        if(
+                            Utils.compareTwoTimes(constraint.heure_debut_livrable, heure_debut) <= 0 && 
+                            Utils.compareTwoTimes(constraint.heure_fin_livrable, heure_debut) >= 0 && 
+                            Utils.compareTwoTimes(constraint.heure_fin_livrable, heure_fin) >= 0
+                        ){
+                            return true;
+                        }
+                    
+                        throw new BadRequestException(`Il existe une contrainte de livraison pour cette date. L'heure de la livraison doit être comprise entre ${constraint.heure_debut_livrable} - ${constraint.heure_fin_livrable}`);
+                    }
+                    return false;
+                }   
+            });
+        } 
+            pointLivraison.creneaux_livraison.forEach(horaire => {
+                if(horaire.annee == dateLivraison.getFullYear() && horaire.jour_semaine.toLocaleLowerCase() == Utils.getDayInWord(dateLivraison)){
+                    if(heure_debut){    
+                        if(
+                            Utils.compareTwoTimes(horaire.heure_debut, heure_debut) <= 0 && 
+                            Utils.compareTwoTimes(horaire.heure_fin, heure_debut) >= 0 && 
+                            Utils.compareTwoTimes(horaire.heure_fin, heure_fin) >= 0
+                        ){
+                            return true;
+                        }
+                        
+                        throw new BadRequestException(`L'heure de la livraison doit être comprise entre ${horaire.heure_debut} - ${horaire.heure_fin}`)
+                    }
+                }
+            });
 
-                return true;
-            }
-        })
+        return false;
     }
 }

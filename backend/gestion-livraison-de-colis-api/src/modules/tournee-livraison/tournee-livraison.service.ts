@@ -15,6 +15,7 @@ import { LivraisonsService } from '../livraisons/livraisons.service';
 import { StatusColis } from 'src/common/enum/status-colis.enum';
 import { Utils } from 'src/common/utils/utils';
 import { LivreurService } from '../livreur/livreur.service';
+import { ColisEntity } from '../colis/colis.entity';
 
 @Injectable()
 export class TourneeLivraisonService {
@@ -68,14 +69,21 @@ export class TourneeLivraisonService {
         }
 
         const livraisonIncomplet = await this.livraisonService.findLivraisonIncompleteByIdClient(ordreLivraison.livraison.client.id);
-
+        const colisEnReliquat: ColisEntity[] = [];
         livraisonIncomplet.forEach(livraison => livraison.colis.forEach(colis => {
-            if (colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR || colis.statut_colis === StatusColis.RELIQUAT) {
+            if ((colis.statut_colis === StatusColis.RETOUR_EXPEDITEUR || colis.statut_colis === StatusColis.RELIQUAT) && colis.date_heure_retour_expediteur) {
                 colis.statut_colis = StatusColis.RELIQUAT;
+                colisEnReliquat.push(colis);
             }
         }));
 
-        const all = ordreLivraison.livraison.colis.concat(livraisonIncomplet.flatMap(livraison => livraison.colis));
+        const all = ordreLivraison.livraison.colis.concat(colisEnReliquat);
+        all.forEach(c => {
+            c.date_heure_chargement = c.date_heure_chargement;
+            c.date_heure_dechargement = c.date_heure_dechargement;
+            c.date_heure_retour_expediteur = c.date_heure_retour_expediteur;
+            c.date_heure_accuse_reception = c.date_heure_accuse_reception;
+        });
         
         // Séparer les colis avec des statuts d'anomalie et reliquat
         const colisAnomalie = all.filter((c) => c.statut_colis === StatusColis.ANOMALIE || c.statut_colis === StatusColis.RELIQUAT);
@@ -113,7 +121,7 @@ export class TourneeLivraisonService {
             
             if(bl){
                 countBL++;
-                const date: string = bl.date_scan_bordereau;
+                const date = bl.date_scan_bordereau;
                 if(!date){
                     continue;
                 }
@@ -311,7 +319,11 @@ export class TourneeLivraisonService {
         saved.forEach(t => {
             t.livreur.user.mot_de_passe = '';
         });
-        return saved;
+
+        return saved.map(tournee => {
+            const {prestataire, ...withoutPrestataire} = tournee;
+            return withoutPrestataire;
+        });
     }
 
     async changeStatuts(id: number, statut:string ){

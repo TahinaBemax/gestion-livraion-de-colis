@@ -42,10 +42,11 @@ export class UserService {
         }
 
         const users = await queryBuilder.getMany();
-        return users.map(user => {
-            const {mot_de_passe, ...userWithoutPassword} = user;
-            return user;
+        users.forEach(user => {
+            user.mot_de_passe = '';
         });
+
+        return users;
     }
 
     async prestataireUsersfilterBy(idPrestataire?: number, nom?: string, prenom?: string, nomEntreprise?: string): Promise<User[]> {
@@ -78,11 +79,11 @@ export class UserService {
         }
 
         const matched = await queryBuilder.getMany();
-        return matched.map(user => {
-            const {mot_de_passe, ...withoutPassword} = user;
-
-            return user;            
+        matched.forEach(user => {
+            user.mot_de_passe = '';            
         });
+
+        return matched;
     }
 
     /**
@@ -134,7 +135,7 @@ export class UserService {
             .getMany();
 
         return users.map(user => {
-            const {mot_de_passe, ...userWithoutPassword} = user;
+            user.mot_de_passe = '';
             return user;
         });
     }
@@ -148,7 +149,7 @@ export class UserService {
             .getMany();
 
         return users.map(user => {
-            const {mot_de_passe, ...userWithoutPassword} = user;
+            user.mot_de_passe = '';
             return user;
         });
     }
@@ -173,7 +174,7 @@ export class UserService {
         const users = await query.getMany();
 
         return users.map(user => {
-            const {mot_de_passe, ...userWithoutPassword} = user;
+            user.mot_de_passe = '';
             return user;
         });
     }
@@ -187,7 +188,7 @@ export class UserService {
         if (!user) {
             throw new NotFoundException(`Utilisateur {${id}} introuvable!`)
         }
-        const {mot_de_passe, ...userWithoutPassword} = user;
+        user.mot_de_passe = '';
 
         return user;
     }

@@ -58,7 +58,12 @@ export class OrdreLivraisonController {
         @ApiParam({ name: 'id'})
         @ApiBody({ type: OrdreLivraisonUpdateDto })
     async update(@Param('id', ParseIntPipe) id: number, @Body() updateDto: OrdreLivraisonUpdateDto) {
-        return this.ordreLivraisonService.update(id, updateDto);
+        const reponse = await this.ordreLivraisonService.update(id, updateDto);
+
+        if(reponse){
+            return "Modification réussi!"
+        }
+        return "Aucune modification effectuée."
     }
 
     @Put('/:id/annule')

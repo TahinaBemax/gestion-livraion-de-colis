@@ -257,9 +257,32 @@ export class OrdreLivraisonService {
 
     async delete(id: number) {
         if(!id) throw new BadRequestException("Id tournée de livraison invalide");
+
         const existing = await this.findById(id);
-        return this.ordreRepo.delete(existing.id);
-    }  
+
+        const dataSource = this.ordreRepo.manager.connection as DataSource;
+        const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            // set livraison and colis statuses to EN_ATTENTE
+            existing.livraison.statut_livraison = StatusLivraison.EN_ATTENTE;
+            existing.livraison.colis.forEach(c => c.statut_colis = StatusColis.EN_ATTENTE);
+
+            // persist changes and delete ordre within the same transaction
+            await queryRunner.manager.save(LivraisonEntity, existing.livraison);
+            const deleteResult = await queryRunner.manager.delete(OrdreLivraisonEntity, existing.id);
+
+            await queryRunner.commitTransaction();
+            return deleteResult;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
 
     async deleteAllByTourneeAndPointLivraison(idTournee: number, idPL: number) {
         if(!idTournee || idPL) throw new BadRequestException("Id tournée de livraison invalide");
@@ -307,7 +330,7 @@ export class OrdreLivraisonService {
                 livraison.statut_livraison !== StatusLivraison.RETOUR_EXPEDITEUR &&
                 livraison.statut_livraison !== StatusLivraison.ECHEC_LIVRAISON
             ) {
-                throw new BadRequestException(`Impossible de rattacher une livraison ID:${livraison.id} avec statut: ${livraison.statut_livraison} à cette tournée de livraison`);
+                throw new BadRequestException(`Impossible de rattacher une livraison avec ID:${livraison.id} avec statut: ${livraison.statut_livraison} à cette tournée de livraison`);
             }
 
             if (livraison.ordre_livraison) throw new BadRequestException(`La livraison avec ID: {${idLivraison}} est déjà rattachée à un tournée de livraison`);

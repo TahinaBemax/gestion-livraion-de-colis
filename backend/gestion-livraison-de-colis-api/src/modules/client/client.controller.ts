@@ -23,6 +23,14 @@ export class ClientController {
         return this.clientService.update(id, data);
     }
 
+    @Post("")
+    @Roles(UserRole.Admin)
+    @UserTypes(TypeUtilisateur.TempoOne)
+    @ApiBody({type: ClientUpdateDto})
+    async save(@Body() data: ClientCreateDto): Promise<ClientEntity>{
+        return this.clientService.save(data);
+    }
+
     @Get()
     @Roles(UserRole.Admin, UserRole.User)
     @UserTypes(TypeUtilisateur.TempoOne)

@@ -127,7 +127,7 @@ export class PrestataireDataTest {
         const novice_info: CreateUserDto = new CreateUserDto();
 
         livreurNovice.id_categorie_livreur = CategorieLivreurEnum.Novice;
-        novice_info.nom = "Livreur";
+        novice_info.nom = "Geneviève";
         novice_info.prenom = "Novice";
         novice_info.email = "livreur.novice@gmail.com";
         novice_info.mot_de_passe = "livreurNovice123!";
@@ -137,8 +137,8 @@ export class PrestataireDataTest {
         const ponctuel: CreateUserDto = new CreateUserDto();
 
         livreurPoncuel.id_categorie_livreur = CategorieLivreurEnum.Ponctuel;
-        ponctuel.nom = "Livreur";
-        ponctuel.prenom = "Ponctuel";
+        ponctuel.nom = "Jean";
+        ponctuel.prenom = "Jacques";
         ponctuel.email = "livreur.ponctuel@gmail.com";
         ponctuel.mot_de_passe = "livreurPoctuel123!";
         livreurPoncuel.user = ponctuel;
@@ -147,8 +147,8 @@ export class PrestataireDataTest {
         const regulier: CreateUserDto = new CreateUserDto();
 
         livreurRegulier.id_categorie_livreur = CategorieLivreurEnum.Regulier;
-        regulier.nom = "Livreur";
-        regulier.prenom = "Regulier";
+        regulier.nom = "Jean";
+        regulier.prenom = "Bertin";
         regulier.email = "livreur.regulier@gmail.com";
         regulier.mot_de_passe = "livreurRegulier123!";
         livreurRegulier.user = regulier;
