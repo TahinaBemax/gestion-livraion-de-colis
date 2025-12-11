@@ -1,0 +1,20 @@
+[
+    {
+        "date_tournee": "02/10/2025",
+        "heure_debut": "08:00",
+        "heure_fin": "17:00",
+        "id_livreur": 2
+    },
+    {
+        "date_tournee": "02/10/2025",
+        "heure_debut": "10:00",
+        "heure_fin": "16:00",
+        "id_livreur": 1
+    },
+    {
+        "date_tournee": "02/10/2025",
+        "heure_debut": "08:00",
+        "heure_fin": "14:00",
+        "id_livreur": 3
+    }
+]

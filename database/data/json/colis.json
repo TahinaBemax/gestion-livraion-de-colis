@@ -1,0 +1,42 @@
+[
+  {
+    "nom_destinataire": "Pierre Dupont",
+    "details_colis": [
+      {
+        "description": "T-shirt en coton",
+        "poids": 0.25,
+        "valeur_declaree": 20.0
+      },
+      {
+        "description": "Livre de cuisine",
+        "poids": 0.5,
+        "valeur_declaree": 15.0
+      }
+    ]
+  },
+  {
+    "nom_destinataire": "Marie Martin",
+    "details_colis": [
+      {
+        "description": "Casque de vélo",
+        "poids": 1.2,
+        "valeur_declaree": 50.0
+      },
+      {
+        "description": "Gants de ski",
+        "poids": 0.3,
+        "valeur_declaree": 30.0
+      }
+    ]
+  },
+  {
+    "nom_destinataire": "John Smith",
+    "details_colis": [
+      {
+        "description": "Laptop HP",
+        "poids": 2.5,
+        "valeur_declaree": 800.0
+      }
+    ]
+  }
+]

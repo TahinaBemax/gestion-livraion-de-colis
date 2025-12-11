@@ -1,0 +1,19 @@
+{ 
+  "notes": "Livraison urgente, merci de vérifier les informations",
+  "date_livraison": "26/08/2025",
+  "heure_debut": "09:00",
+  "heure_fin": "12:00",
+  "id_client": 1,
+  "colis": [
+          {
+            "description_produit": "T-shirt en coton",
+            "poids_produit": 0.25,
+            "valeur_produit": 20.0
+          },
+          {
+            "description_produit": "Livre de cuisine",
+            "poids_produit": 0.5,
+            "valeur_produit": 15.0
+          }
+  ]
+}
